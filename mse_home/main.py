@@ -9,19 +9,18 @@ filterwarnings("ignore")  # noqa: E402
 from mse_home import __version__
 
 from mse_home.command import (
-    build,
     decrypt,
-    encrypt,
     evidence,
     fingerprint,
     init,
+    package,
     run,
     seal,
     spawn,
     stop,
     verify,
 )
-from mse_home.log import LOGGER as LOG
+from mse_home.log import LOGGER as LOG, setup_logging
 
 
 def main() -> int:
@@ -39,9 +38,8 @@ def main() -> int:
 
     subparsers = parser.add_subparsers(title="subcommands")
 
-    build.add_subparser(subparsers)
+    package.add_subparser(subparsers)
     decrypt.add_subparser(subparsers)
-    encrypt.add_subparser(subparsers)
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)
     init.add_subparser(subparsers)
@@ -52,6 +50,8 @@ def main() -> int:
     verify.add_subparser(subparsers)
 
     args = parser.parse_args()
+
+    setup_logging()
 
     try:
         func = args.func
