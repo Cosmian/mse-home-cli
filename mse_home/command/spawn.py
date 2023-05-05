@@ -167,7 +167,10 @@ def run_docker_image(
         "--host",
         host,
         "--uuid",
-        str(uuid.uuid4()),
+        "ee08d973-a58f-4944-ae12-2b105bc9a15c",
+        # str(
+        #     uuid.uuid4()
+        # ),  # TODO: what to do with that: at the install save it in a env variable
         "--application",
         "app:app",
         "--timeout",
