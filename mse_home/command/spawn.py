@@ -10,20 +10,18 @@ from pathlib import Path
 from typing import Tuple
 
 import requests
-from docker.errors import NotFound
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_client_docker, is_spawned
 from mse_home.log import LOGGER as LOG
 
 
 def add_subparser(subparsers):
     """Define the subcommand."""
-    parser = subparsers.add_parser("spawn", help="Spawn the MSE docker")
+    parser = subparsers.add_parser("spawn", help="Spawn a MSE docker")
 
     parser.add_argument(
-        "--name",
+        "name",
         type=str,
-        required=True,
         help="The name of the application",
     )
 
@@ -104,18 +102,6 @@ def run(args) -> None:
     wait_for_docker_to_spawn(args.port)
 
 
-def is_spawned(name: str):
-    """Check whether a mse docker is spawned based on its `name`."""
-    client = get_client_docker()
-
-    try:
-        client.containers.get(name)
-    except NotFound:
-        return False
-
-    return True
-
-
 def is_port_free(port: int):
     """Check whether a given `port` is free."""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -185,7 +171,7 @@ def run_docker_image(
         "--application",
         "app:app",
         "--timeout",
-        str(int(cert_expiration_date.timestamp())),  # Remove that argument
+        str(int(cert_expiration_date.timestamp())),  # TODO: Remove that argument
         "--self-signed",
         str(int(cert_expiration_date.timestamp())),
     ]

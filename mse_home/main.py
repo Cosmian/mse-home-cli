@@ -13,10 +13,12 @@ from mse_home.command import (
     evidence,
     fingerprint,
     init,
+    logs,
     package,
     run,
     seal,
     spawn,
+    status,
     stop,
     verify,
 )
@@ -43,7 +45,9 @@ def main() -> int:
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)
     init.add_subparser(subparsers)
+    logs.add_subparser(subparsers)
     run.add_subparser(subparsers)
+    status.add_subparser(subparsers)
     seal.add_subparser(subparsers)
     spawn.add_subparser(subparsers)
     stop.add_subparser(subparsers)

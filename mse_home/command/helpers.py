@@ -3,7 +3,7 @@
 
 from docker import from_env
 from docker.client import DockerClient
-from docker.errors import DockerException
+from docker.errors import DockerException, NotFound
 
 from mse_home.log import LOGGER as LOG
 
@@ -17,3 +17,15 @@ def get_client_docker() -> DockerClient:
         LOG.info("MSE needs Docker to build your app docker.")
         LOG.info("Please refer to the documentation for more details.")
         raise exc
+
+
+def is_spawned(name: str) -> bool:
+    """Check whether a mse docker is spawned based on its `name`."""
+    client = get_client_docker()
+
+    try:
+        client.containers.get(name)
+    except NotFound:
+        return False
+
+    return True

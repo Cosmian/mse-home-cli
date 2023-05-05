@@ -3,13 +3,12 @@
 from docker.errors import NotFound
 
 from mse_home.command.helpers import get_client_docker
-
 from mse_home.log import LOGGER as LOG
 
 
 def add_subparser(subparsers):
     """Define the subcommand."""
-    parser = subparsers.add_parser("stop", help="Stop and remove a MSE docker")
+    parser = subparsers.add_parser("status", help="Print the MSE docker status")
 
     parser.add_argument(
         "name",
@@ -25,11 +24,7 @@ def run(args) -> None:
     client = get_client_docker()
 
     try:
-        LOG.info("Stopping your docker...")
-
         container = client.containers.get(args.name)
-        container.stop(timeout=1)
-
-        LOG.info("Docker '%s' has been stopped!", args.name)
+        LOG.info(container.status)  # TODO: is that the configuration or the app?
     except NotFound:
         raise Exception(f"Can't find mse docker '{args.name}'")
