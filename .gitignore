@@ -3,8 +3,9 @@ TODO.md
 .idea/
 .python-version
 .env*
-output
 examples
+workspace
+cosmian-signer-key.pem
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

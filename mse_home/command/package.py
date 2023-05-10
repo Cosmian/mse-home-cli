@@ -24,12 +24,10 @@ def add_subparser(subparsers):
         help="Generate a package containing the docker image and the code to run on MSE",
     )
 
-    parser.add_argument(
-        "--code", type=Path, required=True, help="The path to the code to include"
-    )
+    # TODO: add a new argument: --name to give the name of the docker image?
 
     parser.add_argument(
-        "--output", type=Path, required=True, help="The directory to write the package"
+        "--code", type=Path, required=True, help="The path to the code to include"
     )
 
     parser.add_argument(
@@ -40,6 +38,10 @@ def add_subparser(subparsers):
         "--encrypt",
         action="store_true",
         help="Encrypt the code directory inside the generated package",
+    )
+
+    parser.add_argument(
+        "--output", type=Path, required=True, help="The directory to write the package"
     )
 
     parser.set_defaults(func=run)

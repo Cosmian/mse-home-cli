@@ -3,15 +3,19 @@
 
 import datetime
 import socket
-import tarfile
 import time
-import uuid
 from pathlib import Path
-from typing import Tuple
+import uuid
 
 import requests
 
-from mse_home.command.helpers import get_client_docker, is_spawned
+from mse_home.command.helpers import (
+    extract_package,
+    get_client_docker,
+    is_spawned,
+    load_docker_image,
+)
+from mse_home.conf.args import ApplicationArguments
 from mse_home.log import LOGGER as LOG
 
 
@@ -29,7 +33,7 @@ def add_subparser(subparsers):
         "--package",
         type=Path,
         required=True,
-        help="The MSE package containing the docker images and the code",
+        help="The MSE application package containing the docker images and the code",
     )
 
     parser.add_argument(
@@ -67,12 +71,18 @@ def add_subparser(subparsers):
         help="The enclave signer key",
     )
 
+    parser.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="The directory to write the args file",
+    )
+
     parser.set_defaults(func=run)
 
 
 def run(args) -> None:
     """Run the subcommand."""
-
     if is_spawned(args.name):
         raise Exception(
             f"Docker container {args.name} is already running. Stop it before restart it!"
@@ -81,25 +91,42 @@ def run(args) -> None:
     if not is_port_free(args.port):
         raise Exception(f"Port {args.port} is already in-used!")
 
-    workspace = Path(f"{args.name}_{time.time_ns()}").resolve()
-    workspace.mkdir()
+    workspace = args.output.resolve()
 
     (code_tar_path, image_tar_path) = extract_package(workspace, args.package)
 
     image = load_docker_image(image_tar_path)
 
+    cert_expiration_date = datetime.datetime.today() + datetime.timedelta(
+        days=args.days
+    )
+    app_id = uuid.uuid4()
+
     run_docker_image(
         args.name,
         image,
-        args.days,
+        cert_expiration_date,
         args.host,
         args.port,
         args.size,
+        app_id,
         code_tar_path,
         args.signer_key,
     )
 
     wait_for_docker_to_spawn(args.port)
+
+    app_args = ApplicationArguments(
+        host=args.host,
+        port=args.port,
+        expiration_date=int(cert_expiration_date.timestamp()),
+        size=args.size,
+        app_id=str(app_id),
+    )
+
+    args_path = workspace / "args.toml"
+    LOG.info("You can share '%s' with the other participants.", args_path)
+    app_args.save(args_path)
 
 
 def is_port_free(port: int):
@@ -114,49 +141,19 @@ def is_port_free(port: int):
     return True
 
 
-def extract_package(workspace: Path, package: Path) -> Tuple[str, str]:
-    """Extract the code and image tarballs from the mse package."""
-    LOG.info("Extracting the package at %s...", workspace)
-
-    with tarfile.open(package, "r") as package:
-        package.extractall(path=workspace)
-
-    code_tar_path = workspace / "code.tar"
-    image_tar_path = workspace / "image.tar"
-
-    if not code_tar_path.exists():
-        raise Exception(f"{code_tar_path} was not find in the mse package")
-
-    if not image_tar_path.exists():
-        raise Exception(f"{image_tar_path} was not find in the mse package")
-
-    return (code_tar_path, image_tar_path)
-
-
-def load_docker_image(image_tar_path: Path) -> str:
-    """Load the docker image from the image tarball."""
-    LOG.info("Loading the docker image...")
-    client = get_client_docker()
-
-    with open(image_tar_path, "rb") as f:
-        image = client.images.load(f.read())
-        return image[0].tags[0]
-
-
 def run_docker_image(
     app_name: str,
     image: str,
-    days: int,
+    expiration_date: datetime,
     host: str,
     port: int,
     size: int,
+    app_id: uuid,
     code_tar_path: Path,
     signer_key: Path,
 ):
     """Run the mse docker."""
     client = get_client_docker()
-
-    cert_expiration_date = datetime.datetime.today() + datetime.timedelta(days=days)
 
     # Run l'image
     command = [
@@ -167,16 +164,14 @@ def run_docker_image(
         "--host",
         host,
         "--uuid",
-        "ee08d973-a58f-4944-ae12-2b105bc9a15c",
-        # str(
-        #     uuid.uuid4()
-        # ),  # TODO: what to do with that: at the install save it in a env variable
+        # TODO: what to do with that: at the install save it in a env variable
+        str(app_id),
         "--application",
         "app:app",
         "--timeout",
-        str(int(cert_expiration_date.timestamp())),  # TODO: Remove that argument
+        str(int(expiration_date.timestamp())),  # TODO: Remove that argument
         "--self-signed",
-        str(int(cert_expiration_date.timestamp())),
+        str(int(expiration_date.timestamp())),
     ]
 
     volumes = {

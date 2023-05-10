@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import requests
+from mse_home.conf.args import ApplicationArguments
 
 from mse_home.log import LOGGER as LOG
 
@@ -23,11 +24,11 @@ def add_subparser(subparsers):
         help="The name of the application",
     )
 
-    parser.add_argument(  # TODO: don't force the user to rewrite this
-        "--port",
-        type=int,
+    parser.add_argument(
+        "--args",
+        type=str,
         required=True,
-        help="The application port",
+        help="The path to the enclave argument file generating when spawning the application (ex: args.toml)",
     )
 
     parser.add_argument(
@@ -56,9 +57,10 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
+    app_args = ApplicationArguments.load(args.args)
 
     data: Dict[str, Any] = {
-        "uuid": "ee08d973-a58f-4944-ae12-2b105bc9a15c",
+        "uuid": app_args.app_id,
     }
 
     if args.secrets:
@@ -70,8 +72,8 @@ def run(args) -> None:
     if args.key:
         data["code_secret_key"] = args.key.read_text()
 
-    send_secrets(data, args.port)
-    wait_for_app_to_be_ready(args.port)
+    send_secrets(data, app_args.port)
+    wait_for_app_to_be_ready(app_args.port)
 
 
 def send_secrets(data: Dict[str, Any], port: int):
