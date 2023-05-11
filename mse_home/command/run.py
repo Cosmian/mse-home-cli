@@ -8,7 +8,7 @@ from typing import Any, Dict
 import requests
 from docker.errors import NotFound
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_client_docker, is_waiting_for_secrets
 from mse_home.conf.docker import DockerConfig
 from mse_home.log import LOGGER as LOG
 
@@ -61,8 +61,13 @@ def run(args) -> None:
 
     docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
 
+    if not is_waiting_for_secrets(docker.port):
+        raise Exception(
+            "Your application is not waiting for secrets. Have you already set it?"
+        )
+
     data: Dict[str, Any] = {
-        "uuid": docker.uuid,
+        "uuid": docker.app_id,
     }
 
     if args.secrets:
@@ -75,7 +80,8 @@ def run(args) -> None:
         data["code_secret_key"] = args.key.read_text()
 
     send_secrets(data, docker.port)
-    wait_for_app_to_be_ready(docker.port)
+
+    wait_for_app_to_be_ready(docker.port, container.labels["healthcheck_endpoint"])
 
 
 def send_secrets(data: Dict[str, Any], port: int):
@@ -95,12 +101,14 @@ def send_secrets(data: Dict[str, Any], port: int):
     LOG.info("Secrets sent!")
 
 
-def wait_for_app_to_be_ready(port: int):
+def wait_for_app_to_be_ready(port: int, healthcheck_endpoint: str):
     """Hold on until the configuration server is stopped and the app starts."""
     LOG.info("Waiting for your application to be ready...")
     while True:
         try:
-            response = requests.get(f"https://localhost:{port}/", verify=False)
+            response = requests.get(
+                f"https://localhost:{port}{healthcheck_endpoint}", verify=False
+            )
 
             if response.status_code != 503 and "Mse-Status" not in response.headers:
                 break

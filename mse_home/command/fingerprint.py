@@ -48,7 +48,7 @@ def run(args) -> None:
         app_args.size,
         app_args.host,
         uuid.UUID(app_args.app_id),
-        "app:app",  # TODO:unhardcode?
+        app_args.application,
         code_tar_path,
         app_args.expiration_date,
         None,

@@ -41,9 +41,12 @@ def run(args) -> None:
     LOG.info("Enclave size = %dM", docker.size)
     LOG.info(" Common name = %s", docker.host)
     LOG.info("        Port = %d", docker.port)
+    LOG.info(" Healthcheck = %s", container.labels["healthcheck_endpoint"])
     LOG.info(
         "      Status = %s",
-        app_state(docker.port) if container.status == "running" else container.status,
+        app_state(docker.port, container.labels["healthcheck_endpoint"])
+        if container.status == "running"
+        else container.status,
     )
     LOG.info(
         "  Started at = %s",
@@ -56,10 +59,15 @@ def run(args) -> None:
     )
 
 
-def app_state(port: int) -> str:
+def app_state(port: int, healthcheck_endpoint: str) -> str:
     """Determine the application state by querying it."""
     try:
-        response = requests.get(f"https://localhost:{port}/", verify=False)
+        # Note: the configuration server allows any path
+        # So: `healthcheck_endpoint`` does not exist but it's process as /
+        # We can there do one query for the application and the configuration server
+        response = requests.get(
+            f"https://localhost:{port}{healthcheck_endpoint}", verify=False
+        )
 
         if response.status_code == 503:
             return "initializing"
@@ -67,13 +75,13 @@ def app_state(port: int) -> str:
         if response.status_code == 500:
             return "on error"
 
+        if response.status_code == 200 and "Mse-Status" in response.headers:
+            return "waiting secret keys"
+
         if response.status_code == 200:
-            if "Mse-Status" not in response.headers:
-                return "running"
-            if "Mse-Status" in response.headers:
-                return "waiting secret keys"
-        else:
-            return "unknow"
+            return "running"
+
+        return "unknown"
 
     except requests.exceptions.SSLError:
         return "initializing"

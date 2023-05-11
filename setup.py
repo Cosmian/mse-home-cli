@@ -50,6 +50,7 @@ setup(
     entry_points={
         "console_scripts": ["msehome = mse_home.main:main"],
     },
+    package_data={"mse_home": ["template/*", "template/**/*"]},
     tests_require=["pytest>=7.2.0,<7.3.0"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

@@ -7,15 +7,16 @@ import time
 import uuid
 from pathlib import Path
 
-import requests
-
+from mse_home import DOCKER_LABEL
 from mse_home.command.helpers import (
     extract_package,
     get_client_docker,
     is_spawned,
+    is_waiting_for_secrets,
     load_docker_image,
 )
 from mse_home.conf.args import ApplicationArguments
+from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
 
 
@@ -64,7 +65,7 @@ def add_subparser(subparsers):
         help="The enclave size to spawn",
     )
 
-    parser.add_argument(  # TODO: Variable d'env?
+    parser.add_argument(
         "--signer-key",
         type=Path,
         required=True,
@@ -93,7 +94,11 @@ def run(args) -> None:
 
     workspace = args.output.resolve()
 
-    (code_tar_path, image_tar_path) = extract_package(workspace, args.package)
+    (code_tar_path, image_tar_path, code_config_path) = extract_package(
+        workspace, args.package
+    )
+
+    code_config = CodeConfig.load(code_config_path)
 
     image = load_docker_image(image_tar_path)
 
@@ -110,6 +115,8 @@ def run(args) -> None:
         args.port,
         args.size,
         app_id,
+        code_config.python_application,
+        code_config.healthcheck_endpoint,
         code_tar_path,
         args.signer_key,
     )
@@ -121,6 +128,7 @@ def run(args) -> None:
         expiration_date=int(cert_expiration_date.timestamp()),
         size=args.size,
         app_id=str(app_id),
+        application=code_config.python_application,
     )
 
     args_path = workspace / "args.toml"
@@ -148,6 +156,8 @@ def run_docker_image(
     port: int,
     size: int,
     app_id: uuid,
+    application: str,
+    healthcheck: str,
     code_tar_path: Path,
     signer_key: Path,
 ):
@@ -163,12 +173,11 @@ def run_docker_image(
         "--host",
         host,
         "--uuid",
-        # TODO: what to do with that: at the install save it in a env variable
         str(app_id),
         "--application",
-        "app:app",
+        application,
         "--timeout",
-        str(int(expiration_date.timestamp())),  # TODO: Remove that argument
+        str(int(expiration_date.timestamp())),
         "--self-signed",
         str(int(expiration_date.timestamp())),
     ]
@@ -197,7 +206,7 @@ def run_docker_image(
         ],
         ports={f"443/tcp": ("127.0.0.1", str(port))},
         entrypoint="mse-run",
-        labels=["mse-home"],
+        labels={DOCKER_LABEL: "1", "healthcheck_endpoint": healthcheck},
         remove=True,
         detach=True,
         stdout=True,
@@ -213,15 +222,7 @@ def run_docker_image(
 def wait_for_docker_to_spawn(port: int):
     """Hold on until the configuration server is up and listing."""
     LOG.info("Waiting for configuration server to be ready...")
-    while True:
-        try:
-            response = requests.get(f"https://localhost:{port}/", verify=False)
-
-            if response.status_code == 200 and "Mse-Status" in response.headers:
-                break
-        except requests.exceptions.SSLError:
-            pass
-
+    while not is_waiting_for_secrets(port):
         time.sleep(10)
 
     LOG.info("The application is now ready to receive the secrets!")

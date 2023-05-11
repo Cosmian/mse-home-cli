@@ -22,6 +22,7 @@ __User__: the code provider
 ```console
 $ msehome package --code examples/mse_src/ \
                   --dockerfile examples/Dockerfile \
+                  --config examples/mse.home.toml
                   --output workspace/code_provider \
                   --encrypt
 ```

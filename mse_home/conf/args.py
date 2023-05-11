@@ -14,6 +14,7 @@ class ApplicationArguments(BaseModel):
     expiration_date: int
     size: int
     app_id: str
+    application: str
 
     @staticmethod
     def load(path: Path):
@@ -31,6 +32,7 @@ class ApplicationArguments(BaseModel):
                 "expiration_date": self.expiration_date,
                 "size": self.size,
                 "app_id": self.app_id,
+                "application": self.application,
             }
 
             toml.dump(dataMap, f)

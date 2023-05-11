@@ -1,0 +1,3 @@
+name = "{{ name }}"
+python_application = "app:app"
+healthcheck_endpoint = "/health"

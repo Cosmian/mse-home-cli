@@ -11,11 +11,11 @@ from mse_home.command import (
     decrypt,
     evidence,
     fingerprint,
-    init,
     list,
     logs,
     package,
     run,
+    scaffold,
     seal,
     spawn,
     status,
@@ -45,7 +45,7 @@ def main() -> int:
     decrypt.add_subparser(subparsers)
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)
-    init.add_subparser(subparsers)
+    scaffold.add_subparser(subparsers)
     list.add_subparser(subparsers)
     logs.add_subparser(subparsers)
     run.add_subparser(subparsers)
