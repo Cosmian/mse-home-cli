@@ -29,8 +29,10 @@ def run(args) -> None:
 
     try:
         container = client.containers.get(args.name)
-    except NotFound:
-        raise Exception(f"Can't find the mse docker for application '{args.name}'")
+    except NotFound as exc:
+        raise Exception(
+            f"Can't find the mse docker for application '{args.name}'"
+        ) from exc
 
     docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
 
@@ -66,7 +68,9 @@ def app_state(port: int, healthcheck_endpoint: str) -> str:
         # So: `healthcheck_endpoint`` does not exist but it's process as /
         # We can there do one query for the application and the configuration server
         response = requests.get(
-            f"https://localhost:{port}{healthcheck_endpoint}", verify=False
+            f"https://localhost:{port}{healthcheck_endpoint}",
+            verify=False,
+            timeout=60,
         )
 
         if response.status_code == 503:

@@ -40,7 +40,8 @@ def run(args) -> None:
     """Run the subcommand."""
     evidence = ApplicationEvidence.load(args.evidence)
 
-    # TODO: we can probably merge this function somehow with `mse_cli.subcommand.helpers.verify_app`
+    # TODO: we can probably merge this function
+    # somehow with `mse_cli.subcommand.helpers.verify_app`
 
     # Compute MRSIGNER value from public key
     mrsigner = mr_signer_from_pk(evidence.signer_pk)

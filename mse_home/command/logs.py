@@ -26,5 +26,5 @@ def run(args) -> None:
     try:
         container = client.containers.get(args.name)
         LOG.info(container.logs().decode("utf-8"))
-    except NotFound:
-        raise Exception(f"Can't find mse docker '{args.name}'")
+    except NotFound as exc:
+        raise Exception(f"Can't find mse docker '{args.name}'") from exc

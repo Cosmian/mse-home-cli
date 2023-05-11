@@ -19,7 +19,8 @@ def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
         "evidence",
-        help="Collect the evidences to verify on offline mode the application and the enclave",
+        help="Collect the evidences to verify on offline mode "
+        "the application and the enclave",
     )
 
     parser.add_argument(
@@ -29,7 +30,7 @@ def add_subparser(subparsers):
         help="URL to the PCCS (ex: https://pccs.example.com)",
     )
 
-    parser.add_argument(  # TODO: Variable d'env?
+    parser.add_argument(
         "--signer-key",
         type=Path,
         required=True,
@@ -58,8 +59,10 @@ def run(args) -> None:
 
     try:
         container = client.containers.get(args.name)
-    except NotFound:
-        raise Exception(f"Can't find the mse docker for application '{args.name}'")
+    except NotFound as exc:
+        raise Exception(
+            f"Can't find the mse docker for application '{args.name}'"
+        ) from exc
 
     # Get the certificate from the application
     try:

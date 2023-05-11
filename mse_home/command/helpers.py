@@ -5,12 +5,12 @@ import tarfile
 from pathlib import Path
 from typing import Tuple
 
+import requests
 from docker import from_env
 from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
-import requests
-from mse_home import CODE_CONFIG_NAME, CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME
 
+from mse_home import CODE_CONFIG_NAME, CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME
 from mse_home.log import LOGGER as LOG
 
 
@@ -40,7 +40,7 @@ def is_spawned(name: str) -> bool:
 def is_waiting_for_secrets(port: int) -> bool:
     """Check whether the configuration server is up."""
     try:
-        response = requests.get(f"https://localhost:{port}/", verify=False)
+        response = requests.get(f"https://localhost:{port}/", verify=False, timeout=5)
 
         if response.status_code == 200 and "Mse-Status" in response.headers:
             return True
@@ -50,12 +50,12 @@ def is_waiting_for_secrets(port: int) -> bool:
     return False
 
 
-def extract_package(workspace: Path, package: Path) -> Tuple[str, str, str]:
+def extract_package(workspace: Path, package: Path) -> Tuple[Path, Path, Path]:
     """Extract the code and image tarballs from the mse package."""
     LOG.info("Extracting the package at %s...", workspace)
 
-    with tarfile.open(package, "r") as package:
-        package.extractall(path=workspace)
+    with tarfile.open(package, "r") as f:
+        f.extractall(path=workspace)
 
     code_tar_path = workspace / CODE_TAR_NAME
     image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME

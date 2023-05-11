@@ -35,6 +35,8 @@ class ApplicationEvidence(BaseModel):
     signer_pk: PUBLIC_KEY_TYPES
 
     class Config:
+        """Overwrite internal structure."""
+
         arbitrary_types_allowed = True
 
     @staticmethod

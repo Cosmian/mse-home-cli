@@ -30,5 +30,5 @@ def run(args) -> None:
         container.stop(timeout=1)
 
         LOG.info("Docker '%s' has been stopped!", args.name)
-    except NotFound:
-        raise Exception(f"Can't find mse docker '{args.name}'")
+    except NotFound as exc:
+        raise Exception(f"Can't find mse docker '{args.name}'") from exc

@@ -27,7 +27,8 @@ def add_subparser(subparsers):
         "--args",
         type=str,
         required=True,
-        help="The path to the enclave argument file generating when spawning the application (ex: args.toml)",
+        help="The path to the enclave argument file generating when "
+        "spawning the application (ex: args.toml)",
     )
 
     parser.set_defaults(func=run)
@@ -40,7 +41,7 @@ def run(args) -> None:
 
     app_args = ApplicationArguments.load(args.args)
 
-    (code_tar_path, image_tar_path) = extract_package(workspace, args.package)
+    (code_tar_path, image_tar_path, _) = extract_package(workspace, args.package)
     image = load_docker_image(image_tar_path)
 
     mrenclave = compute_mr_enclave(

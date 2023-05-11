@@ -1,11 +1,11 @@
 """mse_home.command.spawn module."""
 
 
-import datetime
 import socket
 import time
-import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
+from uuid import UUID, uuid4
 
 from mse_home import DOCKER_LABEL
 from mse_home.command.helpers import (
@@ -102,10 +102,8 @@ def run(args) -> None:
 
     image = load_docker_image(image_tar_path)
 
-    cert_expiration_date = datetime.datetime.today() + datetime.timedelta(
-        days=args.days
-    )
-    app_id = uuid.uuid4()
+    cert_expiration_date = datetime.today() + timedelta(days=args.days)
+    app_id = uuid4()
 
     run_docker_image(
         args.name,
@@ -155,7 +153,7 @@ def run_docker_image(
     host: str,
     port: int,
     size: int,
-    app_id: uuid,
+    app_id: UUID,
     application: str,
     healthcheck: str,
     code_tar_path: Path,
@@ -204,7 +202,7 @@ def run_docker_image(
             "/dev/sgx/enclave:/dev/sgx_enclave:rw",
             "/dev/sgx/provision:/dev/sgx_enclave:rw",
         ],
-        ports={f"443/tcp": ("127.0.0.1", str(port))},
+        ports={"443/tcp": ("127.0.0.1", str(port))},
         entrypoint="mse-run",
         labels={DOCKER_LABEL: "1", "healthcheck_endpoint": healthcheck},
         remove=True,

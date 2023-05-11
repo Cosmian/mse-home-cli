@@ -10,10 +10,9 @@ from typing import Dict, Optional, Tuple
 from docker.errors import BuildError
 from mse_cli_utils.fs import tar, whilelist
 from mse_cli_utils.ignore_file import IgnoreFile
-
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
-from mse_home import CODE_CONFIG_NAME, CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME
 
+from mse_home import CODE_CONFIG_NAME, CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME
 from mse_home.command.helpers import get_client_docker
 from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
@@ -53,7 +52,6 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-
     code_path = args.code.resolve()
     if not code_path.is_dir():
         raise IOError(f"{code_path} does not exist")
@@ -120,22 +118,22 @@ def create_code_tar(
         tar(dir_path=encrypted_path, tar_path=output_tar_path)
 
         return (secret_key, nounces)
-    else:
-        LOG.info("Building the code archive...")
 
-        mirror_path = output_tar_path.parent / "mirrored_code"
+    LOG.info("Building the code archive...")
 
-        # We copy the code directory to remove the files to ignore when taring
-        shutil.copytree(
-            code_path,
-            mirror_path,
-            ignore=shutil.ignore_patterns(*list(IgnoreFile.parse(code_path))),
-        )
+    mirror_path = output_tar_path.parent / "mirrored_code"
 
-        # Generate the tarball
-        tar(dir_path=mirror_path, tar_path=output_tar_path)
+    # We copy the code directory to remove the files to ignore when taring
+    shutil.copytree(
+        code_path,
+        mirror_path,
+        ignore=shutil.ignore_patterns(*list(IgnoreFile.parse(code_path))),
+    )
 
-        return (None, None)
+    # Generate the tarball
+    tar(dir_path=mirror_path, tar_path=output_tar_path)
+
+    return (None, None)
 
 
 def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
@@ -146,7 +144,7 @@ def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
         LOG.info("Building your docker image...")
 
         # Build the docker
-        (image, streamer) = client.images.build(
+        (image, _) = client.images.build(
             path=str(dockerfile.parent),
             tag=f"{image_name}:{time.time_ns()}",
         )

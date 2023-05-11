@@ -11,7 +11,7 @@ from mse_home.command import (
     decrypt,
     evidence,
     fingerprint,
-    list,
+    list_all,
     logs,
     package,
     run,
@@ -46,7 +46,7 @@ def main() -> int:
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)
     scaffold.add_subparser(subparsers)
-    list.add_subparser(subparsers)
+    list_all.add_subparser(subparsers)
     logs.add_subparser(subparsers)
     run.add_subparser(subparsers)
     status.add_subparser(subparsers)

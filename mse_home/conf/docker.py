@@ -31,14 +31,16 @@ class DockerConfig(BaseModel):
             "--application",
             self.application,
             "--timeout",
-            int(self.timeout),
+            str(self.timeout),
             "--self-signed",
-            int(self.self_signed),
+            str(self.self_signed),
         ]
 
+    @staticmethod
     def load(cmd: List[str], port: Dict[str, List[Dict[str, str]]]):
         """Load the the docker configuration from the command."""
         dataMap: Dict[str, Any] = {}
+        # pylint: disable=unsubscriptable-object
         for key, value in zip(cmd[::2], cmd[1::2]):
             dataMap[key[2:]] = value
 

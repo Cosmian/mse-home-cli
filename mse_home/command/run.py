@@ -17,7 +17,8 @@ def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
         "run",
-        help="Finalise the configuration of the application docker and run the application code",
+        help="Finalise the configuration of the application "
+        "docker and run the application code",
     )
 
     parser.add_argument(
@@ -56,8 +57,10 @@ def run(args) -> None:
 
     try:
         container = client.containers.get(args.name)
-    except NotFound:
-        raise Exception(f"Can't find the mse docker for application '{args.name}'")
+    except NotFound as exc:
+        raise Exception(
+            f"Can't find the mse docker for application '{args.name}'"
+        ) from exc
 
     docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
 
@@ -85,6 +88,7 @@ def run(args) -> None:
 
 
 def send_secrets(data: Dict[str, Any], port: int):
+    """Send the secrets to the configuration server."""
     LOG.info("Sending secrets to the application...")
 
     r = requests.post(
@@ -107,7 +111,9 @@ def wait_for_app_to_be_ready(port: int, healthcheck_endpoint: str):
     while True:
         try:
             response = requests.get(
-                f"https://localhost:{port}{healthcheck_endpoint}", verify=False
+                f"https://localhost:{port}{healthcheck_endpoint}",
+                verify=False,
+                timeout=5,
             )
 
             if response.status_code != 503 and "Mse-Status" not in response.headers:

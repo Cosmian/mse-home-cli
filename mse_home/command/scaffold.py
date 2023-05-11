@@ -28,7 +28,6 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-
     project_dir = Path(os.getcwd()) / args.app_name
 
     # Copy the template files

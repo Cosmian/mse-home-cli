@@ -12,7 +12,7 @@ def add_subparser(subparsers):
     parser.set_defaults(func=run)
 
 
-def run(args) -> None:
+def run(_args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
 
