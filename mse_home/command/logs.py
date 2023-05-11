@@ -1,4 +1,4 @@
-"""mse_home.command.stop module."""
+"""mse_home.command.logds module."""
 
 from docker.errors import NotFound
 

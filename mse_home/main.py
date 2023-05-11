@@ -7,12 +7,12 @@ filterwarnings("ignore")  # noqa: E402
 
 # pylint: disable=wrong-import-position
 from mse_home import __version__
-
 from mse_home.command import (
     decrypt,
     evidence,
     fingerprint,
     init,
+    list,
     logs,
     package,
     run,
@@ -22,7 +22,8 @@ from mse_home.command import (
     stop,
     verify,
 )
-from mse_home.log import LOGGER as LOG, setup_logging
+from mse_home.log import LOGGER as LOG
+from mse_home.log import setup_logging
 
 
 def main() -> int:
@@ -45,6 +46,7 @@ def main() -> int:
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)
     init.add_subparser(subparsers)
+    list.add_subparser(subparsers)
     logs.add_subparser(subparsers)
     run.add_subparser(subparsers)
     status.add_subparser(subparsers)

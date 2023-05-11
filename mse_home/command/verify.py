@@ -3,11 +3,11 @@
 
 from pathlib import Path
 
-from intel_sgx_ra.signer import mr_signer_from_pk
 from intel_sgx_ra.attest import remote_attestation
 from intel_sgx_ra.ratls import ratls_verification
-from mse_home.conf.evidence import ApplicationEvidence
+from intel_sgx_ra.signer import mr_signer_from_pk
 
+from mse_home.conf.evidence import ApplicationEvidence
 from mse_home.log import LOGGER as LOG
 
 

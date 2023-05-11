@@ -5,15 +5,13 @@ import tarfile
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Dict, Optional, Tuple
 
-from docker import from_env
-from docker.client import DockerClient
-from docker.errors import BuildError, DockerException
+from docker.errors import BuildError
 from mse_cli_utils.fs import tar, whilelist
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
-from mse_home.command.helpers import get_client_docker
 
+from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 
 

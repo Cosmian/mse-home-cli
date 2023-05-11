@@ -1,14 +1,15 @@
 """mse_home.command.fingerprint module."""
 
 
-import datetime
-from pathlib import Path
 import tempfile
 import uuid
+from pathlib import Path
+
+from mse_cli_utils.enclave import compute_mr_enclave
+
 from mse_home.command.helpers import extract_package, load_docker_image
 from mse_home.conf.args import ApplicationArguments
 from mse_home.log import LOGGER as LOG
-from mse_cli_utils.enclave import compute_mr_enclave
 
 
 def add_subparser(subparsers):

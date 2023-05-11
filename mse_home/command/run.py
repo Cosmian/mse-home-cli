@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import Any, Dict
 
 import requests
-from mse_home.conf.args import ApplicationArguments
+from docker.errors import NotFound
 
+from mse_home.command.helpers import get_client_docker
+from mse_home.conf.docker import DockerConfig
 from mse_home.log import LOGGER as LOG
 
 
@@ -22,13 +24,6 @@ def add_subparser(subparsers):
         "name",
         type=str,
         help="The name of the application",
-    )
-
-    parser.add_argument(
-        "--args",
-        type=str,
-        required=True,
-        help="The path to the enclave argument file generating when spawning the application (ex: args.toml)",
     )
 
     parser.add_argument(
@@ -57,10 +52,17 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    app_args = ApplicationArguments.load(args.args)
+    client = get_client_docker()
+
+    try:
+        container = client.containers.get(args.name)
+    except NotFound:
+        raise Exception(f"Can't find the mse docker for application '{args.name}'")
+
+    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
 
     data: Dict[str, Any] = {
-        "uuid": app_args.app_id,
+        "uuid": docker.uuid,
     }
 
     if args.secrets:
@@ -72,8 +74,8 @@ def run(args) -> None:
     if args.key:
         data["code_secret_key"] = args.key.read_text()
 
-    send_secrets(data, app_args.port)
-    wait_for_app_to_be_ready(app_args.port)
+    send_secrets(data, docker.port)
+    wait_for_app_to_be_ready(docker.port)
 
 
 def send_secrets(data: Dict[str, Any], port: int):

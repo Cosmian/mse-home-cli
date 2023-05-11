@@ -50,11 +50,10 @@ Keep the `workspace/sgx_operator/args.toml` to share it with the other participa
 __User__: the sgx operator
 
 ```console
-$ msehome evidence --host localhost \
-                   --port 7777 \
-                   --pccs https://pccs.example.com \
+$ msehome evidence --pccs https://pccs.example.com \
                    --signer-key /opt/cosmian-internal/cosmian-signer-key.pem \
-                   --output workspace/sgx_operator/
+                   --output workspace/sgx_operator/ \
+                   app_name
 ```
 
 The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with the orther participants.
@@ -93,8 +92,7 @@ TODO
 __User__: the sgx operator
 
 ```console
-$ msehome run --args workspace/sgx_operator/args.toml \
-              --key code.secret \
+$ msehome run --key code.secret \
               app_name
 ```
 
@@ -105,17 +103,23 @@ __User__: the sgx operator
 You can stop and remove the docker as follow:
 
 ```console
-$ msehome stop <test_mse_home>
+$ msehome stop <app_name>
 ```
 
 You can get the mse docker logs as follow:
 
 ```console
-$ msehome logs <test_mse_home>
+$ msehome logs <app_name>
 ```
 
 You can get the mse docker status as follow:
 
 ```console
-$ msehome status <test_mse_home>
+$ msehome status <app_name>
+```
+
+You can get the list of running mse dockers:
+
+```console
+$ msehome list
 ```

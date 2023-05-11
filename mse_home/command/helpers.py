@@ -1,9 +1,10 @@
 """mse_home.command.helpers module."""
 
 
-from pathlib import Path
 import tarfile
+from pathlib import Path
 from typing import Tuple
+
 from docker import from_env
 from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
@@ -17,7 +18,7 @@ def get_client_docker() -> DockerClient:
         return from_env()
     except DockerException as exc:
         LOG.warning("Docker seems not running. Please enable Docker daemon.")
-        LOG.info("MSE needs Docker to build your app docker.")
+        LOG.info("MSE needs Docker to manage your app docker.")
         LOG.info("Please refer to the documentation for more details.")
         raise exc
 

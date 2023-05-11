@@ -4,8 +4,8 @@
 import datetime
 import socket
 import time
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import requests
 
@@ -118,7 +118,6 @@ def run(args) -> None:
 
     app_args = ApplicationArguments(
         host=args.host,
-        port=args.port,
         expiration_date=int(cert_expiration_date.timestamp()),
         size=args.size,
         app_id=str(app_id),
@@ -198,6 +197,7 @@ def run_docker_image(
         ],
         ports={f"443/tcp": ("127.0.0.1", str(port))},
         entrypoint="mse-run",
+        labels=["mse-home"],
         remove=True,
         detach=True,
         stdout=True,

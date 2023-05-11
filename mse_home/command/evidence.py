@@ -1,16 +1,16 @@
 """mse_home.command.evidence module."""
 
-import os
 import socket
 import ssl
-import time
 from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import CertificateRevocationList, load_pem_x509_certificate
+from docker.errors import NotFound
 from intel_sgx_ra.pcs import get_pck_cert_crl, get_root_ca_crl
 from intel_sgx_ra.ratls import get_server_certificate
 
+from mse_home.command.helpers import get_client_docker
 from mse_home.conf.evidence import ApplicationEvidence
 from mse_home.log import LOGGER as LOG
 
@@ -20,20 +20,6 @@ def add_subparser(subparsers):
     parser = subparsers.add_parser(
         "evidence",
         help="Collect the evidences to verify on offline mode the application and the enclave",
-    )
-
-    parser.add_argument(
-        "--host",
-        type=str,
-        required=True,
-        help="The address of the deployed application",
-    )
-
-    parser.add_argument(
-        "--port",
-        type=int,
-        required=True,
-        help="The application port",
     )
 
     parser.add_argument(
@@ -57,20 +43,32 @@ def add_subparser(subparsers):
         help="The directory to write the evidence file",
     )
 
+    parser.add_argument(
+        "name",
+        type=str,
+        help="The name of the application",
+    )
+
     parser.set_defaults(func=run)
 
 
 def run(args) -> None:
     """Run the subcommand."""
+    client = get_client_docker()
+
+    try:
+        container = client.containers.get(args.name)
+    except NotFound:
+        raise Exception(f"Can't find the mse docker for application '{args.name}'")
 
     # Get the certificate from the application
     try:
         ratls_cert = load_pem_x509_certificate(
-            get_server_certificate((args.host, args.port)).encode("utf-8")
+            get_server_certificate(("localhost", container.ports)).encode("utf-8")
         )
     except (ssl.SSLZeroReturnError, socket.gaierror, ssl.SSLEOFError) as exc:
         raise ConnectionError(
-            f"Can't reach {args.host}. "
+            f"Can't reach localhost:{container.ports}. "
             "Are you sure the application is still running?"
         ) from exc
 
