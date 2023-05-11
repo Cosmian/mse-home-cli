@@ -44,7 +44,7 @@ def add_subparser(subparsers):
         "--key",
         type=Path,
         required=False,
-        help="The code decryption sealed key file path",  # TODO: add unimplemented
+        help="The code decryption sealed key file path",
     )
 
     parser.set_defaults(func=run)

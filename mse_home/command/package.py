@@ -68,15 +68,21 @@ def run(args) -> None:
 
     code_tar_path = workspace / CODE_TAR_NAME
     image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME
-    package_path = package_path / f"package_{code_config.name}_{time.time_ns()}.tar"
+    now = time.time_ns()
+    code_secret_path = package_path / f"package_{code_config.name}_{now}.key"
+    package_path = package_path / f"package_{code_config.name}_{now}.tar"
 
     LOG.info("A workspace has been created at: %s", str(workspace))
 
-    create_code_tar(code_path, code_tar_path, args.encrypt)
+    (secret_key, _) = create_code_tar(code_path, code_tar_path, args.encrypt)
+
+    if secret_key:
+        code_secret_path.write_text(bytes(secret_key).hex())
+        LOG.info("Your code secret key has been saved at: %s", code_secret_path)
+
     create_image_tar(args.dockerfile.resolve(), code_config.name, image_tar_path)
 
     create_package(code_tar_path, image_tar_path, args.config, package_path)
-    # TODO: save the key and nounce in the context file
 
     LOG.info("Your package is now ready to be shared: %s", package_path)
 
@@ -86,7 +92,7 @@ def run(args) -> None:
 
 def create_code_tar(
     code_path: Path, output_tar_path: Path, encrypt_code: bool
-) -> Optional[Tuple[bytes, Dict[str, bytes]]]:
+) -> Tuple[Optional[bytes], Optional[Dict[str, bytes]]]:
     """Create the tarball for the code directory."""
     if encrypt_code:
         LOG.info("Encrypting your code...")
@@ -117,11 +123,19 @@ def create_code_tar(
     else:
         LOG.info("Building the code archive...")
 
-        # Generate the tarball
-        tar(dir_path=code_path, tar_path=output_tar_path)
-        # TODO: ignore files as for the encrypt_directory...
+        mirror_path = output_tar_path.parent / "mirrored_code"
 
-        return None
+        # We copy the code directory to remove the files to ignore when taring
+        shutil.copytree(
+            code_path,
+            mirror_path,
+            ignore=shutil.ignore_patterns(*list(IgnoreFile.parse(code_path))),
+        )
+
+        # Generate the tarball
+        tar(dir_path=mirror_path, tar_path=output_tar_path)
+
+        return (None, None)
 
 
 def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):

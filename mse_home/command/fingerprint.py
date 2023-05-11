@@ -56,5 +56,3 @@ def run(args) -> None:
     )
 
     LOG.info("Fingerprint is: %s", mrenclave)
-
-    # TODO: add a spinner?
