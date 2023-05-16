@@ -12,7 +12,12 @@ from mse_cli_utils.fs import tar, whilelist
 from mse_cli_utils.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
-from mse_home import CODE_CONFIG_NAME, CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME
+from mse_home import (
+    CODE_CONFIG_NAME,
+    CODE_TAR_NAME,
+    DOCKER_IMAGE_TAR_NAME,
+    TEST_DIR_NAME,
+)
 from mse_home.command.helpers import get_client_docker
 from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
@@ -26,7 +31,7 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--code", type=Path, required=True, help="The path to the code to include"
+        "--code", type=Path, required=True, help="The path to the code to run"
     )
 
     parser.add_argument(
@@ -36,6 +41,10 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--dockerfile", type=Path, required=True, help="The path to the Dockerfile"
     )
+
+    parser.add_argument("--test", type=Path, required=True, help="The test directory")
+
+    # TODO: add the command to run the test in the configuration?
 
     parser.add_argument(
         "--encrypt",
@@ -66,6 +75,7 @@ def run(args) -> None:
 
     code_tar_path = workspace / CODE_TAR_NAME
     image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME
+
     now = time.time_ns()
     code_secret_path = package_path / f"package_{code_config.name}_{now}.key"
     package_path = package_path / f"package_{code_config.name}_{now}.tar"
@@ -80,7 +90,7 @@ def run(args) -> None:
 
     create_image_tar(args.dockerfile.resolve(), code_config.name, image_tar_path)
 
-    create_package(code_tar_path, image_tar_path, args.config, package_path)
+    create_package(code_tar_path, image_tar_path, args.test, args.config, package_path)
 
     LOG.info("Your package is now ready to be shared: %s", package_path)
 
@@ -167,7 +177,11 @@ def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
 
 
 def create_package(
-    code_tar: Path, image_tar: Path, config_path: Path, output_tar: Path
+    code_tar: Path,
+    image_tar: Path,
+    test_path: Path,
+    config_path: Path,
+    output_tar: Path,
 ):
     """Create the package containing the code and docker image tarballs."""
     LOG.info("Creating the final package...")
@@ -175,4 +189,5 @@ def create_package(
     with tarfile.open(output_tar, "w:") as tar_file:
         tar_file.add(code_tar, code_tar.name)
         tar_file.add(image_tar, image_tar.name)
+        tar_file.add(test_path, TEST_DIR_NAME)
         tar_file.add(config_path, CODE_CONFIG_NAME)

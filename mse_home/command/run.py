@@ -8,7 +8,7 @@ from typing import Any, Dict
 import requests
 from docker.errors import NotFound
 
-from mse_home.command.helpers import get_client_docker, is_waiting_for_secrets
+from mse_home.command.helpers import get_client_docker, is_ready, is_waiting_for_secrets
 from mse_home.conf.docker import DockerConfig
 from mse_home.log import LOGGER as LOG
 
@@ -108,20 +108,7 @@ def send_secrets(data: Dict[str, Any], port: int):
 def wait_for_app_to_be_ready(port: int, healthcheck_endpoint: str):
     """Hold on until the configuration server is stopped and the app starts."""
     LOG.info("Waiting for your application to be ready...")
-    while True:
-        try:
-            response = requests.get(
-                f"https://localhost:{port}{healthcheck_endpoint}",
-                verify=False,
-                timeout=5,
-            )
-
-            if response.status_code != 503 and "Mse-Status" not in response.headers:
-                break
-
-        except requests.exceptions.SSLError:
-            pass
-
+    while not is_ready("https://localhost", port, healthcheck_endpoint):
         time.sleep(10)
-
     LOG.info("Application ready!")
+    LOG.info("Feel free to test it using the `msehome test` command")

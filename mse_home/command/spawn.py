@@ -94,7 +94,7 @@ def run(args) -> None:
 
     workspace = args.output.resolve()
 
-    (code_tar_path, image_tar_path, code_config_path) = extract_package(
+    (code_tar_path, image_tar_path, test_dir_path, code_config_path) = extract_package(
         workspace, args.package
     )
 
@@ -219,7 +219,7 @@ def run_docker_image(
 
 def wait_for_docker_to_spawn(port: int):
     """Hold on until the configuration server is up and listing."""
-    LOG.info("Waiting for configuration server to be ready...")
+    LOG.info("Waiting for the configuration server to be ready...")
     while not is_waiting_for_secrets(port):
         time.sleep(10)
 

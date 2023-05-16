@@ -41,7 +41,7 @@ def run(args) -> None:
 
     app_args = ApplicationArguments.load(args.args)
 
-    (code_tar_path, image_tar_path, _) = extract_package(workspace, args.package)
+    (code_tar_path, image_tar_path, _, _) = extract_package(workspace, args.package)
     image = load_docker_image(image_tar_path)
 
     mrenclave = compute_mr_enclave(

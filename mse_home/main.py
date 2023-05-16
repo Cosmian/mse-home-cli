@@ -20,6 +20,8 @@ from mse_home.command import (
     spawn,
     status,
     stop,
+    test,
+    test_dev,
     verify,
 )
 from mse_home.log import LOGGER as LOG
@@ -53,6 +55,8 @@ def main() -> int:
     seal.add_subparser(subparsers)
     spawn.add_subparser(subparsers)
     stop.add_subparser(subparsers)
+    test.add_subparser(subparsers)
+    test_dev.add_subparser(subparsers)
     verify.add_subparser(subparsers)
 
     args = parser.parse_args()

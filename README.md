@@ -15,6 +15,17 @@ $ msehome -h
 
 You can find below the use flow step by step.
 
+### Test your app, your docker and your msehome configuration
+
+__User__: the code provider
+
+```console
+$ msehome test-dev --code examples/mse_src/ \
+                   --dockerfile examples/Dockerfile \
+                   --config examples/mse.home.toml \
+                   --tests examples/tests/
+```
+
 ### Create the mse package with the code and the docker image
 
 __User__: the code provider
@@ -22,7 +33,8 @@ __User__: the code provider
 ```console
 $ msehome package --code examples/mse_src/ \
                   --dockerfile examples/Dockerfile \
-                  --config examples/mse.home.toml
+                  --config examples/mse.home.toml \
+                  --tests examples/tests/ \
                   --output workspace/code_provider \
                   --encrypt
 ```
@@ -95,6 +107,16 @@ __User__: the sgx operator
 ```console
 $ msehome run --key code.secret \
               app_name
+```
+
+### Test the deployed application
+
+__User__: the sgx operator
+
+```console
+$ msehome test --tests workspace/sgx_operator/tests/ \
+               --config workspace/sgx_operator/mse.home.toml \
+               app_name
 ```
 
 ### Manage the mse docker

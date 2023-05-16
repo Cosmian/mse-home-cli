@@ -1,7 +1,7 @@
 """mse_home.conf.code module."""
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import toml
 from pydantic import BaseModel
@@ -13,6 +13,8 @@ class CodeConfig(BaseModel):
     name: str
     python_application: str
     healthcheck_endpoint: str
+    tests_cmd: str
+    tests_requirements: List[str]
 
     @staticmethod
     def load(path: Path):
@@ -29,6 +31,8 @@ class CodeConfig(BaseModel):
                 "name": self.name,
                 "python_application": self.python_application,
                 "healthcheck_endpoint": self.healthcheck_endpoint,
+                "tests_cmd": self.tests_cmd,
+                "tests_requirements": self.tests_requirements,
             }
 
             toml.dump(dataMap, f)

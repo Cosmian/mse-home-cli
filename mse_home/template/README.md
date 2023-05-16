@@ -1,20 +1,34 @@
 # Example application
 
-Basic example of an MSE application containing:
+A basic example of an MSE application containing:
 - A simple helloworld Flask application
 - An MSE app config file
 - Unit tests
 
-### Create the mse package with the code and the docker image
+You should edit the following files:
+- `mse_src/` with your own webservice code
+- `Dockerfile` to run your webservice code into a docker
+- `mse.home.toml` to specify some details for the person who will run your code through the `msehome` cli 
+- `tests` with the tests code which can be run against your webservice
 
-__User__: the code provider
+### Test your app, your docker and your msehome configuration
 
 ```console
-$ msehome package --code examples/mse_src/ \
-                  --dockerfile examples/Dockerfile \
-                  --config examples/mse.home.toml
-                  --output workspace/code_provider \
-                  --encrypt
+$ msehome test-dev --code mse_src/ \
+                   --dockerfile Dockerfile \
+                   --config mse.home.toml \
+                   --tests tests/
 ```
 
+### Create the mse package with the code and the docker image
+
+```console
+$ msehome package --code mse_src/ \
+                  --dockerfile Dockerfile \
+                  --config mse.home.toml
+                  --output code_provider \
+                  --encrypt
+```
 The generating package can now be sent to the sgx operator.
+
+
