@@ -202,7 +202,7 @@ def run_docker_image(
         ports={"443/tcp": ("127.0.0.1", str(port))},
         entrypoint="mse-run",
         labels={DOCKER_LABEL: "1", "healthcheck_endpoint": healthcheck},
-        remove=True,
+        remove=False,
         detach=True,
         stdout=True,
         stderr=True,

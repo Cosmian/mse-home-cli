@@ -16,15 +16,21 @@ def run(_args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
 
-    containers = client.containers.list(filters={"label": DOCKER_LABEL})
+    containers = client.containers.list(all=True, filters={"label": DOCKER_LABEL})
 
-    LOG.info("\n %s | %s [Image name] ", "Started at".center(29), "Application name")
-    LOG.info(("-" * 65))
+    LOG.info(
+        "\n %s | %s | %s [Image name] ",
+        "Started at".center(29),
+        "Status".center(10),
+        "Application name",
+    )
+    LOG.info(("-" * 85))
 
     for container in containers:
         LOG.info(
-            "%s | %s [%s]",
+            "%s | %s | %s [%s]",
             container.attrs["State"]["StartedAt"],
+            container.status.center(10),
             container.name,
             container.image.tags[0],
         )

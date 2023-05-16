@@ -14,6 +14,7 @@ from mse_home.command import (
     list_all,
     logs,
     package,
+    restart,
     run,
     scaffold,
     seal,
@@ -50,6 +51,7 @@ def main() -> int:
     scaffold.add_subparser(subparsers)
     list_all.add_subparser(subparsers)
     logs.add_subparser(subparsers)
+    restart.add_subparser(subparsers)
     run.add_subparser(subparsers)
     status.add_subparser(subparsers)
     seal.add_subparser(subparsers)

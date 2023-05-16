@@ -126,7 +126,13 @@ __User__: the sgx operator
 You can stop and remove the docker as follow:
 
 ```console
-$ msehome stop <app_name>
+$ msehome stop [--remove] <app_name>
+```
+
+You can restart a stopped and not removed docker as follow:
+
+```console
+$ msehome restart <app_name>
 ```
 
 You can get the mse docker logs as follow:
