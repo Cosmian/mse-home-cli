@@ -1,4 +1,4 @@
-"""mse_home.conf.code module."""
+"""mse_home.model.code module."""
 
 from pathlib import Path
 from typing import Any, Dict, List

@@ -1,4 +1,4 @@
-"""mse_home.conf.evidence module."""
+"""mse_home.model.evidence module."""
 
 import json
 from pathlib import Path

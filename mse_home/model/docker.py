@@ -1,4 +1,4 @@
-"""mse_home.conf.docker_cmd module."""
+"""mse_home.model.docker_cmd module."""
 
 from typing import Any, Dict, List
 

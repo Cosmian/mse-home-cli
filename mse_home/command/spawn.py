@@ -9,15 +9,15 @@ from uuid import UUID, uuid4
 
 from mse_home import DOCKER_LABEL
 from mse_home.command.helpers import (
-    extract_package,
     get_client_docker,
     is_spawned,
     is_waiting_for_secrets,
     load_docker_image,
 )
-from mse_home.conf.args import ApplicationArguments
-from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
+from mse_home.model.args import ApplicationArguments
+from mse_home.model.code import CodeConfig
+from mse_home.model.package import CodePackage
 
 
 def add_subparser(subparsers):
@@ -94,13 +94,10 @@ def run(args) -> None:
 
     workspace = args.output.resolve()
 
-    (code_tar_path, image_tar_path, test_dir_path, code_config_path) = extract_package(
-        workspace, args.package
-    )
-
-    code_config = CodeConfig.load(code_config_path)
-
-    image = load_docker_image(image_tar_path)
+    LOG.info("Extracting the package at %s...", workspace)
+    package = CodePackage.extract(workspace, args.package)
+    code_config = CodeConfig.load(package.config_path)
+    image = load_docker_image(package.image_tar)
 
     cert_expiration_date = datetime.today() + timedelta(days=args.days)
     app_id = uuid4()
@@ -115,7 +112,7 @@ def run(args) -> None:
         app_id,
         code_config.python_application,
         code_config.healthcheck_endpoint,
-        code_tar_path,
+        package.code_tar,
         args.signer_key,
     )
 

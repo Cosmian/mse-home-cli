@@ -7,8 +7,8 @@ from pathlib import Path
 import pkg_resources
 from jinja2 import Template
 
-from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
+from mse_home.model.code import CodeConfig
 
 
 def add_subparser(subparsers):

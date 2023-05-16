@@ -8,8 +8,8 @@ from pathlib import Path
 from docker.errors import NotFound
 
 from mse_home.command.helpers import get_client_docker, is_waiting_for_secrets
-from mse_home.conf.code import CodeConfig
-from mse_home.conf.docker import DockerConfig
+from mse_home.model.code import CodeConfig
+from mse_home.model.docker import DockerConfig
 
 
 def add_subparser(subparsers):

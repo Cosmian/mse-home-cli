@@ -1,7 +1,6 @@
 """mse_home.command.package module."""
 
 import shutil
-import tarfile
 import tempfile
 import time
 from pathlib import Path
@@ -12,15 +11,10 @@ from mse_cli_utils.fs import tar, whilelist
 from mse_cli_utils.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
-from mse_home import (
-    CODE_CONFIG_NAME,
-    CODE_TAR_NAME,
-    DOCKER_IMAGE_TAR_NAME,
-    TEST_DIR_NAME,
-)
 from mse_home.command.helpers import get_client_docker
-from mse_home.conf.code import CodeConfig
+from mse_home.model.code import CodeConfig
 from mse_home.log import LOGGER as LOG
+from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePackage
 
 
 def add_subparser(subparsers):
@@ -44,8 +38,6 @@ def add_subparser(subparsers):
 
     parser.add_argument("--test", type=Path, required=True, help="The test directory")
 
-    # TODO: add the command to run the test in the configuration?
-
     parser.add_argument(
         "--encrypt",
         action="store_true",
@@ -65,32 +57,46 @@ def run(args) -> None:
     if not code_path.is_dir():
         raise IOError(f"{code_path} does not exist")
 
-    workspace = Path(tempfile.mkdtemp())
-
     package_path: Path = args.output.resolve()
     if not package_path.is_dir():
         raise IOError(f"{package_path} does not exist")
 
+    test_path: Path = args.test.resolve()
+    if not test_path.is_dir():
+        raise IOError(f"{test_path} does not exist")
+
+    dockerfile_path: Path = args.dockerfile.resolve()
+    if not dockerfile_path.is_file():
+        raise IOError(f"{dockerfile_path} does not exist")
+
     code_config = CodeConfig.load(args.config)
 
-    code_tar_path = workspace / CODE_TAR_NAME
-    image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME
+    workspace = Path(tempfile.mkdtemp())
+
+    LOG.info("A workspace has been created at: %s", str(workspace))
+
+    package = CodePackage(
+        code_tar=workspace / CODE_TAR_NAME,
+        image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
+        test_path=test_path,
+        config_path=args.config,
+    )
 
     now = time.time_ns()
     code_secret_path = package_path / f"package_{code_config.name}_{now}.key"
     package_path = package_path / f"package_{code_config.name}_{now}.tar"
 
-    LOG.info("A workspace has been created at: %s", str(workspace))
-
-    (secret_key, _) = create_code_tar(code_path, code_tar_path, args.encrypt)
+    (secret_key, _) = create_code_tar(code_path, package.code_tar, args.encrypt)
 
     if secret_key:
         code_secret_path.write_text(bytes(secret_key).hex())
         LOG.info("Your code secret key has been saved at: %s", code_secret_path)
 
-    create_image_tar(args.dockerfile.resolve(), code_config.name, image_tar_path)
+    create_image_tar(args.dockerfile.resolve(), code_config.name, package.image_tar)
 
-    create_package(code_tar_path, image_tar_path, args.test, args.config, package_path)
+    LOG.info("Creating the final package...")
+
+    package.create(package_path)
 
     LOG.info("Your package is now ready to be shared: %s", package_path)
 
@@ -174,20 +180,3 @@ def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
     except BuildError as exc:
         LOG.error("Failed to build your docker: %s", exc)
         raise exc
-
-
-def create_package(
-    code_tar: Path,
-    image_tar: Path,
-    test_path: Path,
-    config_path: Path,
-    output_tar: Path,
-):
-    """Create the package containing the code and docker image tarballs."""
-    LOG.info("Creating the final package...")
-
-    with tarfile.open(output_tar, "w:") as tar_file:
-        tar_file.add(code_tar, code_tar.name)
-        tar_file.add(image_tar, image_tar.name)
-        tar_file.add(test_path, TEST_DIR_NAME)
-        tar_file.add(config_path, CODE_CONFIG_NAME)

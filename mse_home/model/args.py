@@ -1,4 +1,4 @@
-"""mse_home.conf.args module."""
+"""mse_home.model.args module."""
 
 from pathlib import Path
 from typing import Any, Dict

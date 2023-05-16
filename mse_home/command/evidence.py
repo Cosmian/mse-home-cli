@@ -11,8 +11,8 @@ from intel_sgx_ra.pcs import get_pck_cert_crl, get_root_ca_crl
 from intel_sgx_ra.ratls import get_server_certificate
 
 from mse_home.command.helpers import get_client_docker
-from mse_home.conf.evidence import ApplicationEvidence
 from mse_home.log import LOGGER as LOG
+from mse_home.model.evidence import ApplicationEvidence
 
 
 def add_subparser(subparsers):

@@ -8,8 +8,8 @@ from pathlib import Path
 from docker.errors import BuildError
 
 from mse_home.command.helpers import get_client_docker, is_ready
-from mse_home.conf.code import CodeConfig
 from mse_home.log import LOGGER as LOG
+from mse_home.model.code import CodeConfig
 
 
 def add_subparser(subparsers):
@@ -59,7 +59,7 @@ def run(args) -> None:
         LOG.info("Building your docker image...")
 
         # Build the docker
-        (image, _) = client.images.build(
+        client.images.build(
             path=str(args.dockerfile.parent),
             tag=docker_name,
         )
@@ -101,12 +101,10 @@ def run(args) -> None:
 
     try:
         LOG.info("Installing tests requirements...")
-
         for package in code_config.tests_requirements:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
         LOG.info("Running tests...")
-
         subprocess.check_call(
             code_config.tests_cmd,
             cwd=args.tests,

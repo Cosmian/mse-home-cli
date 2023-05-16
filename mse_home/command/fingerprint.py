@@ -7,9 +7,10 @@ from pathlib import Path
 
 from mse_cli_utils.enclave import compute_mr_enclave
 
-from mse_home.command.helpers import extract_package, load_docker_image
-from mse_home.conf.args import ApplicationArguments
+from mse_home.command.helpers import load_docker_image
 from mse_home.log import LOGGER as LOG
+from mse_home.model.args import ApplicationArguments
+from mse_home.model.package import CodePackage
 
 
 def add_subparser(subparsers):
@@ -41,8 +42,9 @@ def run(args) -> None:
 
     app_args = ApplicationArguments.load(args.args)
 
-    (code_tar_path, image_tar_path, _, _) = extract_package(workspace, args.package)
-    image = load_docker_image(image_tar_path)
+    LOG.info("Extracting the package at %s...", workspace)
+    package = CodePackage.extract(workspace, args.package)
+    image = load_docker_image(package.image_tar)
 
     mrenclave = compute_mr_enclave(
         image,
@@ -50,7 +52,7 @@ def run(args) -> None:
         app_args.host,
         uuid.UUID(app_args.app_id),
         app_args.application,
-        code_tar_path,
+        package.code_tar,
         app_args.expiration_date,
         None,
         log_path,
