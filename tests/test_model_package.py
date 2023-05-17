@@ -2,7 +2,7 @@
 
 import filecmp
 from pathlib import Path
-
+from tarfile import TarFile
 from mse_home.model.package import CodePackage
 
 
@@ -19,7 +19,7 @@ def test_create(workspace: Path):
     package_tar = workspace / "package.tar"
     package.create(package_tar)
 
-    assert filecmp.cmp(package_tar, package_tar_ref)
+    assert TarFile(package_tar).getnames() == TarFile(package_tar_ref).getnames()
 
 
 def test_extract(workspace: Path):

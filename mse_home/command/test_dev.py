@@ -7,9 +7,10 @@ from pathlib import Path
 
 from docker.errors import BuildError
 
-from mse_home.command.helpers import get_client_docker, is_ready
+from mse_home.command.helpers import get_client_docker, is_ready, is_spawned
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
+from mse_cli_utils.clock_tick import ClockTick
 
 
 def add_subparser(subparsers):
@@ -32,7 +33,7 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--tests",
+        "--test",
         type=Path,
         required=True,
         help="The path of the test directory extracted from the mse package",
@@ -50,8 +51,27 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
+    code_path = args.code.resolve()
+    if not code_path.is_dir():
+        raise IOError(f"{code_path} does not exist")
+
+    test_path: Path = args.test.resolve()
+    if not test_path.is_dir():
+        raise IOError(f"{test_path} does not exist")
+
+    dockerfile_path: Path = args.dockerfile.resolve()
+    if not dockerfile_path.is_file():
+        raise IOError(f"{dockerfile_path} does not exist")
+
+    if args.secrets:
+        secrets_path: Path = args.secrets.resolve()
+        if not secrets_path.is_file():
+            raise IOError(f"{secrets_path} does not exist")
+
     code_config = CodeConfig.load(args.config)
-    docker_name = f"{code_config.name}:{time.time_ns()}"
+    now = time.time_ns()
+    docker_name = f"{code_config.name}:{now}"
+    container_name = f"{code_config.name}_{now}"
 
     client = get_client_docker()
 
@@ -65,8 +85,7 @@ def run(args) -> None:
         )
 
     except BuildError as exc:
-        LOG.error("Failed to build your docker: %s", exc)
-        raise exc
+        raise Exception(f"Failed to build your docker: {exc}") from exc
 
     LOG.info("Starting the docker: %s...", docker_name)
 
@@ -77,7 +96,7 @@ def run(args) -> None:
     }
 
     if args.secrets:
-        volumes[f"{args.secrets.resolve()}"] = {
+        volumes[f"{secrets_path}"] = {
             "bind": "/root/.cache/mse/secrets.json",
             "mode": "rw",
         }
@@ -86,32 +105,51 @@ def run(args) -> None:
 
     container = client.containers.run(
         docker_name,
+        name=container_name,
         command=command,
         volumes=volumes,
         entrypoint="mse-test",
         ports={f"{port}/tcp": ("127.0.0.1", port)},
-        remove=True,
         detach=True,
-        stdout=True,
-        stderr=True,
+        remove=False,  # We do not remove the container to be able to print the error (if some)
     )
 
-    while not is_ready("http://localhost", port, code_config.healthcheck_endpoint):
-        time.sleep(5)
+    clock = ClockTick(
+        period=5,
+        timeout=10,
+        message="Test application docker is unreachable!",
+    )
 
     try:
+        while clock.tick():
+            # Note: container.status is not actualized. Get it again to have the current status
+            if client.containers.get(container_name).status == "exited":
+                raise Exception(
+                    f"Application docker fails to start with the following error:\n{container.logs().decode('utf-8')}"
+                )
+
+            if is_ready("http://localhost", port, code_config.healthcheck_endpoint):
+                break
+
         LOG.info("Installing tests requirements...")
         for package in code_config.tests_requirements:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", package],
+                stdout=subprocess.DEVNULL,
+            )
 
         LOG.info("Running tests...")
         subprocess.check_call(
             code_config.tests_cmd,
-            cwd=args.tests,
+            cwd=args.test,
         )
 
-        LOG.error("Tests succeed!")
+        LOG.info("Tests succeed!")
     except subprocess.CalledProcessError:
         LOG.error("Tests failed!")
+    except Exception as exc:
+        raise exc
     finally:
         container.stop(timeout=1)
+        # We need to remove the container since we declare remove=False previously
+        container.remove()

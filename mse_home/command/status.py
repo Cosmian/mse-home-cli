@@ -34,7 +34,9 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
+    docker = DockerConfig.load(
+        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
+    )
 
     expires_at = datetime.fromtimestamp(docker.self_signed)
     remaining_days = expires_at - datetime.now()

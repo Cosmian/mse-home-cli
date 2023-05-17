@@ -65,7 +65,11 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
+    docker = DockerConfig.load(
+        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
+    )
+
+    # TODO: verify the docker is running?
 
     # Get the certificate from the application
     try:

@@ -24,11 +24,11 @@ def run(_args) -> None:
         "Status".center(10),
         "Application name",
     )
-    LOG.info(("-" * 85))
+    LOG.info(("-" * 86))
 
     for container in containers:
         LOG.info(
-            "%s | %s | %s [%s]",
+            "%30s | %s | %s [%s]",
             container.attrs["State"]["StartedAt"],
             container.status.center(10),
             container.name,

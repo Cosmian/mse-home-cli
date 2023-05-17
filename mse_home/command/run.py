@@ -62,7 +62,9 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
+    docker = DockerConfig.load(
+        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
+    )
 
     if not is_waiting_for_secrets(docker.port):
         raise Exception(

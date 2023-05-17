@@ -86,7 +86,7 @@ def run(args) -> None:
     """Run the subcommand."""
     if is_spawned(args.name):
         raise Exception(
-            f"Docker container {args.name} is already running. Stop it before restart it!"
+            f"Docker container {args.name} is already running. Stop and remove it before respawn it!"
         )
 
     if not is_port_free(args.port):

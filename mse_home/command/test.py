@@ -23,7 +23,7 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--tests",
+        "--test",
         type=Path,
         required=True,
         help="The path of the test directory extracted from the mse package",
@@ -50,7 +50,9 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
+    docker = DockerConfig.load(
+        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
+    )
 
     if is_waiting_for_secrets(docker.port):
         raise Exception(
@@ -64,6 +66,6 @@ def run(args) -> None:
 
     subprocess.check_call(
         code_config.tests_cmd,
-        cwd=args.tests,
+        cwd=args.test,
         env=dict(os.environ, TEST_REMOTE_URL=f"https://localhost:{docker.port}"),
     )

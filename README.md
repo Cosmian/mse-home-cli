@@ -23,7 +23,7 @@ __User__: the code provider
 $ msehome test-dev --code examples/mse_src/ \
                    --dockerfile examples/Dockerfile \
                    --config examples/mse.home.toml \
-                   --tests examples/tests/
+                   --test examples/tests/
 ```
 
 ### Create the mse package with the code and the docker image
@@ -34,7 +34,7 @@ __User__: the code provider
 $ msehome package --code examples/mse_src/ \
                   --dockerfile examples/Dockerfile \
                   --config examples/mse.home.toml \
-                  --tests examples/tests/ \
+                  --test examples/tests/ \
                   --output workspace/code_provider \
                   --encrypt
 ```
@@ -114,7 +114,7 @@ $ msehome run --key code.secret \
 __User__: the sgx operator
 
 ```console
-$ msehome test --tests workspace/sgx_operator/tests/ \
+$ msehome test --test workspace/sgx_operator/tests/ \
                --config workspace/sgx_operator/mse.home.toml \
                app_name
 ```

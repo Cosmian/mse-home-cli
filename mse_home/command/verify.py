@@ -73,4 +73,4 @@ def run(args) -> None:
             f"but should be {args.fingerprint})"
         )
 
-    LOG.error("Verification succeed!")
+    LOG.info("Verification succeed!")
