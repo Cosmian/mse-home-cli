@@ -12,6 +12,7 @@ from intel_sgx_ra.ratls import get_server_certificate
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
+from mse_home.model.docker import DockerConfig
 from mse_home.model.evidence import ApplicationEvidence
 
 
@@ -64,14 +65,16 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
+    docker = DockerConfig.load(container.attrs["Config"]["Cmd"], container.ports)
+
     # Get the certificate from the application
     try:
         ratls_cert = load_pem_x509_certificate(
-            get_server_certificate(("localhost", container.ports)).encode("utf-8")
+            get_server_certificate(("localhost", docker.port)).encode("utf-8")
         )
     except (ssl.SSLZeroReturnError, socket.gaierror, ssl.SSLEOFError) as exc:
         raise ConnectionError(
-            f"Can't reach localhost:{container.ports}. "
+            f"Can't reach localhost:{container.port}. "
             "Are you sure the application is still running?"
         ) from exc
 
