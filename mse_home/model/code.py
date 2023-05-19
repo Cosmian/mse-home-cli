@@ -13,6 +13,7 @@ class CodeConfig(BaseModel):
     name: str
     python_application: str
     healthcheck_endpoint: str
+    encrypt: bool
     tests_cmd: str
     tests_requirements: List[str]
 
@@ -33,6 +34,7 @@ class CodeConfig(BaseModel):
                 "healthcheck_endpoint": self.healthcheck_endpoint,
                 "tests_cmd": self.tests_cmd,
                 "tests_requirements": self.tests_requirements,
+                "encrypt": self.plaincode,
             }
 
             toml.dump(dataMap, f)

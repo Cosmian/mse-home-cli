@@ -11,6 +11,7 @@ from docker.errors import NotFound
 from mse_home.command.helpers import get_client_docker, is_ready, is_waiting_for_secrets
 from mse_home.log import LOGGER as LOG
 from mse_home.model.docker import DockerConfig
+from mse_cli_utils.base64 import base64url_encode
 
 
 def add_subparser(subparsers):
@@ -79,7 +80,7 @@ def run(args) -> None:
         data["app_secrets"] = json.loads(args.secrets.read_text())
 
     if args.sealed_secrets:
-        data["app_sealed_secrets"] = json.loads(args.sealed_secrets.read_text())
+        data["app_sealed_secrets"] = base64url_encode(args.sealed_secrets.read_bytes())
 
     if args.key:
         data["code_secret_key"] = args.key.read_text()
@@ -102,7 +103,9 @@ def send_secrets(data: Dict[str, Any], port: int):
     )
 
     if not r.ok:
-        raise Exception(r.text)
+        raise Exception(
+            f"Fail to send secrets data (Response {r.status_code} {r.text})"
+        )
 
     LOG.info("Secrets sent!")
 

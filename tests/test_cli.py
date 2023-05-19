@@ -120,11 +120,11 @@ def test_spawn(workspace: Path, cmd_log: io.StringIO):
                 "package": pytest.package_path,
                 "host": "localhost",
                 "days": 2,
-                "port": 5555,  # How to stop if an error occurs?
+                "port": 5555,  # How to stop if an error occurs? 5555 will be already in use.
                 "size": 4096,
                 "signer_key": Path(
                     "/opt/cosmian-internal/cosmian-signer-key.pem"
-                ),  # TODO
+                ),  # TODO: use env variable
                 "output": workspace,
             }
         )
@@ -187,7 +187,7 @@ def test_status_conf_server(cmd_log: io.StringIO):
     assert "Common name = localhost" in output
     assert "Port = 5555" in output
     assert "Healthcheck = /health" in output
-    assert "Status = waiting secret keys" in output  # TODO: test when waiting secrets
+    assert "Status = waiting secret keys" in output
 
 
 @pytest.mark.slow
@@ -198,10 +198,10 @@ def test_evidence(workspace: Path, cmd_log: io.StringIO):
         Namespace(
             **{
                 "name": APP_NAME,
-                "pccs": "https://pccs.staging.mse.cosmian.com",  # TODO
+                "pccs": "https://pccs.staging.mse.cosmian.com",  # TODO: put a env variable
                 "signer_key": Path(
                     "/opt/cosmian-internal/cosmian-signer-key.pem"
-                ),  # TODO
+                ),  # TODO: put a env variable
                 "output": workspace,
             }
         )
@@ -318,7 +318,7 @@ def test_status(cmd_log: io.StringIO):
     assert "Common name = localhost" in output
     assert "Port = 5555" in output
     assert "Healthcheck = /health" in output
-    assert "Status = running" in output  # TODO: test when waiting secrets
+    assert "Status = running" in output
 
 
 @pytest.mark.slow
@@ -418,6 +418,3 @@ def test_remove(cmd_log: io.StringIO):
     output = capture_logs(cmd_log)
 
     assert f"{APP_NAME}" not in output
-
-
-# TODO: verify error cases

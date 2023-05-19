@@ -46,7 +46,10 @@ def run(args) -> None:
     evidence = ApplicationEvidence.load(args.evidence)
 
     quote = ratls_verification(evidence.ratls_certificate)
+
     enclave_pk = quote.report_body.report_data[32:64]
+
+    print(bytes(enclave_pk).hex())
 
     sealed_secrets = seal(args.secrets.read_bytes(), enclave_pk)
 

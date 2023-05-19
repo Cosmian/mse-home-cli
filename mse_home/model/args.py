@@ -15,6 +15,7 @@ class ApplicationArguments(BaseModel):
     size: int
     app_id: str
     application: str
+    plaincode: bool
 
     @staticmethod
     def load(path: Path):
@@ -33,6 +34,7 @@ class ApplicationArguments(BaseModel):
                 "size": self.size,
                 "app_id": self.app_id,
                 "application": self.application,
+                "plaincode": self.plaincode,
             }
 
             toml.dump(dataMap, f)

@@ -53,6 +53,7 @@ def run(args) -> None:
         uuid.UUID(app_args.app_id),
         app_args.application,
         package.code_tar,
+        not app_args.plaincode,  # TODO: harmonize here
         app_args.expiration_date,
         None,
         log_path,

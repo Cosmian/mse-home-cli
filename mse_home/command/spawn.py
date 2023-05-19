@@ -113,6 +113,7 @@ def run(args) -> None:
         code_config.python_application,
         code_config.healthcheck_endpoint,
         package.code_tar,
+        code_config.encrypt,
         args.signer_key,
     )
 
@@ -124,6 +125,7 @@ def run(args) -> None:
         size=args.size,
         app_id=str(app_id),
         application=code_config.python_application,
+        plaincode=not code_config.encrypt,
     )
 
     args_path = workspace / "args.toml"
@@ -154,28 +156,33 @@ def run_docker_image(
     application: str,
     healthcheck: str,
     code_tar_path: Path,
+    encrypted_code: bool,
     signer_key: Path,
 ):
     """Run the mse docker."""
     client = get_client_docker()
 
     # Run l'image
+
+    # TODO: use the serialize from dockerConfig
+
     command = [
         "--size",
         f"{size}M",
         "--code",
         "/tmp/app.tar",
         "--host",
-        host,
-        "--uuid",
+        host,  # TODO: to change
+        "--id",
         str(app_id),
         "--application",
         application,
-        "--timeout",
-        str(int(expiration_date.timestamp())),
-        "--self-signed",
+        "--ratls",
         str(int(expiration_date.timestamp())),
     ]
+
+    if not encrypted_code:
+        command.append("--plaincode")
 
     volumes = {
         f"{code_tar_path}": {"bind": "/tmp/app.tar", "mode": "rw"},

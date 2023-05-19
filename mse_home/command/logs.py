@@ -23,6 +23,8 @@ def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
 
+    # TODO: add a -f (follow)
+
     try:
         container = client.containers.get(args.name)
         LOG.info(container.logs().decode("utf-8"))
