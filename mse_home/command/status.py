@@ -34,21 +34,19 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(
-        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
-    )
+    docker = DockerConfig.load(container)
 
-    expires_at = datetime.fromtimestamp(docker.self_signed)
+    expires_at = datetime.fromtimestamp(docker.expiration_date)
     remaining_days = expires_at - datetime.now()
 
     LOG.info("    App name = %s", args.name)
     LOG.info("Enclave size = %dM", docker.size)
     LOG.info(" Common name = %s", docker.host)
     LOG.info("        Port = %d", docker.port)
-    LOG.info(" Healthcheck = %s", container.labels["healthcheck_endpoint"])
+    LOG.info(" Healthcheck = %s", docker.healthcheck)
     LOG.info(
         "      Status = %s",
-        app_state(docker.port, container.labels["healthcheck_endpoint"])
+        app_state(docker.port, docker.healthcheck)
         if container.status == "running"
         else container.status,
     )

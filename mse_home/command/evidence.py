@@ -32,13 +32,6 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--signer-key",
-        type=Path,
-        required=True,
-        help="The enclave signer key",
-    )
-
-    parser.add_argument(
         "--output",
         type=Path,
         required=True,
@@ -65,9 +58,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(
-        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
-    )
+    docker = DockerConfig.load(container)
 
     # TODO: verify the docker is running?
 
@@ -78,7 +69,7 @@ def run(args) -> None:
         )
     except (ssl.SSLZeroReturnError, socket.gaierror, ssl.SSLEOFError) as exc:
         raise ConnectionError(
-            f"Can't reach localhost:{container.port}. "
+            f"Can't reach localhost:{docker.port}. "
             "Are you sure the application is still running?"
         ) from exc
 
@@ -91,7 +82,7 @@ def run(args) -> None:
     )
 
     signer_key = load_pem_private_key(
-        args.signer_key.read_bytes(),
+        docker.signer_key.read_bytes(),
         password=None,
     )
 

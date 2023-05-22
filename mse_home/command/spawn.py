@@ -5,9 +5,8 @@ import socket
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from mse_home import DOCKER_LABEL
 from mse_home.command.helpers import (
     get_client_docker,
     is_spawned,
@@ -17,6 +16,7 @@ from mse_home.command.helpers import (
 from mse_home.log import LOGGER as LOG
 from mse_home.model.args import ApplicationArguments
 from mse_home.model.code import CodeConfig
+from mse_home.model.docker import DockerConfig
 from mse_home.model.package import CodePackage
 
 
@@ -99,35 +99,28 @@ def run(args) -> None:
     code_config = CodeConfig.load(package.config_path)
     image = load_docker_image(package.image_tar)
 
-    cert_expiration_date = datetime.today() + timedelta(days=args.days)
-    app_id = uuid4()
+    docker_config = DockerConfig(
+        size=args.size,
+        host=args.host,
+        port=args.port,
+        app_id=uuid4(),
+        expiration_date=int((datetime.today() + timedelta(days=args.days)).timestamp()),
+        code=package.code_tar,
+        application=code_config.python_application,
+        plaincode=not code_config.encrypt,
+        healthcheck=code_config.healthcheck_endpoint,
+        signer_key=args.signer_key,
+    )
 
     run_docker_image(
         args.name,
         image,
-        cert_expiration_date,
-        args.host,
-        args.port,
-        args.size,
-        app_id,
-        code_config.python_application,
-        code_config.healthcheck_endpoint,
-        package.code_tar,
-        code_config.encrypt,
-        args.signer_key,
+        docker_config,
     )
 
     wait_for_docker_to_spawn(args.port)
 
-    app_args = ApplicationArguments(
-        host=args.host,
-        expiration_date=int(cert_expiration_date.timestamp()),
-        size=args.size,
-        app_id=str(app_id),
-        application=code_config.python_application,
-        plaincode=not code_config.encrypt,
-    )
-
+    app_args = ApplicationArguments.from_docker_config(docker_config)
     args_path = workspace / "args.toml"
     LOG.info("You can share '%s' with the other participants.", args_path)
     app_args.save(args_path)
@@ -148,67 +141,22 @@ def is_port_free(port: int):
 def run_docker_image(
     app_name: str,
     image: str,
-    expiration_date: datetime,
-    host: str,
-    port: int,
-    size: int,
-    app_id: UUID,
-    application: str,
-    healthcheck: str,
-    code_tar_path: Path,
-    encrypted_code: bool,
-    signer_key: Path,
+    docker_config: DockerConfig,
 ):
     """Run the mse docker."""
     client = get_client_docker()
-
-    # Run l'image
-
-    # TODO: use the serialize from dockerConfig
-
-    command = [
-        "--size",
-        f"{size}M",
-        "--code",
-        "/tmp/app.tar",
-        "--host",
-        host,  # TODO: to change
-        "--id",
-        str(app_id),
-        "--application",
-        application,
-        "--ratls",
-        str(int(expiration_date.timestamp())),
-    ]
-
-    if not encrypted_code:
-        command.append("--plaincode")
-
-    volumes = {
-        f"{code_tar_path}": {"bind": "/tmp/app.tar", "mode": "rw"},
-        "/var/run/aesmd": {"bind": "/var/run/aesmd", "mode": "rw"},
-        f"{signer_key}": {
-            "bind": "/root/.config/gramine/enclave-key.pem",
-            "mode": "rw",
-        },
-    }
 
     LOG.info("Starting the docker...")
 
     container = client.containers.run(
         image,
         name=app_name,
-        command=command,
-        volumes=volumes,
-        devices=[
-            "/dev/sgx_enclave:/dev/sgx_enclave:rw",
-            "/dev/sgx_provision:/dev/sgx_enclave:rw",
-            "/dev/sgx/enclave:/dev/sgx_enclave:rw",
-            "/dev/sgx/provision:/dev/sgx_enclave:rw",
-        ],
-        ports={"443/tcp": ("127.0.0.1", str(port))},
-        entrypoint="mse-run",
-        labels={DOCKER_LABEL: "1", "healthcheck_endpoint": healthcheck},
+        command=docker_config.cmd(),
+        volumes=docker_config.volumes(),
+        devices=DockerConfig.devices(),
+        ports=docker_config.ports(),
+        entrypoint=DockerConfig.entrypoint,
+        labels=docker_config.labels(),
         remove=False,
         detach=True,
         stdout=True,

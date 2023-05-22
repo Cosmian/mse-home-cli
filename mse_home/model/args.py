@@ -6,6 +6,8 @@ from typing import Any, Dict
 import toml
 from pydantic import BaseModel
 
+from mse_home.model.docker import DockerConfig
+
 
 class ApplicationArguments(BaseModel):
     """Definition of an enclave args used to verify the app."""
@@ -24,6 +26,17 @@ class ApplicationArguments(BaseModel):
             dataMap = toml.load(f)
 
             return ApplicationArguments(**dataMap)
+
+    @staticmethod
+    def from_docker_config(docker_config: DockerConfig):
+        return ApplicationArguments(
+            host=docker_config.host,
+            expiration_date=docker_config.expiration_date,
+            size=docker_config.size,
+            app_id=str(docker_config.app_id),
+            application=docker_config.application,
+            plaincode=docker_config.plaincode,
+        )
 
     def save(self, path: Path) -> None:
         """Save the args into a toml file."""

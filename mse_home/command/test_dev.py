@@ -29,7 +29,7 @@ def add_subparser(subparsers):
         "--secrets",
         type=Path,
         required=False,
-        help="The secrets.json file path",
+        help="The secrets.json file path",  # TODO: both sealed and not sealed
     )
 
     parser.add_argument(
@@ -88,6 +88,8 @@ def run(args) -> None:
         raise Exception(f"Failed to build your docker: {exc}") from exc
 
     LOG.info("Starting the docker: %s...", docker_name)
+
+    # TODO: create a code config for mse-test and rename dockerconfig into mserunconfig
 
     command = ["--application", code_config.python_application, "--debug"]
 

@@ -36,6 +36,8 @@ def add_subparser(subparsers):
         help="The conf path extracted from the mse package",
     )
 
+    # TODO: --secerts both sealed and not sealed
+
     parser.set_defaults(func=run)
 
 
@@ -50,9 +52,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(
-        container.attrs["Config"]["Cmd"], container.attrs["HostConfig"]["PortBindings"]
-    )
+    docker = DockerConfig.load(container)
 
     if is_waiting_for_secrets(docker.port):
         raise Exception(

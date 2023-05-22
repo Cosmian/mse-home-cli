@@ -1,8 +1,8 @@
 """mse_home.command.list module."""
 
-from mse_home import DOCKER_LABEL
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
+from mse_home.model.docker import DockerConfig
 
 
 def add_subparser(subparsers):
@@ -16,7 +16,9 @@ def run(_args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
 
-    containers = client.containers.list(all=True, filters={"label": DOCKER_LABEL})
+    containers = client.containers.list(
+        all=True, filters={"label": DockerConfig.docker_label}
+    )
 
     LOG.info(
         "\n %s | %s | %s [Image name] ",
