@@ -10,7 +10,7 @@ from docker.errors import NotFound
 
 from mse_home.command.helpers import get_client_docker, is_ready, is_waiting_for_secrets
 from mse_home.log import LOGGER as LOG
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 from mse_cli_utils.base64 import base64url_encode
 
 
@@ -63,7 +63,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container)
+    docker = SgxDockerConfig.load(container)
 
     if not is_waiting_for_secrets(docker.port):
         raise Exception(

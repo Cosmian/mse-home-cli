@@ -7,7 +7,7 @@ from docker.errors import NotFound
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):
@@ -34,7 +34,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container)
+    docker = SgxDockerConfig.load(container)
 
     expires_at = datetime.fromtimestamp(docker.expiration_date)
     remaining_days = expires_at - datetime.now()

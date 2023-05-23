@@ -9,7 +9,7 @@ from docker.errors import NotFound
 
 from mse_home.command.helpers import get_client_docker, is_waiting_for_secrets
 from mse_home.model.code import CodeConfig
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):
@@ -50,7 +50,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container)
+    docker = SgxDockerConfig.load(container)
 
     if is_waiting_for_secrets(docker.port):
         raise Exception(

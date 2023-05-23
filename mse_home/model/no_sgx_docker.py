@@ -1,4 +1,4 @@
-"""mse_home.model.args module."""
+"""mse_home.model.no_sgx_docker module."""
 
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional
@@ -7,12 +7,11 @@ from uuid import UUID
 import toml
 from pydantic import BaseModel
 
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
-# TODO: can we use ApplicationArguments in DockerConfig to merge a bit the two classes
-class ApplicationArguments(BaseModel):
-    """Definition of an enclave args used to verify the app."""
+class NoSgxDockerConfig(BaseModel):
+    """Definition of an mse docker running on a non-sgx hardware."""
 
     host: str
     expiration_date: Optional[int]
@@ -31,7 +30,7 @@ class ApplicationArguments(BaseModel):
             "--size",
             f"{self.size}M",
             "--code",
-            ApplicationArguments.code_mountpoint,
+            NoSgxDockerConfig.code_mountpoint,
             "--san",
             str(self.host),
             "--id",
@@ -43,7 +42,7 @@ class ApplicationArguments(BaseModel):
 
         if self.app_cert:
             command.append("--certificate")
-            command.append(ApplicationArguments.app_cert_mountpoint)
+            command.append(NoSgxDockerConfig.app_cert_mountpoint)
         else:
             command.append("--ratls")
             command.append(str(self.expiration_date))
@@ -51,16 +50,17 @@ class ApplicationArguments(BaseModel):
         return command
 
     def volumes(self, code_tar_path) -> Dict[str, Dict[str, str]]:
+        """Define the docker volumes."""
         v = {
             f"{code_tar_path}": {
-                "bind": ApplicationArguments.code_mountpoint,
+                "bind": NoSgxDockerConfig.code_mountpoint,
                 "mode": "rw",
             }
         }
 
         if self.app_cert:
             v[f"{self.app_cert}"] = {
-                "bind": ApplicationArguments.app_cert_mountpoint,
+                "bind": NoSgxDockerConfig.app_cert_mountpoint,
                 "mode": "rw",
             }
 
@@ -72,12 +72,12 @@ class ApplicationArguments(BaseModel):
         with open(path, encoding="utf8") as f:
             dataMap = toml.load(f)
 
-            return ApplicationArguments(**dataMap)
+            return NoSgxDockerConfig(**dataMap)
 
     @staticmethod
-    def from_docker_config(docker_config: DockerConfig):
-        """Load from a DockerConfig object."""
-        return ApplicationArguments(
+    def from_sgx(docker_config: SgxDockerConfig):
+        """Load from a SgxDockerConfig object."""
+        return NoSgxDockerConfig(
             host=docker_config.host,
             expiration_date=docker_config.expiration_date,
             size=docker_config.size,

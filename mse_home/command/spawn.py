@@ -14,9 +14,9 @@ from mse_home.command.helpers import (
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
-from mse_home.model.args import ApplicationArguments
+from mse_home.model.no_sgx_docker import ApplicationArguments
 from mse_home.model.code import CodeConfig
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 from mse_home.model.package import CodePackage
 
 
@@ -99,7 +99,7 @@ def run(args) -> None:
     code_config = CodeConfig.load(package.config_path)
     image = load_docker_image(package.image_tar)
 
-    docker_config = DockerConfig(
+    docker_config = SgxDockerConfig(
         size=args.size,
         host=args.host,
         port=args.port,
@@ -140,7 +140,7 @@ def is_port_free(port: int):
 def run_docker_image(
     app_name: str,
     image: str,
-    docker_config: DockerConfig,
+    docker_config: SgxDockerConfig,
 ):
     """Run the mse docker."""
     client = get_client_docker()
@@ -152,9 +152,9 @@ def run_docker_image(
         name=app_name,
         command=docker_config.cmd(),
         volumes=docker_config.volumes(),
-        devices=DockerConfig.devices(),
+        devices=SgxDockerConfig.devices(),
         ports=docker_config.ports(),
-        entrypoint=DockerConfig.entrypoint,
+        entrypoint=SgxDockerConfig.entrypoint,
         labels=docker_config.labels(),
         remove=False,
         detach=True,

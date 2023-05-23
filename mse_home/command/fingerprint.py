@@ -8,7 +8,7 @@ from pathlib import Path
 
 from mse_home.command.helpers import get_client_docker, load_docker_image
 from mse_home.log import LOGGER as LOG
-from mse_home.model.args import ApplicationArguments
+from mse_home.model.no_sgx_docker import NoSgxDockerConfig
 from mse_home.model.package import CodePackage
 
 
@@ -39,7 +39,7 @@ def run(args) -> None:
     workspace = Path(tempfile.mkdtemp())
     log_path = workspace / "docker.log"
 
-    app_args = ApplicationArguments.load(args.args)
+    app_args = NoSgxDockerConfig.load(args.args)
 
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
@@ -58,7 +58,7 @@ def run(args) -> None:
 # TODO: merge with mse-cli
 def compute_mr_enclave(
     image: str,
-    app_args: ApplicationArguments,
+    app_args: NoSgxDockerConfig,
     code_tar_path: Path,
     docker_path_log: Path,
 ) -> str:
@@ -69,7 +69,7 @@ def compute_mr_enclave(
         image,
         command=app_args.cmd(),
         volumes=app_args.volumes(code_tar_path),
-        entrypoint=ApplicationArguments.entrypoint,
+        entrypoint=NoSgxDockerConfig.entrypoint,
         remove=True,
         detach=False,
         stdout=True,

@@ -12,7 +12,7 @@ from intel_sgx_ra.ratls import get_server_certificate
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 from mse_home.model.evidence import ApplicationEvidence
 
 
@@ -58,7 +58,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = DockerConfig.load(container)
+    docker = SgxDockerConfig.load(container)
 
     # TODO: verify the docker is running?
 

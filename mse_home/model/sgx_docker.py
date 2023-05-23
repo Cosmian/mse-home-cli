@@ -1,4 +1,4 @@
-"""mse_home.model.docker_cmd module."""
+"""mse_home.model.sgx_docker module."""
 
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List
@@ -8,8 +8,8 @@ from docker.models.containers import Container
 from pydantic import BaseModel
 
 
-class DockerConfig(BaseModel):
-    """Definition of a running docker configuration."""
+class SgxDockerConfig(BaseModel):
+    """Definition of an mse docker running on a SGX hardware."""
 
     size: int
     host: str
@@ -32,7 +32,7 @@ class DockerConfig(BaseModel):
             "--size",
             f"{self.size}M",
             "--code",
-            DockerConfig.code_mountpoint,
+            SgxDockerConfig.code_mountpoint,
             "--san",
             str(self.host),
             "--id",
@@ -44,26 +44,33 @@ class DockerConfig(BaseModel):
         ]
 
     def ports(self) -> Dict[str, List[Dict[str, str]]]:
+        """Define the docker ports."""
         return {"443/tcp": ("127.0.0.1", str(self.port))}
 
     def labels(self) -> Dict[str, str]:
+        """Define the docker labels."""
         return {
-            DockerConfig.docker_label: "1",
+            SgxDockerConfig.docker_label: "1",
             "healthcheck_endpoint": self.healthcheck,
         }
 
     def volumes(self) -> Dict[str, Dict[str, str]]:
+        """Define the docker volumes."""
         return {
-            f"{self.code}": {"bind": DockerConfig.code_mountpoint, "mode": "rw"},
+            f"{self.code.resolve()}": {
+                "bind": SgxDockerConfig.code_mountpoint,
+                "mode": "rw",
+            },
             "/var/run/aesmd": {"bind": "/var/run/aesmd", "mode": "rw"},
-            f"{self.signer_key}": {
-                "bind": DockerConfig.signer_key_mountpoint,
+            f"{self.signer_key.resolve()}": {
+                "bind": SgxDockerConfig.signer_key_mountpoint,
                 "mode": "rw",
             },
         }
 
     @staticmethod
     def devices() -> List[str]:
+        """Define the docker devices."""
         return [
             "/dev/sgx_enclave:/dev/sgx_enclave:rw",
             "/dev/sgx_provision:/dev/sgx_enclave:rw",
@@ -73,7 +80,7 @@ class DockerConfig(BaseModel):
 
     @staticmethod
     def load(container: Container):
-        """Load the the docker configuration from the command."""
+        """Load the the docker configuration from the container."""
         dataMap: Dict[str, Any] = {}
 
         cmd = container.attrs["Config"]["Cmd"]
@@ -81,7 +88,7 @@ class DockerConfig(BaseModel):
         signer_key = next(
             filter(
                 lambda mount: mount["Destination"]
-                == DockerConfig.signer_key_mountpoint,
+                == SgxDockerConfig.signer_key_mountpoint,
                 container.attrs["Mounts"],
             )
         )
@@ -102,7 +109,7 @@ class DockerConfig(BaseModel):
             dataMap[key] = cmd[i + 1]
             i += 2
 
-        return DockerConfig(
+        return SgxDockerConfig(
             size=int(dataMap["size"][:-1]),
             host=dataMap["san"],
             app_id=UUID(dataMap["id"]),

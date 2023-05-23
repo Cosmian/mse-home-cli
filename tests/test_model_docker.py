@@ -1,11 +1,11 @@
 """Test model/docker.py."""
 
-from mse_home.model.docker import DockerConfig
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def test_load():
     """Test `load` function."""
-    ref_conf = DockerConfig(
+    ref_conf = SgxDockerConfig(
         size=4096,
         host="localhost",
         app_id="test_id",
@@ -16,7 +16,7 @@ def test_load():
         port=1234,
     )
 
-    conf = DockerConfig.load(
+    conf = SgxDockerConfig.load(
         cmd=[
             "--size",
             "4096M",
@@ -41,7 +41,7 @@ def test_load():
 
 def test_serialize():
     """Test `serialize` function."""
-    docker = DockerConfig(
+    docker = SgxDockerConfig(
         size=4096,
         host="localhost",
         app_id="test_id",

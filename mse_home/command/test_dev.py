@@ -7,11 +7,12 @@ import time
 from pathlib import Path
 
 from docker.errors import BuildError
+from mse_cli_utils.clock_tick import ClockTick
 
 from mse_home.command.helpers import get_client_docker, is_ready, is_spawned
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
-from mse_cli_utils.clock_tick import ClockTick
+from mse_home.model.test_docker import TestDockerConfig
 
 
 def add_subparser(subparsers):
@@ -96,44 +97,26 @@ def run(args) -> None:
             path=str(args.dockerfile.parent),
             tag=docker_name,
         )
-
     except BuildError as exc:
         raise Exception(f"Failed to build your docker: {exc}") from exc
 
     LOG.info("Starting the docker: %s...", docker_name)
 
-    # TODO: create a code config for mse-test and rename dockerconfig into mserunconfig
-
-    command = ["--application", code_config.python_application, "--debug"]
-
-    volumes = {
-        f"{args.code.resolve()}": {"bind": "/mse-app", "mode": "rw"},
-    }
-
-    env = dict(os.environ)
-    if args.secrets:
-        volumes[f"{secrets_path}"] = {
-            "bind": "/root/.cache/mse/secrets.json",
-            "mode": "rw",
-        }
-        env["TEST_SECRET_JSON"] = str(secrets_path)
-
-    if args.sealed_secrets:
-        volumes[f"{sealed_secrets_path}"] = {
-            "bind": "/root/.cache/mse/sealed_secrets.json",
-            "mode": "rw",
-        }
-        env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets_path)
-
-    port = 5000
+    docker_config = TestDockerConfig(
+        code=code_path,
+        application=code_config.python_application,
+        sealed_secrets=sealed_secrets_path,
+        secrets=secrets_path,
+        port=5000,
+    )
 
     container = client.containers.run(
         docker_name,
         name=container_name,
-        command=command,
-        volumes=volumes,
-        entrypoint="mse-test",
-        ports={f"{port}/tcp": ("127.0.0.1", port)},
+        command=docker_config.cmd(),
+        volumes=docker_config.volumes(),
+        entrypoint=TestDockerConfig.entrypoint,
+        ports=docker_config.ports(),
         detach=True,
         remove=False,  # We do not remove the container to be able to print the error (if some)
     )
@@ -152,7 +135,9 @@ def run(args) -> None:
                     f"Application docker fails to start with the following error:\n{container.logs().decode('utf-8')}"
                 )
 
-            if is_ready("http://localhost", port, code_config.healthcheck_endpoint):
+            if is_ready(
+                "http://localhost", docker_config.port, code_config.healthcheck_endpoint
+            ):
                 break
 
         LOG.info("Installing tests requirements...")
@@ -163,6 +148,13 @@ def run(args) -> None:
             )
 
         LOG.info("Running tests...")
+        env = dict(os.environ)
+        if args.secrets:
+            env["TEST_SECRET_JSON"] = str(secrets_path)
+
+        if args.sealed_secrets:
+            env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets_path)
+
         subprocess.check_call(code_config.tests_cmd, cwd=args.test, env=env)
 
         LOG.info("Tests succeed!")
