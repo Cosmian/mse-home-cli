@@ -22,13 +22,12 @@ def add_subparser(subparsers):
         help="The secret file to seal",
     )
 
-    # TODO: we just need the certificate
     parser.add_argument(
-        "--evidence",
+        "--cert",
         required=True,
         type=Path,
         metavar="FILE",
-        help="path to the evidence file",
+        help="Path to the ratls certificate",
     )
 
     parser.add_argument(
@@ -43,13 +42,9 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    evidence = ApplicationEvidence.load(args.evidence)
-
-    quote = ratls_verification(evidence.ratls_certificate)
+    quote = ratls_verification(args.cert)
 
     enclave_pk = quote.report_body.report_data[32:64]
-
-    print(bytes(enclave_pk).hex())
 
     sealed_secrets = seal(args.secrets.read_bytes(), enclave_pk)
 

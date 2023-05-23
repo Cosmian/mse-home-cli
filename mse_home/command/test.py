@@ -36,8 +36,6 @@ def add_subparser(subparsers):
         help="The conf path extracted from the mse package",
     )
 
-    # TODO: --secerts both sealed and not sealed
-
     parser.set_defaults(func=run)
 
 

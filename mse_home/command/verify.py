@@ -3,6 +3,7 @@
 
 from pathlib import Path
 
+from cryptography.hazmat.primitives.serialization import Encoding
 from intel_sgx_ra.attest import remote_attestation
 from intel_sgx_ra.ratls import ratls_verification
 from intel_sgx_ra.signer import mr_signer_from_pk
@@ -14,7 +15,8 @@ from mse_home.model.evidence import ApplicationEvidence
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "verify", help="Verify the trustworthiness of a running MSE web application"
+        "verify",
+        help="Verify the trustworthiness of a running MSE web application and get the ratls certificate",
     )
 
     parser.add_argument(
@@ -22,7 +24,7 @@ def add_subparser(subparsers):
         required=True,
         type=str,
         metavar="HEXDIGEST",
-        help="check the code fingerprint against specific SHA-256 hexdigest",
+        help="Check the code fingerprint against specific SHA-256 hexdigest",
     )
 
     parser.add_argument(
@@ -30,7 +32,14 @@ def add_subparser(subparsers):
         required=True,
         type=Path,
         metavar="FILE",
-        help="path to the evidence file",
+        help="The path to the evidence file",
+    )
+
+    parser.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="The verified certificate",
     )
 
     parser.set_defaults(func=run)
@@ -74,3 +83,10 @@ def run(args) -> None:
         )
 
     LOG.info("Verification succeed!")
+
+    ratls_cert_path = args.output / "ratls.pem"
+    ratls_cert_path.write_bytes(
+        evidence.ratls_certificate.public_bytes(encoding=Encoding.PEM)
+    )
+
+    LOG.info("The ratls certificate has been saved at: %s", ratls_cert_path)

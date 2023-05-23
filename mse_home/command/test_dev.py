@@ -1,5 +1,6 @@
 """mse_home.command.test_dev module."""
 
+import os
 import subprocess
 import sys
 import time
@@ -29,7 +30,14 @@ def add_subparser(subparsers):
         "--secrets",
         type=Path,
         required=False,
-        help="The secrets.json file path",  # TODO: both sealed and not sealed
+        help="The secrets.json file path",
+    )
+
+    parser.add_argument(
+        "--sealed-secrets",
+        type=Path,
+        required=False,
+        help="The secrets.json to seal file path (unsealed for the test purpose)",
     )
 
     parser.add_argument(
@@ -68,6 +76,11 @@ def run(args) -> None:
         if not secrets_path.is_file():
             raise IOError(f"{secrets_path} does not exist")
 
+    if args.sealed_secrets:
+        sealed_secrets_path: Path = args.sealed_secrets.resolve()
+        if not sealed_secrets_path.is_file():
+            raise IOError(f"{sealed_secrets_path} does not exist")
+
     code_config = CodeConfig.load(args.config)
     now = time.time_ns()
     docker_name = f"{code_config.name}:{now}"
@@ -97,11 +110,20 @@ def run(args) -> None:
         f"{args.code.resolve()}": {"bind": "/mse-app", "mode": "rw"},
     }
 
+    env = dict(os.environ)
     if args.secrets:
         volumes[f"{secrets_path}"] = {
             "bind": "/root/.cache/mse/secrets.json",
             "mode": "rw",
         }
+        env["TEST_SECRET_JSON"] = str(secrets_path)
+
+    if args.sealed_secrets:
+        volumes[f"{sealed_secrets_path}"] = {
+            "bind": "/root/.cache/mse/sealed_secrets.json",
+            "mode": "rw",
+        }
+        env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets_path)
 
     port = 5000
 
@@ -141,14 +163,12 @@ def run(args) -> None:
             )
 
         LOG.info("Running tests...")
-        subprocess.check_call(
-            code_config.tests_cmd,
-            cwd=args.test,
-        )
+        subprocess.check_call(code_config.tests_cmd, cwd=args.test, env=env)
 
         LOG.info("Tests succeed!")
     except subprocess.CalledProcessError:
-        LOG.error("Tests failed!")
+        LOG.error("Tests failed! The docker logs are:")
+        print(container.logs().decode("utf-8"))
     except Exception as exc:
         raise exc
     finally:

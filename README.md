@@ -43,7 +43,7 @@ $ msehome package --code example/mse_src/ \
                   --dockerfile example/Dockerfile \
                   --config example/mse.home.toml \
                   --test example/tests/ \
-                  --output workspace/code_provider \
+                  --output workspace/code_provider 
 ```
 
 The generating package can now be sent to the sgx operator.
@@ -96,16 +96,17 @@ __User__: the code provider
     ```console
     $ msehome verify --evidence output/evidence.json
                      --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3
+                     --output /tmp
     ```
 
-    If the verification succeed, you can now seal the code key to share it with the sgx operator.
+    If the verification succeed, you get the ratls certificat and you can now seal the code key to share it with the sgx operator.
 
 ### Seal the code key
 
 __User__: the code provider
 
 ```console
-msehome seal --secrets example/secrets_to_seal.json --evidence /tmp/evidence.json  --output workspace/code_provider/
+msehome seal --secrets example/secrets_to_seal.json --cert /tmp/ratls.pem  --output workspace/code_provider/
 ```
 
 ### Finalize the configuration and run the application
@@ -131,7 +132,7 @@ $ msehome test --test workspace/sgx_operator/tests/ \
 
 __User__: the code provider
 
-Assume the sgx operator gets a result as follow: `curl https://localhost:7788/result --cacert /tmp/cert.pem > result.enc`
+Assume the sgx operator gets a result as follow: `curl https://localhost:7788/result --cacert /tmp/ratls.pem > result.enc`
 
 Then, the code provider can decrypt the result has follow:
 

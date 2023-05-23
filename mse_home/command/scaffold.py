@@ -20,7 +20,7 @@ def add_subparser(subparsers):
     parser.add_argument(
         "app_name",
         type=str,
-        help="name of the MSE web application to create",
+        help="Name of the MSE web application to create",
     )
 
     parser.set_defaults(func=run)

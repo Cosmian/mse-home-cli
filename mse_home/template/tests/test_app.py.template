@@ -1,6 +1,9 @@
 """Unit test for our mse app."""
 
+import json
+
 import requests
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 def test_hello(url, certificate):
@@ -14,3 +17,38 @@ def test_health(url, certificate):
     """Test healthcheck endpoint."""
     response = requests.get(f"{url}{{ healthcheck_endpoint }}", timeout=10, verify=certificate)
     assert response.status_code == 200
+
+
+def aes_decrypt(text: bytes, key: bytes, iv: bytes) -> bytes:
+    """Decrypt a text using AES-CBC."""
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    decryptor = cipher.decryptor()
+    return decryptor.update(text) + decryptor.finalize()
+
+
+def test_result_secret(url, certificate, secret_json):
+    """Test get method on //result/secrets."""
+    response = requests.get(f"{url}/result/secrets", timeout=10, verify=certificate)
+    assert response.status_code == 200
+
+    key = bytes.fromhex(json.loads(secret_json.read_bytes())["key"])
+    encrypted_bytes = response.content
+    iv = encrypted_bytes[:16]
+    plaintext = aes_decrypt(encrypted_bytes[16:], key, iv)
+
+    assert b"secret message with secrets.json" in plaintext
+
+
+def test_result_sealed_secret(url, certificate, sealed_secret_json):
+    """Test get method on /result/sealed_secrets."""
+    response = requests.get(
+        f"{url}/result/sealed_secrets", timeout=10, verify=certificate
+    )
+    assert response.status_code == 200
+
+    key = bytes.fromhex(json.loads(sealed_secret_json.read_bytes())["key"])
+    encrypted_bytes = response.content
+    iv = encrypted_bytes[:16]
+    plaintext = aes_decrypt(encrypted_bytes[16:], key, iv)
+
+    assert b"message with sealed_secrets.json" in plaintext

@@ -16,6 +16,13 @@ def add_subparser(subparsers):
         help="The name of the application",
     )
 
+    parser.add_argument(
+        "-f",
+        "--follow",
+        action="store_true",
+        help="Follow log output",
+    )
+
     parser.set_defaults(func=run)
 
 
@@ -23,10 +30,13 @@ def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
 
-    # TODO: add a -f (follow)
-
     try:
         container = client.containers.get(args.name)
-        LOG.info(container.logs().decode("utf-8"))
+        if args.follow:
+            LOG.info("skipping...")
+            for line in container.logs(tail=10, stream=True):
+                LOG.info(line.decode("utf-8").strip())
+        else:
+            LOG.info(container.logs().decode("utf-8"))
     except NotFound as exc:
         raise Exception(f"Can't find mse docker '{args.name}'") from exc

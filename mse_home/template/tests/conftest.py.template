@@ -17,6 +17,18 @@ def url() -> str:
 
 
 @pytest.fixture(scope="module")
+def secret_json() -> Path:
+    """Get the secret.json path."""
+    return Path(os.getenv("TEST_SECRET_JSON"))
+
+
+@pytest.fixture(scope="module")
+def sealed_secret_json() -> Path:
+    """Get the sealed_secret.json path."""
+    return Path(os.getenv("TEST_SEALED_SECRET_JSON"))
+
+
+@pytest.fixture(scope="module")
 def workspace() -> Path:
     """Get the path of the test work directory."""
     return Path(tempfile.mkdtemp())
