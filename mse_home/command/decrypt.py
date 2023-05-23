@@ -4,6 +4,8 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+from mse_home.log import LOGGER as LOG
+
 
 def add_subparser(subparsers):
     """Define the subcommand."""
@@ -14,9 +16,9 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--aes",
         type=str,
-        metavar="KEY",  # TODO:  in hexa (like in the json btw)
+        metavar="KEY",
         required=True,
-        help="Decrypt using AES-CBC and the given key",
+        help="Decrypt using AES-CBC and the given key (in hex)",
     )
 
     parser.add_argument(
@@ -37,8 +39,9 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    key = args.aes.encode("utf-8")
+    LOG.info("Decrypting your file...")
 
+    key = bytes.fromhex(args.aes)
     encrypted_bytes = args.encrypted_file.read_bytes()
     iv = encrypted_bytes[:16]
 
@@ -48,3 +51,5 @@ def run(args) -> None:
     args.output.write_bytes(
         decryptor.update(encrypted_bytes[16:]) + decryptor.finalize()
     )
+
+    LOG.info("Your file has been decrypted and saved at: %s", args.output)

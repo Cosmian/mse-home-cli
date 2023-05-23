@@ -1,10 +1,10 @@
 """mse_home.model.docker_cmd module."""
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, ClassVar, Dict, List
 from uuid import UUID
 
-from docker.models import Container
+from docker.models.containers import Container
 from pydantic import BaseModel
 
 
@@ -18,36 +18,30 @@ class DockerConfig(BaseModel):
     expiration_date: int
     code: Path
     application: str
-    plaincode: bool
     healthcheck: str
     signer_key: Path
 
-    signer_key_mountpoint = "/root/.config/gramine/enclave-key.pem"
-    code_mountpoint = "/tmp/app.tar"
-    docker_label = "mse-home"
-    entrypoint = "mse-run"
+    signer_key_mountpoint: ClassVar[str] = "/root/.config/gramine/enclave-key.pem"
+    code_mountpoint: ClassVar[str] = "/tmp/app.tar"
+    docker_label: ClassVar[str] = "mse-home"
+    entrypoint: ClassVar[str] = "mse-run"
 
     def cmd(self) -> List[str]:
         """Serialize the docker command args."""
-        args = [
+        return [
             "--size",
             f"{self.size}M",
             "--code",
             DockerConfig.code_mountpoint,
-            "--host",
+            "--san",
             str(self.host),
             "--id",
             str(self.app_id),
             "--application",
             self.application,
             "--ratls",
-            str(self.ratls),
+            str(self.expiration_date),
         ]
-
-        if self.plaincode:
-            args.append("--plaincode")
-
-        return args
 
     def ports(self) -> Dict[str, List[Dict[str, str]]]:
         return {"443/tcp": ("127.0.0.1", str(self.port))}
@@ -69,7 +63,7 @@ class DockerConfig(BaseModel):
         }
 
     @staticmethod
-    def devices(self) -> List[str]:
+    def devices() -> List[str]:
         return [
             "/dev/sgx_enclave:/dev/sgx_enclave:rw",
             "/dev/sgx_provision:/dev/sgx_enclave:rw",
@@ -110,13 +104,12 @@ class DockerConfig(BaseModel):
 
         return DockerConfig(
             size=int(dataMap["size"][:-1]),
-            host=dataMap["host"],
-            app_id=dataMap["id"],
+            host=dataMap["san"],
+            app_id=UUID(dataMap["id"]),
             expiration_date=int(dataMap["ratls"]),
             code=Path(dataMap["code"]),
             application=dataMap["application"],
             port=int(port["443/tcp"][0]["HostPort"]),
-            plaincode=dataMap.get("plaincode", False),
             healthcheck=container.labels["healthcheck_endpoint"],
             signer_key=Path(signer_key["Source"]),
         )

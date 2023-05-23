@@ -1,13 +1,12 @@
 """mse_home.command.fingerprint module."""
 
 
+import re
 import tempfile
 import uuid
 from pathlib import Path
 
-from mse_cli_utils.enclave import compute_mr_enclave
-
-from mse_home.command.helpers import load_docker_image
+from mse_home.command.helpers import get_client_docker, load_docker_image
 from mse_home.log import LOGGER as LOG
 from mse_home.model.args import ApplicationArguments
 from mse_home.model.package import CodePackage
@@ -48,15 +47,45 @@ def run(args) -> None:
 
     mrenclave = compute_mr_enclave(
         image,
-        app_args.size,
-        app_args.host,
-        uuid.UUID(app_args.app_id),
-        app_args.application,
+        app_args,
         package.code_tar,
-        not app_args.plaincode,  # TODO: harmonize here
-        app_args.expiration_date,
-        None,
         log_path,
     )
 
     LOG.info("Fingerprint is: %s", mrenclave)
+
+
+# TODO: merge with mse-cli
+def compute_mr_enclave(
+    image: str,
+    app_args: ApplicationArguments,
+    code_tar_path: Path,
+    docker_path_log: Path,
+) -> str:
+    """Compute the MR enclave of an enclave."""
+    client = get_client_docker()
+
+    container = client.containers.run(
+        image,
+        command=app_args.cmd(),
+        volumes=app_args.volumes(code_tar_path),
+        entrypoint=ApplicationArguments.entrypoint,
+        remove=True,
+        detach=False,
+        stdout=True,
+        stderr=True,
+    )
+
+    # Save the docker output
+    docker_path_log.write_bytes(container)
+
+    # Get the mr_enclave from the docker output
+    pattern = "Measurement:\n[ ]*([a-z0-9]{64})"
+    m = re.search(pattern.encode("utf-8"), container)
+
+    if not m:
+        raise Exception(
+            f"Fail to compute mr_enclave! See {docker_path_log} for more details."
+        )
+
+    return str(m.group(1).decode("utf-8"))

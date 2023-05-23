@@ -2,9 +2,12 @@
 
 from http import HTTPStatus
 
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from flask import Flask, Response
 
 {{ app }} = Flask(__name__)
+
+secret_json = Path(os.getenv("SEALED_SECRETS_PATH"))
 
 
 @{{ app }}.get("{{ healthcheck_endpoint }}")
@@ -17,3 +20,13 @@ def health_check():
 def hello():
     """Get a simple example."""
     return "Hello world"
+
+
+@app.route("/result")
+def result():
+    """Get the result using the sealed secrets."""
+    key = bytes.fromhex(json.loads(secret_json.read_bytes())["key"])
+    iv = os.urandom(16)
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    encryptor = cipher.encryptor()
+    return iv + encryptor.update(b"a secret message") + encryptor.finalize()

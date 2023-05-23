@@ -15,15 +15,23 @@ $ msehome -h
 
 You can find below the use flow step by step.
 
+### Scaffold your app
+
+__User__: the code provider
+
+```console
+$ msehome scaffold example
+```
+
 ### Test your app, your docker and your msehome configuration
 
 __User__: the code provider
 
 ```console
-$ msehome test-dev --code examples/mse_src/ \
-                   --dockerfile examples/Dockerfile \
-                   --config examples/mse.home.toml \
-                   --test examples/tests/
+$ msehome test-dev --code example/mse_src/ \
+                   --dockerfile example/Dockerfile \
+                   --config example/mse.home.toml \
+                   --test example/tests/
 ```
 
 ### Create the mse package with the code and the docker image
@@ -31,12 +39,11 @@ $ msehome test-dev --code examples/mse_src/ \
 __User__: the code provider
 
 ```console
-$ msehome package --code examples/mse_src/ \
-                  --dockerfile examples/Dockerfile \
-                  --config examples/mse.home.toml \
-                  --test examples/tests/ \
+$ msehome package --code example/mse_src/ \
+                  --dockerfile example/Dockerfile \
+                  --config example/mse.home.toml \
+                  --test example/tests/ \
                   --output workspace/code_provider \
-                  --encrypt
 ```
 
 The generating package can now be sent to the sgx operator.
@@ -46,7 +53,7 @@ The generating package can now be sent to the sgx operator.
 __User__: the sgx operator
 
 ```console
-$ msehome spawn --host localhost \
+$ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --days 345 \
                 --signer-key /opt/cosmian-internal/cosmian-signer-key.pem \
@@ -64,7 +71,6 @@ __User__: the sgx operator
 
 ```console
 $ msehome evidence --pccs https://pccs.example.com \
-                   --signer-key /opt/cosmian-internal/cosmian-signer-key.pem \
                    --output workspace/sgx_operator/ \
                    app_name
 ```
@@ -98,14 +104,16 @@ __User__: the code provider
 
 __User__: the code provider
 
-TODO
+```console
+msehome seal --secrets example/secrets_to_seal.json --evidence /tmp/evidence.json  --output workspace/code_provider/
+```
 
 ### Finalize the configuration and run the application
 
 __User__: the sgx operator
 
 ```console
-$ msehome run --key code.secret \
+$ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.sealed \
               app_name
 ```
 
@@ -117,6 +125,20 @@ __User__: the sgx operator
 $ msehome test --test workspace/sgx_operator/tests/ \
                --config workspace/sgx_operator/mse.home.toml \
                app_name
+```
+
+### Decrypt the result
+
+__User__: the code provider
+
+Assume the sgx operator gets a result as follow: `curl https://localhost:7788/result --cacert /tmp/cert.pem > result.enc`
+
+Then, the code provider can decrypt the result has follow:
+
+```console
+$ msehome decrypt --aes 00112233445566778899aabbccddeeff --output workspace/code_provider/result.plain res
+ult.enc
+$ cat workspace/code_provider/result.plain
 ```
 
 ### Manage the mse docker

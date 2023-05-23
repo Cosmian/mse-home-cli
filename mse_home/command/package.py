@@ -42,6 +42,12 @@ def add_subparser(subparsers):
         "--output", type=Path, required=True, help="The directory to write the package"
     )
 
+    parser.add_argument(
+        "--encrypt",
+        action="store_true",
+        help="Encrypt the code before packaging it",
+    )
+
     parser.set_defaults(func=run)
 
 
@@ -80,7 +86,7 @@ def run(args) -> None:
     code_secret_path = package_path / f"package_{code_config.name}_{now}.key"
     package_path = package_path / f"package_{code_config.name}_{now}.tar"
 
-    (secret_key, _) = create_code_tar(code_path, package.code_tar, code_config.encrypt)
+    (secret_key, _) = create_code_tar(code_path, package.code_tar, args.encrypt)
 
     if secret_key:
         code_secret_path.write_text(bytes(secret_key).hex())

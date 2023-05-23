@@ -71,7 +71,7 @@ def run(args) -> None:
         )
 
     data: Dict[str, Any] = {
-        "uuid": docker.app_id,
+        "uuid": str(docker.app_id),
     }
 
     if args.secrets:

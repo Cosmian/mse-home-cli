@@ -107,7 +107,6 @@ def run(args) -> None:
         expiration_date=int((datetime.today() + timedelta(days=args.days)).timestamp()),
         code=package.code_tar,
         application=code_config.python_application,
-        plaincode=not code_config.encrypt,
         healthcheck=code_config.healthcheck_endpoint,
         signer_key=args.signer_key,
     )
