@@ -2,6 +2,7 @@
 
 import json
 
+import pytest
 import requests
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
@@ -28,6 +29,9 @@ def aes_decrypt(text: bytes, key: bytes, iv: bytes) -> bytes:
 
 def test_result_secret(url, certificate, secret_json):
     """Test get method on //result/secrets."""
+    if not secret_json:
+        pytest.skip()
+
     response = requests.get(f"{url}/result/secrets", timeout=10, verify=certificate)
     assert response.status_code == 200
 
@@ -41,6 +45,9 @@ def test_result_secret(url, certificate, secret_json):
 
 def test_result_sealed_secret(url, certificate, sealed_secret_json):
     """Test get method on /result/sealed_secrets."""
+    if not sealed_secret_json:
+        pytest.skip()
+
     response = requests.get(
         f"{url}/result/sealed_secrets", timeout=10, verify=certificate
     )

@@ -1,9 +1,7 @@
 """mse_home.command.helpers module."""
 
-
 from pathlib import Path
 
-import requests
 from docker import from_env
 from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
@@ -22,8 +20,8 @@ def get_client_docker() -> DockerClient:
         raise exc
 
 
-def is_spawned(name: str) -> bool:
-    """Check whether a mse docker is spawned based on its `name`."""
+def docker_container_exists(name: str) -> bool:
+    """Check whether a mse docker is running based on its `name`."""
     client = get_client_docker()
 
     try:
@@ -32,38 +30,6 @@ def is_spawned(name: str) -> bool:
         return False
 
     return True
-
-
-def is_waiting_for_secrets(port: int) -> bool:
-    """Check whether the configuration server is up."""
-    try:
-        response = requests.get(f"https://localhost:{port}/", verify=False, timeout=5)
-
-        if response.status_code == 200 and "Mse-Status" in response.headers:
-            return True
-    except requests.exceptions.SSLError:
-        return False
-
-    return False
-
-
-def is_ready(url: str, port: int, healthcheck_endpoint: str) -> bool:
-    """Check whether the app server is up."""
-    try:
-        response = requests.get(
-            f"{url}:{port}{healthcheck_endpoint}",
-            verify=False,
-            timeout=5,
-        )
-
-        if response.status_code != 503 and "Mse-Status" not in response.headers:
-            return True
-    except requests.exceptions.SSLError:
-        return False
-    except requests.exceptions.ConnectionError:
-        return False
-
-    return False
 
 
 def load_docker_image(image_tar_path: Path) -> str:

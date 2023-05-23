@@ -9,11 +9,11 @@ from cryptography.x509 import CertificateRevocationList, load_pem_x509_certifica
 from docker.errors import NotFound
 from intel_sgx_ra.pcs import get_pck_cert_crl, get_root_ca_crl
 from intel_sgx_ra.ratls import get_server_certificate
+from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.evidence import ApplicationEvidence
-from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):
@@ -58,7 +58,7 @@ def run(args) -> None:
             f"Can't find the mse docker for application '{args.name}'"
         ) from exc
 
-    docker = SgxDockerConfig.load(container)
+    docker = SgxDockerConfig.load(container.attrs, container.labels)
 
     # TODO: verify the docker is running?
 
@@ -96,7 +96,5 @@ def run(args) -> None:
     )
 
     evidence_path = args.output / "evidence.json"
-
     evidence.save(evidence_path)
-
     LOG.info("The evidence file has been generated at: %s", evidence_path)

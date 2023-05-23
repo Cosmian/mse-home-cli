@@ -1,14 +1,14 @@
 """mse_home.command.fingerprint module."""
 
 
-import re
 import tempfile
 from pathlib import Path
 
 from mse_home.command.helpers import get_client_docker, load_docker_image
 from mse_home.log import LOGGER as LOG
-from mse_home.model.no_sgx_docker import NoSgxDockerConfig
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_home.model.package import CodePackage
+from mse_cli_core.enclave import compute_mr_enclave
 
 
 def add_subparser(subparsers):
@@ -44,7 +44,10 @@ def run(args) -> None:
     package = CodePackage.extract(workspace, args.package)
     image = load_docker_image(package.image_tar)
 
+    client = get_client_docker()
+
     mrenclave = compute_mr_enclave(
+        client,
         image,
         app_args,
         package.code_tar,
@@ -52,39 +55,3 @@ def run(args) -> None:
     )
 
     LOG.info("Fingerprint is: %s", mrenclave)
-
-
-# TODO: merge with mse-cli
-def compute_mr_enclave(
-    image: str,
-    app_args: NoSgxDockerConfig,
-    code_tar_path: Path,
-    docker_path_log: Path,
-) -> str:
-    """Compute the MR enclave of an enclave."""
-    client = get_client_docker()
-
-    container = client.containers.run(
-        image,
-        command=app_args.cmd(),
-        volumes=app_args.volumes(code_tar_path),
-        entrypoint=NoSgxDockerConfig.entrypoint,
-        remove=True,
-        detach=False,
-        stdout=True,
-        stderr=True,
-    )
-
-    # Save the docker output
-    docker_path_log.write_bytes(container)
-
-    # Get the mr_enclave from the docker output
-    pattern = "Measurement:\n[ ]*([a-z0-9]{64})"
-    m = re.search(pattern.encode("utf-8"), container)
-
-    if not m:
-        raise Exception(
-            f"Fail to compute mr_enclave! See {docker_path_log} for more details."
-        )
-
-    return str(m.group(1).decode("utf-8"))

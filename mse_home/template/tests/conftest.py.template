@@ -3,7 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import pytest
 from cryptography import x509
@@ -17,15 +17,17 @@ def url() -> str:
 
 
 @pytest.fixture(scope="module")
-def secret_json() -> Path:
+def secret_json() -> Optional[Path]:
     """Get the secret.json path."""
-    return Path(os.getenv("TEST_SECRET_JSON"))
+    e = os.getenv("TEST_SECRET_JSON")
+    return Path(e) if e else None
 
 
 @pytest.fixture(scope="module")
-def sealed_secret_json() -> Path:
+def sealed_secret_json() -> Optional[Path]:
     """Get the sealed_secret.json path."""
-    return Path(os.getenv("TEST_SEALED_SECRET_JSON"))
+    e = os.getenv("TEST_SEALED_SECRET_JSON")
+    return Path(e) if e else None
 
 
 @pytest.fixture(scope="module")

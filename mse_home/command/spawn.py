@@ -1,22 +1,22 @@
 """mse_home.command.spawn module."""
 
 import socket
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
+from mse_cli_core.bootstrap import wait_for_conf_server
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
+from mse_cli_core.sgx_docker import SgxDockerConfig
+
 from mse_home.command.helpers import (
+    docker_container_exists,
     get_client_docker,
-    is_spawned,
-    is_waiting_for_secrets,
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
-from mse_home.model.no_sgx_docker import NoSgxDockerConfig
 from mse_home.model.package import CodePackage
-from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):
@@ -83,7 +83,7 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    if is_spawned(args.name):
+    if docker_container_exists(args.name):
         raise Exception(
             f"Docker container {args.name} is already running. "
             "Stop and remove it before respawn it!"
@@ -117,7 +117,9 @@ def run(args) -> None:
         docker_config,
     )
 
-    wait_for_docker_to_spawn(args.port)
+    LOG.info("Waiting for the configuration server to be ready...")
+    wait_for_conf_server(f"https://localhost:{args.port}", False)
+    LOG.info("The application is now ready to receive the secrets!")
 
     app_args = NoSgxDockerConfig.from_sgx(docker_config)
     args_path = workspace / "args.toml"
@@ -166,12 +168,3 @@ def run_docker_image(
         raise Exception(
             f"Can't create the container: {container.status} - {container.logs()}"
         )
-
-
-def wait_for_docker_to_spawn(port: int):
-    """Hold on until the configuration server is up and listing."""
-    LOG.info("Waiting for the configuration server to be ready...")
-    while not is_waiting_for_secrets(port):
-        time.sleep(10)
-
-    LOG.info("The application is now ready to receive the secrets!")

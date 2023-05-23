@@ -4,9 +4,7 @@
 from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import Encoding
-from intel_sgx_ra.attest import remote_attestation
-from intel_sgx_ra.ratls import ratls_verification
-from intel_sgx_ra.signer import mr_signer_from_pk
+from mse_cli_core.enclave import verify_enclave
 
 from mse_home.log import LOGGER as LOG
 from mse_home.model.evidence import ApplicationEvidence
@@ -50,38 +48,11 @@ def run(args) -> None:
     """Run the subcommand."""
     evidence = ApplicationEvidence.load(args.evidence)
 
-    # TODO: we can probably merge this function
-    # somehow with `mse_cli.subcommand.helpers.verify_app`
-
-    # Compute MRSIGNER value from public key
-    mrsigner = mr_signer_from_pk(evidence.signer_pk)
-
-    # Check certificate's public key in quote's user report data
-    quote = ratls_verification(evidence.ratls_certificate)
-
-    # Check MRSIGNER
-    if quote.report_body.mr_signer != mrsigner:
+    try:
+        verify_enclave(evidence.signer_pk, evidence.ratls_certificate, args.fingerprint)
+    except Exception as exc:
         LOG.error("Verification failed!")
-        raise Exception(
-            "Enclave signer is wrong "
-            f"(read {bytes(quote.report_body.mr_signer).hex()} "
-            f"but should be {bytes(mrsigner).hex()})"
-        )
-
-        # Check enclave certificates and information
-        # try:
-        #     remote_attestation(quote=quote)  # TODO: PCC_URL to change here
-        # except Exception as exc:
-        #     LOG.error("Verification failed!")
-        #     raise exc
-
-    if quote.report_body.mr_enclave != bytes.fromhex(args.fingerprint):
-        LOG.error("Verification failed!")
-        raise Exception(
-            "Code fingerprint is wrong "
-            f"(read {bytes(quote.report_body.mr_enclave).hex()} "
-            f"but should be {args.fingerprint})"
-        )
+        raise exc
 
     LOG.info("Verification succeed!")
 

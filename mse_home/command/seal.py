@@ -44,11 +44,9 @@ def run(args) -> None:
     quote = ratls_verification(args.cert)
 
     enclave_pk = quote.report_body.report_data[32:64]
-
     sealed_secrets = seal(args.secrets.read_bytes(), enclave_pk)
 
     sealed_secrets_path: Path = args.output / (args.secrets.name + ".sealed")
-
     sealed_secrets_path.write_bytes(sealed_secrets)
 
     LOG.info("Your sealed secrets has been saved at: %s", sealed_secrets_path)

@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from docker.errors import BuildError
-from mse_cli_utils.fs import tar, whilelist
-from mse_cli_utils.ignore_file import IgnoreFile
+from mse_cli_core.fs import tar, whitelist
+from mse_cli_core.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
 from mse_home.command.helpers import get_client_docker
@@ -53,21 +53,18 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    code_path = args.code.resolve()
-    if not code_path.is_dir():
-        raise IOError(f"{code_path} does not exist")
+    if not args.code.is_dir():
+        raise IOError(f"{args.code} does not exist")
 
     package_path: Path = args.output.resolve()
     if not package_path.is_dir():
         raise IOError(f"{package_path} does not exist")
 
-    test_path: Path = args.test.resolve()
-    if not test_path.is_dir():
-        raise IOError(f"{test_path} does not exist")
+    if not args.test.is_dir():
+        raise IOError(f"{args.test} does not exist")
 
-    dockerfile_path: Path = args.dockerfile.resolve()
-    if not dockerfile_path.is_file():
-        raise IOError(f"{dockerfile_path} does not exist")
+    if not args.dockerfile.is_file():
+        raise IOError(f"{args.dockerfile} does not exist")
 
     code_config = CodeConfig.load(args.config)
 
@@ -78,7 +75,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=test_path,
+        test_path=args.test.resolve(),
         config_path=args.config,
     )
 
@@ -86,10 +83,12 @@ def run(args) -> None:
     code_secret_path = package_path / f"package_{code_config.name}_{now}.key"
     package_path = package_path / f"package_{code_config.name}_{now}.tar"
 
-    (secret_key, _) = create_code_tar(code_path, package.code_tar, args.encrypt)
+    (secret_key, _) = create_code_tar(
+        args.code.resolve(), package.code_tar, args.encrypt
+    )
 
     if secret_key:
-        code_secret_path.write_text(bytes(secret_key).hex())
+        code_secret_path.write_bytes(secret_key)
         LOG.info("Your code secret key has been saved at: %s", code_secret_path)
 
     create_image_tar(args.dockerfile.resolve(), code_config.name, package.image_tar)
@@ -122,7 +121,7 @@ def create_code_tar(
             pattern="*",
             key=secret_key,
             nonces=None,
-            exceptions=whilelist(),
+            exceptions=whitelist(),
             ignore_patterns=list(IgnoreFile.parse(code_path)),
             out_dir_path=encrypted_path,
         )
@@ -160,7 +159,7 @@ def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
         LOG.info("Building your docker image...")
 
         # Build the docker
-        (image, _) = client.images.build(
+        (image, _streamer) = client.images.build(
             path=str(dockerfile.parent),
             tag=f"{image_name}:{time.time_ns()}",
         )
