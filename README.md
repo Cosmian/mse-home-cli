@@ -1,5 +1,11 @@
 # 🏕️ MSE Home CLI 
 
+MSE Home CLI is designed to start an mse application on your own SGX hardware without using all the mse cloud infrastructure. 
+
+We explain later how all the subscommands can be chained to deploy your own application. Two actors are required:
+- The code provider (who can also consume the result of the mse application)
+- The sgx operator (who also owns the data to run against the mse application)
+
 ## Install
 
 ```console
