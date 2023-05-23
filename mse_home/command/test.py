@@ -6,11 +6,11 @@ import sys
 from pathlib import Path
 
 from docker.errors import NotFound
+from mse_cli_core.bootstrap import is_waiting_for_secrets
+from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.model.code import CodeConfig
-from mse_cli_core.sgx_docker import SgxDockerConfig
-from mse_cli_core.bootstrap import is_waiting_for_secrets
 
 
 def add_subparser(subparsers):

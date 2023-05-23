@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict
 
 from docker.errors import NotFound
 from mse_cli_core.bootstrap import (

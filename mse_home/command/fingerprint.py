@@ -1,14 +1,14 @@
 """mse_home.command.fingerprint module."""
 
-
 import tempfile
 from pathlib import Path
 
+from mse_cli_core.enclave import compute_mr_enclave
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
+
 from mse_home.command.helpers import get_client_docker, load_docker_image
 from mse_home.log import LOGGER as LOG
-from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_home.model.package import CodePackage
-from mse_cli_core.enclave import compute_mr_enclave
 
 
 def add_subparser(subparsers):

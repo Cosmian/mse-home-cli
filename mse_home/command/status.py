@@ -4,10 +4,10 @@ from datetime import datetime
 
 import requests
 from docker.errors import NotFound
+from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_cli_core.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):

@@ -120,7 +120,8 @@ def test_spawn(workspace: Path, cmd_log: io.StringIO):
                 "package": pytest.package_path,
                 "host": "localhost",
                 "days": 2,
-                "port": 5555,  # How to stop if an error occurs? 5555 will be already in use.
+                # TODO: How to stop if an error occurs? 5555 will be already in use.
+                "port": 5555,
                 "size": 4096,
                 "signer_key": Path(
                     "/opt/cosmian-internal/cosmian-signer-key.pem"
@@ -198,7 +199,8 @@ def test_evidence(workspace: Path, cmd_log: io.StringIO):
         Namespace(
             **{
                 "name": APP_NAME,
-                "pccs": "https://pccs.staging.mse.cosmian.com",  # TODO: put a env variable
+                # TODO: put a env variable
+                "pccs": "https://pccs.staging.mse.cosmian.com",
                 "signer_key": Path(
                     "/opt/cosmian-internal/cosmian-signer-key.pem"
                 ),  # TODO: put a env variable
