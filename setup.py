@@ -25,7 +25,7 @@ setup(
     license="MIT",
     project_urls={
         "Documentation": "https://docs.cosmian.com",
-        "Source": "https://github.com/Cosmian/mse-cli",
+        "Source": "https://github.com/Cosmian/mse-home-cli",
     },
     author="Cosmian Tech",
     author_email="tech@cosmian.com",

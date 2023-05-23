@@ -1,4 +1,4 @@
-# 🏕️ MSE CLI Home
+# 🏕️ MSE Home CLI 
 
 ## Install
 
