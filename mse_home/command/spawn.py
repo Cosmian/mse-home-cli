@@ -1,6 +1,5 @@
 """mse_home.command.spawn module."""
 
-
 import socket
 import time
 from datetime import datetime, timedelta
@@ -14,10 +13,10 @@ from mse_home.command.helpers import (
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
-from mse_home.model.no_sgx_docker import ApplicationArguments
 from mse_home.model.code import CodeConfig
-from mse_home.model.sgx_docker import SgxDockerConfig
+from mse_home.model.no_sgx_docker import NoSgxDockerConfig
 from mse_home.model.package import CodePackage
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):
@@ -86,7 +85,8 @@ def run(args) -> None:
     """Run the subcommand."""
     if is_spawned(args.name):
         raise Exception(
-            f"Docker container {args.name} is already running. Stop and remove it before respawn it!"
+            f"Docker container {args.name} is already running. "
+            "Stop and remove it before respawn it!"
         )
 
     if not is_port_free(args.port):
@@ -119,7 +119,7 @@ def run(args) -> None:
 
     wait_for_docker_to_spawn(args.port)
 
-    app_args = ApplicationArguments.from_docker_config(docker_config)
+    app_args = NoSgxDockerConfig.from_sgx(docker_config)
     args_path = workspace / "args.toml"
     LOG.info("You can share '%s' with the other participants.", args_path)
     app_args.save(args_path)

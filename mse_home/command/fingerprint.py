@@ -3,7 +3,6 @@
 
 import re
 import tempfile
-import uuid
 from pathlib import Path
 
 from mse_home.command.helpers import get_client_docker, load_docker_image

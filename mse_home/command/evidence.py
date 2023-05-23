@@ -12,8 +12,8 @@ from intel_sgx_ra.ratls import get_server_certificate
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_home.model.sgx_docker import SgxDockerConfig
 from mse_home.model.evidence import ApplicationEvidence
+from mse_home.model.sgx_docker import SgxDockerConfig
 
 
 def add_subparser(subparsers):

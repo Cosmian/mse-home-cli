@@ -1,7 +1,7 @@
 """mse_home.model.test_docker module."""
 
 from pathlib import Path
-from typing import ClassVar, Dict, List, Optional
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class TestDockerConfig(BaseModel):
         """Serialize the docker command args."""
         return ["--application", self.application, "--debug"]
 
-    def ports(self) -> Dict[str, List[Dict[str, str]]]:
+    def ports(self) -> Dict[str, Tuple[str, str]]:
         """Define the docker ports."""
         return {f"{self.port}/tcp": ("127.0.0.1", str(self.port))}
 

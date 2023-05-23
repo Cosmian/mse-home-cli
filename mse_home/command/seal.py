@@ -6,7 +6,6 @@ from intel_sgx_ra.ratls import ratls_verification
 from mse_lib_crypto.seal_box import seal
 
 from mse_home.log import LOGGER as LOG
-from mse_home.model.evidence import ApplicationEvidence
 
 
 def add_subparser(subparsers):

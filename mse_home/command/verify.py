@@ -16,7 +16,8 @@ def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
         "verify",
-        help="Verify the trustworthiness of a running MSE web application and get the ratls certificate",
+        help="Verify the trustworthiness of a running MSE web application "
+        "and get the ratls certificate",
     )
 
     parser.add_argument(

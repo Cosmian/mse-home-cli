@@ -7,11 +7,11 @@ from typing import Any, Dict
 
 import requests
 from docker.errors import NotFound
+from mse_cli_utils.base64 import base64url_encode
 
 from mse_home.command.helpers import get_client_docker, is_ready, is_waiting_for_secrets
 from mse_home.log import LOGGER as LOG
 from mse_home.model.sgx_docker import SgxDockerConfig
-from mse_cli_utils.base64 import base64url_encode
 
 
 def add_subparser(subparsers):

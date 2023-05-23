@@ -5,11 +5,13 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 from docker.errors import BuildError
+from docker.models.containers import Container
 from mse_cli_utils.clock_tick import ClockTick
 
-from mse_home.command.helpers import get_client_docker, is_ready, is_spawned
+from mse_home.command.helpers import get_client_docker, is_ready
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
 from mse_home.model.test_docker import TestDockerConfig
@@ -60,27 +62,20 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    code_path = args.code.resolve()
-    if not code_path.is_dir():
-        raise IOError(f"{code_path} does not exist")
+    if not args.code.is_dir():
+        raise IOError(f"{args.code} does not exist")
 
-    test_path: Path = args.test.resolve()
-    if not test_path.is_dir():
-        raise IOError(f"{test_path} does not exist")
+    if not args.test.is_dir():
+        raise IOError(f"{args.test} does not exist")
 
-    dockerfile_path: Path = args.dockerfile.resolve()
-    if not dockerfile_path.is_file():
-        raise IOError(f"{dockerfile_path} does not exist")
+    if not args.dockerfile.is_file():
+        raise IOError(f"{args.dockerfile} does not exist")
 
-    if args.secrets:
-        secrets_path: Path = args.secrets.resolve()
-        if not secrets_path.is_file():
-            raise IOError(f"{secrets_path} does not exist")
+    if not args.secrets.is_file():
+        raise IOError(f"{args.secrets} does not exist")
 
-    if args.sealed_secrets:
-        sealed_secrets_path: Path = args.sealed_secrets.resolve()
-        if not sealed_secrets_path.is_file():
-            raise IOError(f"{sealed_secrets_path} does not exist")
+    if not args.sealed_secrets.is_file():
+        raise IOError(f"{ args.sealed_secrets} does not exist")
 
     code_config = CodeConfig.load(args.config)
     now = time.time_ns()
@@ -89,27 +84,52 @@ def run(args) -> None:
 
     client = get_client_docker()
 
-    try:
-        LOG.info("Building your docker image...")
-
-        # Build the docker
-        client.images.build(
-            path=str(args.dockerfile.parent),
-            tag=docker_name,
-        )
-    except BuildError as exc:
-        raise Exception(f"Failed to build your docker: {exc}") from exc
+    build_test_docker(client, args.dockerfile, docker_name)
 
     LOG.info("Starting the docker: %s...", docker_name)
-
     docker_config = TestDockerConfig(
-        code=code_path,
+        code=args.code,
         application=code_config.python_application,
-        sealed_secrets=sealed_secrets_path,
-        secrets=secrets_path,
+        secrets=args.secrets,
+        sealed_secrets=args.sealed_secrets,
         port=5000,
     )
 
+    try:
+        container = run_app_docker(
+            client,
+            docker_name,
+            container_name,
+            docker_config,
+            code_config.healthcheck_endpoint,
+        )
+
+        success = run_tests(
+            code_config,
+            args.test,
+            args.secrets,
+            args.sealed_secrets,
+        )
+
+        if not success:
+            print("The docker logs are:", container.logs().decode("utf-8"))
+
+    except Exception as exc:
+        raise exc
+    finally:
+        container.stop(timeout=1)
+        # We need to remove the container since we declare remove=False previously
+        container.remove()
+
+
+def run_app_docker(
+    client,
+    docker_name,
+    container_name: str,
+    docker_config: TestDockerConfig,
+    healthcheck_endpoint: str,
+) -> Container:
+    """Run the app docker to test."""
     container = client.containers.run(
         docker_name,
         name=container_name,
@@ -118,7 +138,8 @@ def run(args) -> None:
         entrypoint=TestDockerConfig.entrypoint,
         ports=docker_config.ports(),
         detach=True,
-        remove=False,  # We do not remove the container to be able to print the error (if some)
+        # We do not remove the container to be able to print the error (if some)
+        remove=False,
     )
 
     clock = ClockTick(
@@ -127,43 +148,67 @@ def run(args) -> None:
         message="Test application docker is unreachable!",
     )
 
-    try:
-        while clock.tick():
-            # Note: container.status is not actualized. Get it again to have the current status
-            if client.containers.get(container_name).status == "exited":
-                raise Exception(
-                    f"Application docker fails to start with the following error:\n{container.logs().decode('utf-8')}"
-                )
+    while clock.tick():
+        # Note: container.status is not actualized.
+        # Get it again to have the current status
+        container = client.containers.get(container_name)
 
-            if is_ready(
-                "http://localhost", docker_config.port, code_config.healthcheck_endpoint
-            ):
-                break
-
-        LOG.info("Installing tests requirements...")
-        for package in code_config.tests_requirements:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", package],
-                stdout=subprocess.DEVNULL,
+        if container.status == "exited":
+            raise Exception(
+                "Application docker fails to start with the "
+                f"following error:\n{container.logs().decode('utf-8')}"
             )
 
-        LOG.info("Running tests...")
-        env = dict(os.environ)
-        if args.secrets:
-            env["TEST_SECRET_JSON"] = str(secrets_path)
+        if is_ready("http://localhost", docker_config.port, healthcheck_endpoint):
+            break
 
-        if args.sealed_secrets:
-            env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets_path)
+    return container
 
-        subprocess.check_call(code_config.tests_cmd, cwd=args.test, env=env)
+
+def run_tests(
+    code_config: CodeConfig,
+    tests: Path,
+    secrets: Optional[Path],
+    sealed_secrets: Optional[Path],
+) -> bool:
+    """Run the tests."""
+
+    LOG.info("Installing tests requirements...")
+    for package in code_config.tests_requirements:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", package],
+            stdout=subprocess.DEVNULL,
+        )
+
+    LOG.info("Running tests...")
+    env = dict(os.environ)
+    if secrets:
+        env["TEST_SECRET_JSON"] = str(secrets)
+
+    if sealed_secrets:
+        env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets)
+
+    try:
+        subprocess.check_call(code_config.tests_cmd, cwd=tests, env=env)
 
         LOG.info("Tests succeed!")
+        return True
     except subprocess.CalledProcessError:
-        LOG.error("Tests failed! The docker logs are:")
-        print(container.logs().decode("utf-8"))
-    except Exception as exc:
-        raise exc
-    finally:
-        container.stop(timeout=1)
-        # We need to remove the container since we declare remove=False previously
-        container.remove()
+        LOG.error("Tests failed!")
+
+    return False
+
+
+def build_test_docker(client, dockerfile: Path, docker_name: str):
+    """Build the test docker."""
+
+    try:
+        LOG.info("Building your docker image...")
+
+        # Build the docker
+        client.images.build(
+            path=str(dockerfile.parent),
+            tag=docker_name,
+        )
+    except BuildError as exc:
+        raise Exception(f"Failed to build your docker: {exc}") from exc

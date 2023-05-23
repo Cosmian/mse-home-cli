@@ -1,7 +1,7 @@
 """mse_home.model.sgx_docker module."""
 
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Tuple
 from uuid import UUID
 
 from docker.models.containers import Container
@@ -43,7 +43,7 @@ class SgxDockerConfig(BaseModel):
             str(self.expiration_date),
         ]
 
-    def ports(self) -> Dict[str, List[Dict[str, str]]]:
+    def ports(self) -> Dict[str, Tuple[str, str]]:
         """Define the docker ports."""
         return {"443/tcp": ("127.0.0.1", str(self.port))}
 
