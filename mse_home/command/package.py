@@ -177,5 +177,5 @@ def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
                 f.write(chunk)
 
     except BuildError as exc:
-        LOG.error("Failed to build your docker: %s", exc)
+        LOG.error("Failed to build your docker!")
         raise exc

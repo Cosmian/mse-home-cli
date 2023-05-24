@@ -5,11 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from docker.errors import NotFound
 from mse_cli_core.bootstrap import is_waiting_for_secrets
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.model.code import CodeConfig
 
 
@@ -43,13 +42,7 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
-
-    try:
-        container = client.containers.get(args.name)
-    except NotFound as exc:
-        raise Exception(
-            f"Can't find the mse docker for application '{args.name}'"
-        ) from exc
+    container = get_app_container(client, args.name)
 
     docker = SgxDockerConfig.load(container.attrs, container.labels)
 

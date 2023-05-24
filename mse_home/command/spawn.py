@@ -1,17 +1,19 @@
 """mse_home.command.spawn module."""
 
-import socket
 from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
+from docker.client import DockerClient
 from mse_cli_core.bootstrap import wait_for_conf_server
+from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import (
-    docker_container_exists,
+    app_container_exists,
     get_client_docker,
+    is_port_free,
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
@@ -83,7 +85,9 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    if docker_container_exists(args.name):
+    client = get_client_docker()
+
+    if app_container_exists(client, args.name):
         raise Exception(
             f"Docker container {args.name} is already running. "
             "Stop and remove it before respawn it!"
@@ -97,7 +101,8 @@ def run(args) -> None:
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
     code_config = CodeConfig.load(package.config_path)
-    image = load_docker_image(package.image_tar)
+
+    image = load_docker_image(client, package.image_tar)
 
     docker_config = SgxDockerConfig(
         size=args.size,
@@ -112,13 +117,22 @@ def run(args) -> None:
     )
 
     run_docker_image(
+        client,
         args.name,
         image,
         docker_config,
     )
 
     LOG.info("Waiting for the configuration server to be ready...")
-    wait_for_conf_server(f"https://localhost:{args.port}", False)
+    wait_for_conf_server(
+        ClockTick(
+            period=5,
+            timeout=5 * 60,
+            message="The configuration server is unreachable!",
+        ),
+        f"https://localhost:{args.port}",
+        False,
+    )
     LOG.info("The application is now ready to receive the secrets!")
 
     app_args = NoSgxDockerConfig.from_sgx(docker_config)
@@ -127,28 +141,14 @@ def run(args) -> None:
     app_args.save(args_path)
 
 
-def is_port_free(port: int):
-    """Check whether a given `port` is free."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.bind(("", port))
-        sock.close()
-    except OSError:
-        return False
-
-    return True
-
-
 def run_docker_image(
+    client: DockerClient,
     app_name: str,
     image: str,
     docker_config: SgxDockerConfig,
 ):
     """Run the mse docker."""
-    client = get_client_docker()
-
     LOG.info("Starting the docker...")
-
     container = client.containers.run(
         image,
         name=app_name,

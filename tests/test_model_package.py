@@ -4,6 +4,8 @@ import filecmp
 from pathlib import Path
 from tarfile import TarFile
 
+import pytest
+
 from mse_home.model.package import CodePackage
 
 
@@ -46,3 +48,18 @@ def test_extract(workspace: Path):
     assert filecmp.cmp(
         Path(__file__).parent / "data" / "code.toml", package.config_path
     )
+
+
+def test_extract_bad_tar(workspace: Path):
+    """Test the `extract` method with errors."""
+    # Not a tar
+    package_tar = Path(__file__).parent / "data" / "args.toml"
+
+    with pytest.raises(Exception):
+        CodePackage.extract(workspace, package_tar)
+
+    # Tar but without the expecting content
+    package_tar = Path(__file__).parent / "data" / "package" / "code.tar"
+
+    with pytest.raises(Exception):
+        CodePackage.extract(workspace, package_tar)

@@ -78,8 +78,7 @@ def run(args) -> None:
         raise IOError(f"{ args.sealed_secrets} does not exist")
 
     code_config = CodeConfig.load(args.config)
-    docker_name = f"{code_config.name}_test"
-    container_name = f"{code_config.name}_test"
+    container_name = docker_name = f"{code_config.name}_test"
 
     client = get_client_docker()
 
@@ -94,6 +93,7 @@ def run(args) -> None:
         port=5000,
     )
 
+    success = False
     try:
         container = run_app_docker(
             client,
@@ -110,14 +110,13 @@ def run(args) -> None:
             args.sealed_secrets,
         )
 
-        if not success:
-            print("The docker logs are:", container.logs().decode("utf-8"))
-
     except Exception as exc:
         raise exc
     finally:
         try:
             container = client.containers.get(container_name)
+            if not success:
+                LOG.info("The docker logs are:\n%s", container.logs().decode("utf-8"))
             container.stop(timeout=1)
             # We need to remove the container since we declare remove=False previously
             container.remove()

@@ -1,11 +1,15 @@
 """mse_home.command.helpers module."""
 
+import socket
 from pathlib import Path
+from typing import Optional
 
 from docker import from_env
 from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
+from docker.models.containers import Container
 
+from mse_home.error import AppContainerNotFound
 from mse_home.log import LOGGER as LOG
 
 
@@ -20,23 +24,39 @@ def get_client_docker() -> DockerClient:
         raise exc
 
 
-def docker_container_exists(name: str) -> bool:
-    """Check whether a mse docker is running based on its `name`."""
-    client = get_client_docker()
-
+def app_container_exists(client: DockerClient, name: str) -> Optional[Container]:
+    """Check whether an mse docker container exists based on its `name`."""
     try:
-        client.containers.get(name)
-    except NotFound:
-        return False
-
-    return True
+        return get_app_container(client, name)
+    except AppContainerNotFound:
+        return None
 
 
-def load_docker_image(image_tar_path: Path) -> str:
+def get_app_container(client: DockerClient, name: str) -> Container:
+    """Get an mse docker container based on its `name`."""
+    try:
+        return client.containers.get(name)
+    except NotFound as exc:
+        raise AppContainerNotFound(
+            f"Can't find the mse docker for application '{name}'"
+        ) from exc
+
+
+def load_docker_image(client: DockerClient, image_tar_path: Path) -> str:
     """Load the docker image from the image tarball."""
     LOG.info("Loading the docker image...")
-    client = get_client_docker()
-
     with open(image_tar_path, "rb") as f:
         image = client.images.load(f.read())
         return image[0].tags[0]
+
+
+def is_port_free(port: int):
+    """Check whether a given `port` is free."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(("", port))
+        sock.close()
+    except OSError:
+        return False
+
+    return True
