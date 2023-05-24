@@ -28,7 +28,7 @@ def aes_decrypt(text: bytes, key: bytes, iv: bytes) -> bytes:
 
 
 def test_result_secret(url, certificate, secret_json):
-    """Test get method on //result/secrets."""
+    """Test get method on /result/secrets."""
     if not secret_json:
         pytest.skip()
 
