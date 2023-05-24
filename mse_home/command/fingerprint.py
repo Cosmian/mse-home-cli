@@ -42,10 +42,9 @@ def run(args) -> None:
 
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
-    image = load_docker_image(package.image_tar)
 
     client = get_client_docker()
-
+    image = load_docker_image(client, package.image_tar)
     mrenclave = compute_mr_enclave(
         client,
         image,

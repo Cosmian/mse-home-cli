@@ -3,10 +3,9 @@
 from datetime import datetime
 
 import requests
-from docker.errors import NotFound
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.log import LOGGER as LOG
 
 
@@ -26,13 +25,7 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
-
-    try:
-        container = client.containers.get(args.name)
-    except NotFound as exc:
-        raise Exception(
-            f"Can't find the mse docker for application '{args.name}'"
-        ) from exc
+    container = get_app_container(client, args.name)
 
     docker = SgxDockerConfig.load(container.attrs, container.labels)
 

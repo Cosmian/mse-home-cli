@@ -1,8 +1,7 @@
 """mse_home.command.stop module."""
 
-from docker.errors import NotFound
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.log import LOGGER as LOG
 
 
@@ -22,13 +21,8 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
+    container = get_app_container(client, args.name)
 
-    try:
-        LOG.info("Restarting your application docker...")
-
-        container = client.containers.get(args.name)
-        container.restart()
-
-        LOG.info("Docker '%s' is now restarted!", args.name)
-    except NotFound as exc:
-        raise Exception(f"Can't find mse docker '{args.name}'") from exc
+    LOG.info("Restarting your application docker...")
+    container.restart()
+    LOG.info("Docker '%s' is now restarted!", args.name)

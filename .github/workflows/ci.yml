@@ -20,16 +20,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8"]
-    # container:
-    #   image: python:3.8
-    #   volumes:
-    #     - /var/run/docker.sock:/var/run/docker.sock
-    #     - /tmp:/tmp
-    #     - /dev/sgx_enclave:/dev/sgx_enclave
-    #     - /dev/sgx_provision:/dev/sgx_provision
-    #     - /dev/sgx/enclave:/dev/sgx/enclave
-    #     - /dev/sgx/provision:/dev/sgx/provision
-    #     - /opt/cosmian-internal/cosmian-signer-key.pem:/opt/cosmian-internal/cosmian-signer-key.pem
     steps:
       - uses: actions/checkout@v3
 

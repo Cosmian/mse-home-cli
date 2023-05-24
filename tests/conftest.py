@@ -41,13 +41,13 @@ def capture_logs(f: io.StringIO) -> str:
 
 @pytest.fixture(scope="session")
 def app_name() -> str:
-    """The name of the application to spawn"""
+    """Define the name of the application to spawn."""
     return f"app_{time.time_ns()}"
 
 
 @pytest.fixture(scope="session")
 def port() -> int:
-    """The port of the app docker to spawn."""
+    """Define the port of the app docker to spawn."""
     return 5555
 
 
@@ -59,13 +59,13 @@ def port2() -> int:
 
 @pytest.fixture(scope="session")
 def host() -> str:
-    """The host of the app docker to spawn."""
+    """Define the host of the app docker to spawn."""
     return "localhost"
 
 
 @pytest.fixture(scope="session")
 def pccs_url() -> str:
-    """The pccs url."""
+    """Define the pccs url."""
     e = os.getenv("TEST_PCCS_URL")
     if not e:
         raise Exception("Can't find `TEST_PCCS_URL` env variable")
@@ -74,7 +74,7 @@ def pccs_url() -> str:
 
 @pytest.fixture(scope="session")
 def signer_key() -> Path:
-    """The signer key."""
+    """Define the signer key."""
     e = os.getenv("TEST_SIGNER_KEY")
     if not e:
         raise Exception("Can't find `TEST_SIGNER_KEY` env variable")
@@ -84,10 +84,12 @@ def signer_key() -> Path:
 @pytest.mark.usefixtures("workspace")
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Hook the makereport to cleanup after test failure/"""
-    # Because this is a hookwrapper, calling `yield` lets the actual hooks run & returns a `_Result`
+    """Put an hook the makereport to cleanup after test failure."""
+    # Because this is a hookwrapper, calling `yield` lets
+    # the actual hooks run & returns a `_Result`
     result = yield
-    # Get the actual `TestReport` which the hook(s) returned, having done the hard work for you
+    # Get the actual `TestReport` which the hook(s) returned,
+    # having done the hard work for you
     report = result.get_result()
 
     # If a test fail, try to clean up the dockers we could have spawned

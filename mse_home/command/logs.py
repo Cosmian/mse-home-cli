@@ -1,8 +1,6 @@
 """mse_home.command.logds module."""
 
-from docker.errors import NotFound
-
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.log import LOGGER as LOG
 
 
@@ -29,14 +27,11 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
+    container = get_app_container(client, args.name)
 
-    try:
-        container = client.containers.get(args.name)
-        if args.follow:
-            LOG.info("skipping...")
-            for line in container.logs(tail=10, stream=True):
-                LOG.info(line.decode("utf-8").strip())
-        else:
-            LOG.info(container.logs().decode("utf-8"))
-    except NotFound as exc:
-        raise Exception(f"Can't find mse docker '{args.name}'") from exc
+    if args.follow:
+        LOG.info("skipping...")
+        for line in container.logs(tail=10, stream=True):
+            LOG.info(line.decode("utf-8").strip())
+    else:
+        LOG.info(container.logs().decode("utf-8"))
