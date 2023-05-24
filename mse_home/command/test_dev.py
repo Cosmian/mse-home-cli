@@ -3,11 +3,10 @@
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import Optional
 
-from docker.errors import BuildError
+from docker.errors import BuildError, NotFound
 from docker.models.containers import Container
 from mse_cli_core.bootstrap import is_ready
 from mse_cli_core.clock_tick import ClockTick
@@ -72,16 +71,15 @@ def run(args) -> None:
     if not args.dockerfile.is_file():
         raise IOError(f"{args.dockerfile} does not exist")
 
-    if not args.secrets.is_file():
+    if args.secrets and not args.secrets.is_file():
         raise IOError(f"{args.secrets} does not exist")
 
-    if not args.sealed_secrets.is_file():
+    if args.sealed_secrets and not args.sealed_secrets.is_file():
         raise IOError(f"{ args.sealed_secrets} does not exist")
 
     code_config = CodeConfig.load(args.config)
-    now = time.time_ns()
-    docker_name = f"{code_config.name}:{now}"
-    container_name = f"{code_config.name}_{now}"
+    docker_name = f"{code_config.name}_test"
+    container_name = f"{code_config.name}_test"
 
     client = get_client_docker()
 
@@ -118,9 +116,13 @@ def run(args) -> None:
     except Exception as exc:
         raise exc
     finally:
-        container.stop(timeout=1)
-        # We need to remove the container since we declare remove=False previously
-        container.remove()
+        try:
+            container = client.containers.get(container_name)
+            container.stop(timeout=1)
+            # We need to remove the container since we declare remove=False previously
+            container.remove()
+        except NotFound:
+            pass
 
 
 def run_app_docker(
@@ -155,12 +157,9 @@ def run_app_docker(
         container = client.containers.get(container_name)
 
         if container.status == "exited":
-            raise Exception(
-                "Application docker fails to start with the "
-                f"following error:\n{container.logs().decode('utf-8')}"
-            )
+            raise Exception("Application docker fails to start")
 
-        if is_ready("http://localhost", docker_config.port, healthcheck_endpoint):
+        if is_ready(f"http://localhost:{docker_config.port}", healthcheck_endpoint):
             break
 
     return container

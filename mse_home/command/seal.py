@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from intel_sgx_ra.ratls import ratls_verification
+from intel_sgx_ra.ratls import ratls_verify
 from mse_lib_crypto.seal_box import seal
 
 from mse_home.log import LOGGER as LOG
@@ -41,7 +41,7 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    quote = ratls_verification(args.cert)
+    quote = ratls_verify(args.cert)
 
     enclave_pk = quote.report_body.report_data[32:64]
     sealed_secrets = seal(args.secrets.read_bytes(), enclave_pk)

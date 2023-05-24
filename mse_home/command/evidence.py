@@ -7,7 +7,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import CertificateRevocationList, load_pem_x509_certificate
 from docker.errors import NotFound
-from intel_sgx_ra.pcs import get_pck_cert_crl, get_root_ca_crl
+from intel_sgx_ra.pccs import get_pck_cert_crl, get_root_ca_crl
 from intel_sgx_ra.ratls import get_server_certificate
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
@@ -60,7 +60,7 @@ def run(args) -> None:
 
     docker = SgxDockerConfig.load(container.attrs, container.labels)
 
-    # TODO: verify the docker is running?
+    # verify the docker is running?
 
     # Get the certificate from the application
     try:
@@ -77,9 +77,6 @@ def run(args) -> None:
     pck_platform_crl: CertificateRevocationList = get_pck_cert_crl(
         args.pccs, "platform"
     )
-    pck_processor_crl: CertificateRevocationList = get_pck_cert_crl(
-        args.pccs, "processor"
-    )
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -90,7 +87,6 @@ def run(args) -> None:
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
-        pck_processor_crl=pck_processor_crl,
         tcb_info=None,
         signer_pk=signer_key.public_key(),
     )
