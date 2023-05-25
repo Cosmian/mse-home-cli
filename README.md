@@ -46,7 +46,7 @@ __User__: the code provider
 ```console
 $ msehome test-dev --code example/mse_src/ \
                    --dockerfile example/Dockerfile \
-                   --config example/mse.home.toml \
+                   --config example/code.toml \
                    --test example/tests/
 ```
 
@@ -57,7 +57,7 @@ __User__: the code provider
 ```console
 $ msehome package --code example/mse_src/ \
                   --dockerfile example/Dockerfile \
-                  --config example/mse.home.toml \
+                  --config example/code.toml \
                   --test example/tests/ \
                   --output workspace/code_provider 
 ```
@@ -110,14 +110,14 @@ __User__: the code provider
 2. Verify the fingerprint and the enclave information
 
     ```console
-    $ msehome verify --evidence output/evidence.json
-                     --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3
+    $ msehome verify --evidence output/evidence.json \
+                     --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3 \
                      --output /tmp
     ```
 
     If the verification succeed, you get the ratls certificat and you can now seal the code key to share it with the sgx operator.
 
-### Seal the code key
+### Seal your secrets
 
 __User__: the code provider
 
@@ -140,7 +140,7 @@ __User__: the sgx operator
 
 ```console
 $ msehome test --test workspace/sgx_operator/tests/ \
-               --config workspace/sgx_operator/mse.home.toml \
+               --config workspace/sgx_operator/code.toml \
                app_name
 ```
 
@@ -153,8 +153,9 @@ Assume the sgx operator gets a result as follow: `curl https://localhost:7788/re
 Then, the code provider can decrypt the result has follow:
 
 ```console
-$ msehome decrypt --aes 00112233445566778899aabbccddeeff --output workspace/code_provider/result.plain res
-ult.enc
+$ msehome decrypt --aes 00112233445566778899aabbccddeeff \
+                  --output workspace/code_provider/result.plain \
+                  result.enc
 $ cat workspace/code_provider/result.plain
 ```
 
