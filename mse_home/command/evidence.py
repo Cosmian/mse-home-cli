@@ -5,13 +5,12 @@ import ssl
 from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import CertificateRevocationList, load_pem_x509_certificate
-from docker.errors import NotFound
-from intel_sgx_ra.pccs import get_pck_cert_crl, get_root_ca_crl
+from cryptography.x509 import load_pem_x509_certificate
+from intel_sgx_ra.attest import retrieve_collaterals
 from intel_sgx_ra.ratls import get_server_certificate
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.evidence import ApplicationEvidence
 
@@ -50,17 +49,9 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
-
-    try:
-        container = client.containers.get(args.name)
-    except NotFound as exc:
-        raise Exception(
-            f"Can't find the mse docker for application '{args.name}'"
-        ) from exc
+    container = get_app_container(client, args.name)
 
     docker = SgxDockerConfig.load(container.attrs, container.labels)
-
-    # verify the docker is running?
 
     # Get the certificate from the application
     try:
@@ -73,10 +64,7 @@ def run(args) -> None:
             "Are you sure the application is still running?"
         ) from exc
 
-    root_ca_crl: CertificateRevocationList = get_root_ca_crl(args.pccs)
-    pck_platform_crl: CertificateRevocationList = get_pck_cert_crl(
-        args.pccs, "platform"
-    )
+    (root_ca_crl, pck_platform_crl) = retrieve_collaterals(args.pccs, "platform")
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
