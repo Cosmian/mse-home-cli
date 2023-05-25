@@ -1,6 +1,5 @@
 """mse_home.command.verify module."""
 
-
 from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -49,7 +48,12 @@ def run(args) -> None:
     evidence = ApplicationEvidence.load(args.evidence)
 
     try:
-        verify_enclave(evidence.signer_pk, evidence.ratls_certificate, args.fingerprint)
+        verify_enclave(
+            evidence.signer_pk,
+            evidence.ratls_certificate,
+            args.fingerprint,
+            collaterals=(evidence.root_ca_crl, evidence.pck_platform_crl),
+        )
     except Exception as exc:
         LOG.error("Verification failed!")
         raise exc
