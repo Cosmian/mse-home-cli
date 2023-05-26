@@ -52,7 +52,7 @@ def run(args) -> None:
             evidence.signer_pk,
             evidence.ratls_certificate,
             args.fingerprint,
-            collaterals=(evidence.root_ca_crl, evidence.pck_platform_crl),
+            collaterals=evidence.collaterals,
         )
     except Exception as exc:
         LOG.error("Verification failed!")

@@ -64,7 +64,9 @@ def run(args) -> None:
             "Are you sure the application is still running?"
         ) from exc
 
-    (root_ca_crl, pck_platform_crl) = retrieve_collaterals(args.pccs, "platform")
+    (tcb_info, tcb_cert, root_ca_crl, pck_platform_crl) = retrieve_collaterals(
+        fmspc, args.pccs, "platform"
+    )
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -75,7 +77,8 @@ def run(args) -> None:
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
-        tcb_info=None,
+        tcb_info=tcb_info,
+        tcb_cert=tcb_cert,
         signer_pk=signer_key.public_key(),
     )
 
