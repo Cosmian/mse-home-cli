@@ -6,7 +6,7 @@ In the mse home usage scenario, two roles are defined:
 MSE home deals with several trust issues. Noone needs to trust in anyone:
 
 - The code provider can send the code in plaintext or encrypted to the sgx operator. Only the SGX enclave is able to decrypt and run it.
-- The code provider can send secrets required by the code in plaintext or encrypted to the sgx operator. Only the SGX enclave is able to decrypt and use them.
+- The code provider can send secrets required by the code in plaintext or encrypted to the sgx operator. No one can alter the result before the code provider gets them.
 - The result of the code can be generated in plaintext or encrypted and readable only by the code provider. Only the code provider could decrypt it.
 - The code runs on the SGX technology so the memory is fully encrypted and the code integrity is verifiable at any times. Noone can access the data, the result or the code during execution.
 

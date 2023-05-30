@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 from cryptography.hazmat.primitives.serialization import (
@@ -28,7 +28,9 @@ class ApplicationEvidence(BaseModel):
 
     pck_platform_crl: CertificateRevocationList
 
-    tcb_info: Optional[Tuple[Tuple[Certificate, Certificate], Dict[str, Any]]]
+    tcb_info: bytes
+
+    tcb_cert: Certificate
 
     signer_pk: PublicKeyTypes
 
@@ -36,6 +38,15 @@ class ApplicationEvidence(BaseModel):
         """Overwrite internal structure."""
 
         arbitrary_types_allowed = True
+
+    @property
+    def collaterals(
+        self,
+    ) -> Tuple[
+        bytes, Certificate, CertificateRevocationList, CertificateRevocationList
+    ]:
+        """Return the PCCS collaterals."""
+        return (self.tcb_info, self.tcb_cert, self.root_ca_crl, self.pck_platform_crl)
 
     @staticmethod
     def load(path: Path):
@@ -51,7 +62,8 @@ class ApplicationEvidence(BaseModel):
                 pck_platform_crl=load_pem_x509_crl(
                     dataMap["pck_platform_crl"].encode("utf-8")
                 ),
-                tcb_info=None,
+                tcb_info=bytes.fromhex(dataMap["tcb_info"]),
+                tcb_cert=load_pem_x509_certificate(dataMap["tcb_cert"].encode("utf-8")),
                 signer_pk=load_pem_public_key(
                     dataMap["signer_pk"].encode("utf-8"),
                 ),
@@ -70,7 +82,10 @@ class ApplicationEvidence(BaseModel):
                 "pck_platform_crl": self.pck_platform_crl.public_bytes(
                     encoding=Encoding.PEM,
                 ).decode("utf-8"),
-                "tcb_info": self.tcb_info,
+                "tcb_info": self.tcb_info.hex(),
+                "tcb_cert": self.tcb_cert.public_bytes(encoding=Encoding.PEM).decode(
+                    "utf-8"
+                ),
                 "signer_pk": self.signer_pk.public_bytes(
                     encoding=Encoding.PEM,
                     format=PublicFormat.SubjectPublicKeyInfo,

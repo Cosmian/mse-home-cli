@@ -7,7 +7,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 from intel_sgx_ra.attest import retrieve_collaterals
-from intel_sgx_ra.ratls import get_server_certificate
+from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_app_container, get_client_docker
@@ -64,7 +64,11 @@ def run(args) -> None:
             "Are you sure the application is still running?"
         ) from exc
 
-    (root_ca_crl, pck_platform_crl) = retrieve_collaterals(args.pccs, "platform")
+    quote = ratls_verify(ratls_cert)
+
+    (tcb_info, tcb_cert, root_ca_crl, pck_platform_crl) = retrieve_collaterals(
+        quote, args.pccs
+    )
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -75,7 +79,8 @@ def run(args) -> None:
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
-        tcb_info=None,
+        tcb_info=tcb_info,
+        tcb_cert=tcb_cert,
         signer_pk=signer_key.public_key(),
     )
 
