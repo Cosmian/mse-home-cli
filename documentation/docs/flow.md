@@ -12,5 +12,4 @@ MSE home deals with several trust issues. Noone needs to trust in anyone:
 
 The following flow sums up the chained step from to deploy and run the code by being compliant with the previous privacy & security levels
 
-# TODO put the schema
-
+![](./images/deploy.png)
