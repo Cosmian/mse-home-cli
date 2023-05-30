@@ -46,7 +46,7 @@ class ApplicationEvidence(BaseModel):
         bytes, Certificate, CertificateRevocationList, CertificateRevocationList
     ]:
         """Return the PCCS collaterals."""
-        return (self.tcb_cert, self.tcb_info, self.root_ca_crl, self.pck_platform_crl)
+        return (self.tcb_info, self.tcb_cert, self.root_ca_crl, self.pck_platform_crl)
 
     @staticmethod
     def load(path: Path):
