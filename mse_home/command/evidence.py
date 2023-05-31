@@ -4,7 +4,7 @@ import socket
 import ssl
 from pathlib import Path
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 from intel_sgx_ra.attest import retrieve_collaterals
 from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
@@ -87,3 +87,10 @@ def run(args) -> None:
     evidence_path = args.output / "evidence.json"
     evidence.save(evidence_path)
     LOG.info("The evidence file has been generated at: %s", evidence_path)
+
+    ratls_cert_path = args.output / "ratls.pem"
+    ratls_cert_path.write_bytes(
+        evidence.ratls_certificate.public_bytes(encoding=Encoding.PEM)
+    )
+
+    LOG.info("The ratls certificate has been saved at: %s", ratls_cert_path)
