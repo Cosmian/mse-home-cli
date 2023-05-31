@@ -87,6 +87,7 @@ def run(args) -> None:
     evidence_path = args.output / "evidence.json"
     evidence.save(evidence_path)
     LOG.info("The evidence file has been generated at: %s", evidence_path)
+    LOG.info("The evidence file can now be shared!")
 
     ratls_cert_path = args.output / "ratls.pem"
     ratls_cert_path.write_bytes(
