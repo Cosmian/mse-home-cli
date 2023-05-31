@@ -13,6 +13,10 @@ Two actors are required:
 
 Read [the flow page](flow.md) to get more details about the role of each participant and the overall flow.
 
+## Pre-requesites
+
+You have to install and configure an SGX machine before going any further. 
+
 ## Install
 
 The CLI tool [`msehome`](https://github.com/Cosmian/mse-home-cli) requires at least [Python](https://www.python.org/downloads/) 3.8 and [OpenSSL](https://www.openssl.org/source/) 1.1.1 series.
@@ -71,14 +75,13 @@ example/
     ├── app.py
 │   └── .mseignore
 ├── README.md
-├── requirements-dev.txt
 ├── secrets.json
 ├── secrets_to_seal.json
 └── tests
     ├── conftest.py
     └── test_app.py
 
-2 directories, 10 files
+2 directories, 9 files
 ```
 
 
