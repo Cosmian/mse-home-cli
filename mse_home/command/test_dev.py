@@ -182,10 +182,10 @@ def run_tests(
     LOG.info("Running tests...")
     env = dict(os.environ)
     if secrets:
-        env["TEST_SECRET_JSON"] = str(secrets)
+        env["TEST_SECRET_JSON"] = str(secrets.resolve())
 
     if sealed_secrets:
-        env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets)
+        env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets.resolve())
 
     try:
         subprocess.check_call(code_config.tests_cmd, cwd=tests, env=env)
