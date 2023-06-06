@@ -92,16 +92,24 @@ The `Dockerfile` should inherit from the `mse-docker-base` and include all depen
 The file `app.py` is a basic Flask application with no extra code. Adapting your own application to MSE does not require any modification to your Python code:
 
 ```python
+import json
+import os
 from http import HTTPStatus
+from pathlib import Path
+
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from flask import Flask, Response
 
 app = Flask(__name__)
+
+sealed_secret_json = Path(os.getenv("SEALED_SECRETS_PATH"))
+secret_json = Path(os.getenv("SECRETS_PATH"))
 
 
 @app.get("/health")
 def health_check():
     """Health check of the application."""
-    return Response(status=HTTPStatus.OK)
+    return Response(response="OK", status=HTTPStatus.OK)
 
 
 @app.route('/')
@@ -110,8 +118,30 @@ def hello():
     return "Hello world"
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+def aes_encrypt(text: bytes, key: bytes) -> bytes:
+    """Encrypt a text using AES-CBC."""
+    iv = os.urandom(16)
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    encryptor = cipher.encryptor()
+    return iv + encryptor.update(text) + encryptor.finalize()
+
+
+@app.route("/result/secrets")
+def result_with_secret():
+    """Get a simple result using secrets."""
+    return aes_encrypt(
+        b"secret message with secrets.json",
+        bytes.fromhex(json.loads(secret_json.read_bytes())["key"]),
+    )
+
+
+@app.route("/result/sealed_secrets")
+def result_with_sealed_secret():
+    """Get a simple result using sealed secrets."""
+    return aes_encrypt(
+        b"message with sealed_secrets.json",
+        bytes.fromhex(json.loads(sealed_secret_json.read_bytes())["key"]),
+    )
 ```
 
 The [configuration file](./configuration.md) is a TOML file used to give information to the SGX operator, allowing to start correctly the application:
@@ -256,6 +286,7 @@ Share the sealed secrets file with the SGX operator.
 
 ```console
 $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.sealed \
+              --secrets example/secrets.json
               app_name
 ```
 
@@ -280,7 +311,7 @@ $ msehome test --test workspace/sgx_operator/tests/ \
 First, the SGX operator collects the result (which is encrypted):
 
 ```console
-$ curl https://localhost:7788/result --cacert /tmp/ratls.pem > result.enc
+$ curl https://localhost:7788/result/sealed_secrets --cacert /tmp/ratls.pem > result.enc
 ```
 
 This encrypted result is then sent by external means to the code provider.
@@ -288,7 +319,7 @@ This encrypted result is then sent by external means to the code provider.
 Finally, the code provider can decrypt the result:
 
 ```console
-$ msehome decrypt --aes 00112233445566778899aabbccddeeff \
+$ msehome decrypt --aes ffeeddccbbaa99887766554433221100 \
                   --output workspace/code_provider/result.plain \
                   result.enc
 $ cat workspace/code_provider/result.plain
