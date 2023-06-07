@@ -351,7 +351,7 @@ This demonstrates that `secrets.json` file has been well setup for the enclave a
     This is the way to protect secrets from the SGX operator.
 
 
-First, the SGX operator collects the result (which is encrypted):
+First, the SGX operator collects the encrypted result:
 
 ```console
 $ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/sealed_secrets > result.enc

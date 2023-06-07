@@ -1,5 +1,5 @@
-One of the advantages of using MSE to protect your application and your data in the cloud, is that your Python application does not need to be adapted.
-Indeed, you just need to pick your original code, design a standard Flask application without any specific intruction, write a configuration TOML file and run the `deploy` subcommand.
+One of the advantages of using MSE to protect your application and your data in the cloud, is that your original Python application does not need to be modified.
+You simply need to pick your original code, design a standard Flask application without any specific intruction, write a configuration TOML file and run the `deploy` subcommand.
 
 In this section are shared good practices and some considerations you need to know before developing or deploying your application inside an MSE node.
 
@@ -20,6 +20,7 @@ For example: passwords or keys to connect to a third-party service like a remote
 
 If you need such secrets to run your code, write them in a `secrets.json` file. Please see the example below.
 This file will be sent to the enclave after the latter has been verified during the app deployment.
+Note that this file is not encrypted and can be read by the SGX operator.
 Your application will then be able to read it to retrieve the secrets it needs.
 
 Example of a `secrets.json` file:
@@ -53,7 +54,7 @@ def whoami():
 !!! info "Encrypting some secrets"
 
     If your application requires some secrets to be hidden from the SGX operator, write those secrets in another file, for example `secrets_to_seal.json`.
-    Then you can seal this `secrets_to_seal.json` file with the command `msehome seal`.
+    Then you can seal this `secrets_to_seal.json` file with the `msehome seal` command.
     This command encrypts the `secrets.json` file using the trusted RA-TLS certificate.
     This certificate embeds the public key of the enclave, ensuring that only the enclave is able to decrypt the sealed `secrets.json` file.
 
