@@ -302,16 +302,59 @@ $ msehome test --test workspace/sgx_operator/tests/ \
                app_name
 ```
 
-## Decrypt the result
+## Decrypt the results
 
 !!! info User
 
     This command is designed to be used by the **code provider**
 
+
+### Fetching `/result/secrets` endpoint
+
 First, the SGX operator collects the result (which is encrypted):
 
 ```console
-$ curl https://localhost:7788/result/sealed_secrets --cacert /tmp/ratls.pem > result.enc
+$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/secrets > result.enc
+```
+
+This encrypted result is then sent by external means to the code provider.
+
+Finally, the code provider can decrypt the result:
+
+```console
+$ msehome decrypt --aes 00112233445566778899aabbccddeeff \
+                  --output workspace/code_provider/result.plain \
+                  result.enc
+$ cat workspace/code_provider/result.plain
+secret message with secrets.json
+```
+
+Note that the `--aes` parameter is the key contained in `secrets.json`.
+Looking back at the Flask code shows that the `/result/secrets` endpoint loads
+the env variable `SECRETS_PATH` to get the `key` value, using it to encrypt a text message.
+
+This demonstrates that `secrets.json` file has been well setup for the enclave and is easily accessible through an env variable.
+
+### Fetching `/result/sealed_secrets` endpoint
+
+!!! info Sealed secrets
+
+    From a user perspective, this is exactly the same as fetching `/result/secrets` endpoint.
+    Under the hoods, the original JSON file `secrets_to_seal.json` is transfered
+    sealed to the enclave (see how to [seal secrets](#seal-your-secrets)).
+
+    When [starting](#finalize-the-configuration-and-run-the-application), 
+    the app seamlessly decrypts this file with the enclave's private key, 
+    as sealed secrets are encrypted using the enclave's public key.
+    Data from `secrets_to_seal.json` is then accessible from the Flask app, through `SEALED_SECRETS_PATH` env variable.
+
+    This is the way to protect secrets from the SGX operator.
+
+
+First, the SGX operator collects the result (which is encrypted):
+
+```console
+$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/sealed_secrets > result.enc
 ```
 
 This encrypted result is then sent by external means to the code provider.
@@ -325,3 +368,4 @@ $ msehome decrypt --aes ffeeddccbbaa99887766554433221100 \
 $ cat workspace/code_provider/result.plain
 ```
 
+Note that the `--aes` parameter is the key contained in `secrets_to_seal.json`.
