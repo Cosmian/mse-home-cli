@@ -199,7 +199,9 @@ $ msehome package --code example/mse_src/ \
                   --output workspace/code_provider 
 ```
 
-The generating package can now be sent to the SGX operator.
+This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
+
+The generated package can now be sent to the SGX operator.
 
 ## Spawn the mse docker
 
