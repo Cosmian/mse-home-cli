@@ -230,6 +230,8 @@ Arguments are:
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the args file
 
+This command unpacks the tarball (thus a lot of files are created in `output` folder) specified by the `--package` argument , and generates a `args.toml` file, corresponding to arguments used to spawn the container. This file is also needed to [compute the fingerprint](#check-the-trustworthiness-of-the-application) of the microservice.
+
 Keep the `workspace/sgx_operator/args.toml` to share it with other participants. 
 
 ## Collect the evidences to verify the application
@@ -244,6 +246,8 @@ $ msehome evidence --pccs https://pccs.example.com \
                    --output workspace/sgx_operator/ \
                    app_name
 ```
+
+This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
 
 The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
 
@@ -271,7 +275,7 @@ The file `workspace/sgx_operator/evidence.json` and the previous file `workspace
                      --output /tmp
     ```
 
-    If the verification succeed, you get the RA-TLS certificate and you can now seal the code key to share it with the SGX operator.
+    If the verification succeed, you get the RA-TLS certificate (writte as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
 
 ## Seal your secrets
 
@@ -286,6 +290,8 @@ $ msehome seal --secrets example/secrets_to_seal.json \
                --cert /tmp/ratls.pem \
                --output workspace/code_provider/
 ```
+
+In this example, sealed secrets file is generated as `secrets_to_seal.json.sealed` file.
 
 Share the sealed secrets file with the SGX operator.
 
