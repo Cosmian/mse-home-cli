@@ -72,7 +72,7 @@ def test_test_dev(cmd_log: io.StringIO):
     )
 
     # Check the tar generation
-    assert "Tests succeed!" in capture_logs(cmd_log)
+    assert "Tests success" in capture_logs(cmd_log)
 
 
 @pytest.mark.slow
@@ -262,7 +262,7 @@ def test_verify(workspace: Path, cmd_log: io.StringIO):
 
     output = capture_logs(cmd_log)
 
-    assert "Verification succeed!" in output
+    assert "Verification success" in output
 
     try:
         pytest.ratls_cert = Path(
