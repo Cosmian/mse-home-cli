@@ -32,6 +32,12 @@ def workspace() -> Path:
     return Path(tempfile.mkdtemp())
 
 
+@pytest.fixture(scope="session")
+def workspace2() -> Path:
+    """Another workspace for different packaging tests."""
+    return Path(tempfile.mkdtemp())
+
+
 def capture_logs(f: io.StringIO) -> str:
     """Get the logs stacked until now."""
     log_contents = f.getvalue()
