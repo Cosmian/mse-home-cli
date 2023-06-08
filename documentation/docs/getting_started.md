@@ -221,6 +221,15 @@ $ msehome spawn --host myapp.fr \
                 app_name
 ```
 
+Arguments are:
+- `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
+- `port`: localhost port used by Docker to bind the application
+- `days`: number of days before the certificate expires
+- `signer-key`: key used to sign the enclave
+- `size`: memory size (in MB) of the enclave to spawn
+- `package`: the MSE application package containing the Docker images and the code
+- `output`: directory to write the args file
+
 Keep the `workspace/sgx_operator/args.toml` to share it with other participants. 
 
 ## Collect the evidences to verify the application

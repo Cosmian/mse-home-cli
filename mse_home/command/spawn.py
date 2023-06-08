@@ -89,7 +89,7 @@ def run(args) -> None:
 
     if app_container_exists(client, args.name):
         raise Exception(
-            f"Docker container {args.name} is already running. "
+            f"Docker container `{args.name}` is already running. "
             "Stop and remove it before respawn it!"
         )
 
