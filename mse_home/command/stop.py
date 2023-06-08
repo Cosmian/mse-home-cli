@@ -6,7 +6,7 @@ from mse_home.log import LOGGER as LOG
 
 def add_subparser(subparsers):
     """Define the subcommand."""
-    parser = subparsers.add_parser("stop", help="Stop and remove a running MSE docker")
+    parser = subparsers.add_parser("stop", help="Stop and optionally remove a running MSE docker")
 
     parser.add_argument(
         "name",
@@ -17,7 +17,7 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--remove",
         action="store_true",
-        help="Remove the docker after stopped, preventing it to be restarted later",
+        help="Remove the docker after being stopped, preventing it to be restarted later",
     )
 
     parser.set_defaults(func=run)
