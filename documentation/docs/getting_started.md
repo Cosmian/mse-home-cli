@@ -226,7 +226,7 @@ Arguments are:
 - `port`: localhost port used by Docker to bind the application
 - `days`: number of days before the certificate expires
 - `signer-key`: key used to sign the enclave
-- `size`: memory size (in MB) of the enclave to spawn
+- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.)
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the args file
 

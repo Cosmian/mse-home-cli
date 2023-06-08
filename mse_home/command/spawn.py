@@ -63,7 +63,7 @@ def add_subparser(subparsers):
         "--size",
         type=int,
         required=True,
-        help="The enclave size to spawn",
+        help="The enclave size to spawn (in MB, must be a power of 2)",
     )
 
     parser.add_argument(
