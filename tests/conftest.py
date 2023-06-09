@@ -64,6 +64,12 @@ def port2() -> int:
 
 
 @pytest.fixture(scope="session")
+def port3() -> int:
+    """Define another usable port."""
+    return 5557
+
+
+@pytest.fixture(scope="session")
 def host() -> str:
     """Define the host of the app docker to spawn."""
     return "localhost"

@@ -1,12 +1,12 @@
 # 🏕️ MSE Home CLI 
 
-MSE Home CLI is designed to start an mse application on your own SGX hardware without using all the mse cloud infrastructure. 
+MSE Home CLI is designed to start an MSE application on your own SGX hardware without using all the MSE cloud infrastructure. 
 
 We explain later how all the subscommands can be chained to deploy your own application. 
 
 Two actors are required:
-- The code provider (who can also consume the result of the mse application)
-- The sgx operator (who also owns the data to run against the mse application)
+- The code provider (who can also consume the result of the MSE application)
+- The sgx operator (who also owns the data to run against the MSE application)
 
 ## Install
 
@@ -50,21 +50,18 @@ $ msehome test-dev --code example/mse_src/ \
                    --test example/tests/
 ```
 
-### Create the mse package with the code and the docker image
+### Create the MSE package with the code and the docker image
 
 __User__: the code provider
 
 ```console
-$ msehome package --code example/mse_src/ \
-                  --dockerfile example/Dockerfile \
-                  --config example/mse.toml \
-                  --test example/tests/ \
-                  --output workspace/code_provider 
+$ msehome pack --project example/ \
+               --output workspace/code_provider 
 ```
 
 The generating package can now be sent to the sgx operator.
 
-### Spawn the mse docker
+### Spawn the MSE docker
 
 __User__: the sgx operator
 

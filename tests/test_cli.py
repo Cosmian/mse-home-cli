@@ -77,11 +77,12 @@ def test_test_dev(cmd_log: io.StringIO):
 
 @pytest.mark.slow
 @pytest.mark.incremental
-def test_package(workspace: Path, cmd_log: io.StringIO):
+def test_pack(workspace: Path, cmd_log: io.StringIO):
     """Test the `pack` subcommand."""
     do_package(
         Namespace(
             **{
+                "project": None,
                 "code": pytest.app_path / "mse_src",
                 "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
@@ -115,7 +116,7 @@ def test_package(workspace: Path, cmd_log: io.StringIO):
 
 @pytest.mark.slow
 @pytest.mark.incremental
-def test_package_no_test_folder(workspace: Path, cmd_log: io.StringIO):
+def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
     """Test the `package` subcommand."""
     do_package(
         Namespace(
@@ -123,6 +124,43 @@ def test_package_no_test_folder(workspace: Path, cmd_log: io.StringIO):
                 "code": pytest.app_path / "mse_src",
                 "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
+                "test": None,
+                "encrypt": True,
+                "output": workspace,
+            }
+        )
+    )
+
+    # Check the tar generation
+    output = capture_logs(cmd_log)
+    try:
+        pytest.key_path = Path(
+            re.search(
+                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
+            ).group(1)
+        )
+
+        pytest.package_path = Path(
+            re.search(
+                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+            ).group(1)
+        )
+    except AttributeError:
+        print(output)
+        assert False
+
+    assert pytest.package_path.exists()
+
+
+def test_pack_project(workspace: Path, cmd_log: io.StringIO):
+    """Test the `pack` subcommand with only `project` argument."""
+    do_package(
+        Namespace(
+            **{
+                "project": pytest.app_path,
+                "code": None,
+                "config": None,
+                "dockerfile": None,
                 "test": None,
                 "encrypt": True,
                 "output": workspace,
@@ -595,6 +633,7 @@ def test_plaintext(
     do_package(
         Namespace(
             **{
+                "project": None,
                 "code": pytest.app_path / "mse_src",
                 "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
@@ -671,6 +710,110 @@ def test_plaintext(
                 "name": app_name,
                 "test": pytest.app_path / "tests",
                 "config": pytest.app_path / "mse.toml",
+            }
+        )
+    )
+
+    do_stop(Namespace(**{"name": app_name, "remove": True}))
+
+    output = capture_logs(cmd_log)
+
+    assert f"Docker '{app_name}' has been stopped!" in output
+    assert f"Docker '{app_name}' has been removed!" in output
+
+
+
+@pytest.mark.slow
+@pytest.mark.incremental
+def test_plaintext_project(
+    workspace: Path,
+    cmd_log: io.StringIO,
+    app_name: str,
+    port3: int,
+    host: str,
+    signer_key: Path,
+):
+    """Test the process subcommand without encryption."""
+    do_package(
+        Namespace(
+            **{
+                "project": pytest.app_path,
+                "code": None,
+                "config": None,
+                "dockerfile": None,
+                "test": None,
+                "encrypt": False,  # We do not encrypt here
+                "output": workspace,
+            }
+        )
+    )
+
+    # Check the tar generation
+    output = capture_logs(cmd_log)
+    try:
+        assert "Your code secret key has been saved at" not in output
+
+        pytest.package_path = Path(
+            re.search(
+                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+            ).group(1)
+        )
+    except AttributeError:
+        print(output)
+        assert False
+
+    assert pytest.package_path.exists()
+
+    do_spawn(
+        Namespace(
+            **{
+                "name": app_name,
+                "package": pytest.package_path,
+                "host": host,
+                "days": 2,
+                # We use `port3` because we do not manage when
+                # docker releases the free previous port
+                "port": port3,
+                "size": 4096,
+                "signer_key": signer_key,
+                "output": workspace,
+            }
+        )
+    )
+
+    output = capture_logs(cmd_log)
+    try:
+        pytest.args_path = Path(
+            re.search(
+                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
+                output,
+            ).group(1)
+        )
+    except AttributeError:
+        print(output)
+        assert False
+
+    assert pytest.args_path.exists()
+
+    do_run(
+        Namespace(
+            **{
+                "name": app_name,
+                "key": None,
+                "secrets": None,
+                "sealed_secrets": None,
+            }
+        )
+    )
+
+    assert "Application ready!" in capture_logs(cmd_log)
+
+    do_test(
+        Namespace(
+            **{
+                "name": app_name,
+                "test": pytest.app_path / "tests",
+                "config": pytest.app_path / "code.toml",
             }
         )
     )
