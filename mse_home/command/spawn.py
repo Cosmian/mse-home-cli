@@ -48,8 +48,9 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--days",
         type=int,
-        required=True,
+        required=False,
         help="The number of days before the certificate expires",
+        default=365,
     )
 
     parser.add_argument(
@@ -63,14 +64,16 @@ def add_subparser(subparsers):
         "--size",
         type=int,
         required=True,
-        help="The enclave size to spawn (in MB, must be a power of 2)",
+        help="The enclave size to spawn",
+        choices=[4096, 8192, 16384, 32768, 65536],
     )
 
     parser.add_argument(
         "--signer-key",
         type=Path,
-        required=True,
+        required=False,
         help="The enclave signer key",
+        default="/opt/cosmian-internal/cosmian-signer-key.pem",
     )
 
     parser.add_argument(
