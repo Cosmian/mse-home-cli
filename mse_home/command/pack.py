@@ -12,7 +12,7 @@ from mse_cli_core.fs import tar, whitelist
 from mse_cli_core.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import assert_is_dir, assert_is_file, get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
 from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePackage
@@ -90,20 +90,16 @@ def run(args) -> None:
             )
 
         code_path = args.code
-        if not code_path.is_dir():
-            raise IOError(f"{code_path} does not exist")
+        assert_is_dir(code_path)
 
         test_path = args.test
-        if not test_path.is_dir():
-            raise IOError(f"{test_path} does not exist")
+        assert_is_dir(test_path)
 
         dockerfile_path = args.dockerfile
-        if not dockerfile_path.is_file():
-            raise IOError(f"{dockerfile_path} does not exist")
+        assert_is_file(dockerfile_path)
 
         config_path = args.config
-        if not config_path.is_file():
-            raise IOError(f"{config_path} does not exist")
+        assert_is_file(config_path)
 
     code_config = CodeConfig.load(config_path)
 

@@ -79,7 +79,7 @@ def test_test_dev(cmd_log: io.StringIO):
 @pytest.mark.slow
 @pytest.mark.incremental
 def test_test_dev_project(cmd_log: io.StringIO):
-    """Test the `test-dev` subcommand."""
+    """Test the `test-dev` subcommand by specifying a project directory."""
     do_test_dev(
         Namespace(
             **{
@@ -176,7 +176,7 @@ def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
 
 
 def test_pack_project(workspace: Path, cmd_log: io.StringIO):
-    """Test the `pack` subcommand with only `project` argument."""
+    """Test the `pack` subcommand by specifying a project directory."""
     do_package(
         Namespace(
             **{
@@ -756,7 +756,7 @@ def test_plaintext_project(
     host: str,
     signer_key: Path,
 ):
-    """Test the process subcommand without encryption."""
+    """Test the process subcommand without encryption by specifying a project directory."""
     do_package(
         Namespace(
             **{

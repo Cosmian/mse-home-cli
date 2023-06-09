@@ -60,3 +60,15 @@ def is_port_free(port: int):
         return False
 
     return True
+
+
+def assert_is_file(path: Path):
+    """Ensure the given `path` is an existing file."""
+    if not path.is_file():
+        raise IOError(f"file `{path}` does not exist")
+
+
+def assert_is_dir(path: Path):
+    """Ensure the given `path` is an existing dir."""
+    if not path.is_dir():
+        raise IOError(f"dir `{path}` does not exist")

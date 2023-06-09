@@ -13,7 +13,7 @@ from mse_cli_core.bootstrap import is_ready
 from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.test_docker import TestDockerConfig
 
-from mse_home.command.helpers import get_client_docker
+from mse_home.command.helpers import assert_is_dir, assert_is_file, get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
 
@@ -101,28 +101,24 @@ def run(args) -> None:
             )
 
         code_path = args.code
-        if not code_path.is_dir():
-            raise IOError(f"{code_path} does not exist")
+        assert_is_dir(code_path)
 
         test_path = args.test
-        if not test_path.is_dir():
-            raise IOError(f"{test_path} does not exist")
+        assert_is_dir(test_path)
 
         dockerfile_path = args.dockerfile
-        if not dockerfile_path.is_file():
-            raise IOError(f"{dockerfile_path} does not exist")
+        assert_is_file(dockerfile_path)
 
         config_path = args.config
-        if not config_path.is_file():
-            raise IOError(f"{config_path} does not exist")
+        assert_is_file(config_path)
 
         secrets_path = args.secrets
-        if secrets_path and not secrets_path.is_file():
-            raise IOError(f"{args.secrets} does not exist")
+        if secrets_path:
+            assert_is_file(secrets_path)
 
         sealed_secrets_path = args.sealed_secrets
-        if sealed_secrets_path and not sealed_secrets_path.is_file():
-            raise IOError(f"{sealed_secrets_path} does not exist")
+        if sealed_secrets_path:
+            assert_is_file(sealed_secrets_path)
 
     code_config = CodeConfig.load(config_path)
     container_name = docker_name = f"{code_config.name}_test"
@@ -140,6 +136,29 @@ def run(args) -> None:
         port=5000,
     )
 
+    try_run(
+        code_config,
+        client,
+        docker_name,
+        container_name,
+        docker_config,
+        test_path,
+        secrets_path,
+        sealed_secrets_path,
+    )
+
+
+def try_run(
+    code_config: CodeConfig,
+    client,
+    docker_name,
+    container_name: str,
+    docker_config: TestDockerConfig,
+    test_path: Path,
+    secrets_path: Path,
+    sealed_secrets_path: Path,
+):
+    """Try to start the app docker to test"""
     success = False
     try:
         container = run_app_docker(
