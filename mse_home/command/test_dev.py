@@ -1,5 +1,6 @@
 """mse_home.command.test_dev module."""
 
+import argparse
 import os
 import subprocess
 import sys
@@ -24,11 +25,15 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--code", type=Path, required=True, help="The path to the code to run"
+        "--project", type=Path, required=False, help="The path of the project to test"
     )
 
     parser.add_argument(
-        "--dockerfile", type=Path, required=True, help="The path to the Dockerfile"
+        "--code", type=Path, required=False, help="The path to the code to run"
+    )
+
+    parser.add_argument(
+        "--dockerfile", type=Path, required=False, help="The path to the Dockerfile"
     )
 
     parser.add_argument(
@@ -48,14 +53,14 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--test",
         type=Path,
-        required=True,
+        required=False,
         help="The path of the test directory extracted from the MSE package",
     )
 
     parser.add_argument(
         "--config",
         type=Path,
-        required=True,
+        required=False,
         help="The conf path extracted from the MSE package",
     )
 
@@ -64,34 +69,74 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    if not args.code.is_dir():
-        raise IOError(f"{args.code} does not exist")
+    code_path: Path
+    test_path: Path
+    config_path: Path
+    dockerfile_path: Path
+    secrets_path: Path
+    sealed_secrets_path: Path
 
-    if not args.test.is_dir():
-        raise IOError(f"{args.test} does not exist")
+    if args.project:
+        if args.code or args.config or args.dockerfile or args.test:
+            raise argparse.ArgumentTypeError(
+                "[--project] and [--code & --config & --dockerfile & --test] "
+                "are mutually exclusive"
+            )
 
-    if not args.dockerfile.is_file():
-        raise IOError(f"{args.dockerfile} does not exist")
+        if not args.project.is_dir():
+            raise IOError(f"{args.project} does not exist")
 
-    if args.secrets and not args.secrets.is_file():
-        raise IOError(f"{args.secrets} does not exist")
+        code_path = args.project / "mse_src"
+        test_path = args.project / "tests"
+        config_path = args.project / "code.toml"
+        dockerfile_path = args.project / "Dockerfile"
+        secrets_path = args.project / "secrets.json"
+        sealed_secrets_path = args.project / "sealed_secrets.json"
 
-    if args.sealed_secrets and not args.sealed_secrets.is_file():
-        raise IOError(f"{ args.sealed_secrets} does not exist")
+    else:
+        if not args.code or not args.test or not args.dockerfile or not args.config:
+            raise argparse.ArgumentTypeError(
+                "the following arguments are required: "
+                "--code, --dockerfile, --test, --config"
+            )
 
-    code_config = CodeConfig.load(args.config)
+        code_path = args.code
+        if not code_path.is_dir():
+            raise IOError(f"{code_path} does not exist")
+
+        test_path = args.test
+        if not test_path.is_dir():
+            raise IOError(f"{test_path} does not exist")
+
+        dockerfile_path = args.dockerfile
+        if not dockerfile_path.is_file():
+            raise IOError(f"{dockerfile_path} does not exist")
+
+        config_path = args.config
+        if not config_path.is_file():
+            raise IOError(f"{config_path} does not exist")
+
+        secrets_path = args.secrets
+        if secrets_path and not secrets_path.is_file():
+            raise IOError(f"{args.secrets} does not exist")
+
+        sealed_secrets_path = args.sealed_secrets
+        if sealed_secrets_path and not sealed_secrets_path.is_file():
+            raise IOError(f"{sealed_secrets_path} does not exist")
+
+    code_config = CodeConfig.load(config_path)
     container_name = docker_name = f"{code_config.name}_test"
 
     client = get_client_docker()
 
-    build_test_docker(client, args.dockerfile, docker_name)
+    build_test_docker(client, dockerfile_path, docker_name)
 
     LOG.info("Starting the docker: %s...", docker_name)
     docker_config = TestDockerConfig(
-        code=args.code,
+        code=code_path,
         application=code_config.python_application,
-        secrets=args.secrets,
-        sealed_secrets=args.sealed_secrets,
+        secrets=secrets_path,
+        sealed_secrets=sealed_secrets_path,
         port=5000,
     )
 
@@ -107,9 +152,9 @@ def run(args) -> None:
 
         success = run_tests(
             code_config,
-            args.test,
-            args.secrets,
-            args.sealed_secrets,
+            test_path,
+            secrets_path,
+            sealed_secrets_path,
         )
 
     except Exception as exc:

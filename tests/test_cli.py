@@ -61,6 +61,7 @@ def test_test_dev(cmd_log: io.StringIO):
     do_test_dev(
         Namespace(
             **{
+                "project": None,
                 "code": pytest.app_path / "mse_src",
                 "dockerfile": pytest.app_path / "Dockerfile",
                 "config": pytest.app_path / "mse.toml",
@@ -73,6 +74,28 @@ def test_test_dev(cmd_log: io.StringIO):
 
     # Check the tar generation
     assert "Tests successful" in capture_logs(cmd_log)
+
+
+@pytest.mark.slow
+@pytest.mark.incremental
+def test_test_dev_project(cmd_log: io.StringIO):
+    """Test the `test-dev` subcommand."""
+    do_test_dev(
+        Namespace(
+            **{
+                "project": pytest.app_path,
+                "code": None,
+                "dockerfile": None,
+                "config": None,
+                "secrets": None,
+                "sealed_secrets": None,
+                "test": None,
+            }
+        )
+    )
+
+    # Check the tar generation
+    assert "Tests succeed!" in capture_logs(cmd_log)
 
 
 @pytest.mark.slow
