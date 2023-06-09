@@ -8,7 +8,7 @@ A basic example of an MSE application containing:
 You should edit the following files:
 - `mse_src/` with your own webservice code
 - `Dockerfile` to run your webservice code into a docker
-- `mse.home.toml` to specify some details for the person who will run your code through the `msehome` cli 
+- `mse.toml` to specify some details for the person who will run your code through the `msehome` cli 
 - `tests` with the tests code which can be run against your webservice
 - `secrets_to_seal.json` and `secrets.json` if necessary to specify your app secrets
 
@@ -17,7 +17,7 @@ You should edit the following files:
 ```console
 $ msehome test-dev --code mse_src/ \
                    --dockerfile Dockerfile \
-                   --config mse.home.toml \
+                   --config mse.toml \
                    --tests tests/
 ```
 
@@ -26,7 +26,7 @@ $ msehome test-dev --code mse_src/ \
 ```console
 $ msehome package --code mse_src/ \
                   --dockerfile Dockerfile \
-                  --config mse.home.toml \
+                  --config mse.toml \
                   --output code_provider 
 ```
 The generating package can now be sent to the sgx operator.

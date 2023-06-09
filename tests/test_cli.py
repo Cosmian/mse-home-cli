@@ -45,7 +45,7 @@ def test_scaffold(workspace, app_name):
 
     assert path.exists()
     assert (path / "Dockerfile").exists()
-    assert (path / "code.toml").exists()
+    assert (path / "mse.toml").exists()
     assert (path / "secrets.json").exists()
     assert (path / "secrets_to_seal.json").exists()
     assert (path / "mse_src").exists()
@@ -63,7 +63,7 @@ def test_test_dev(cmd_log: io.StringIO):
             **{
                 "code": pytest.app_path / "mse_src",
                 "dockerfile": pytest.app_path / "Dockerfile",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
                 "secrets": pytest.app_path / "secrets.json",
                 "sealed_secrets": pytest.app_path / "secrets_to_seal.json",
                 "test": pytest.app_path / "tests",
@@ -83,7 +83,7 @@ def test_package(workspace: Path, cmd_log: io.StringIO):
         Namespace(
             **{
                 "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
                 "test": pytest.app_path / "tests",
                 "encrypt": True,
@@ -332,7 +332,7 @@ def test_test(app_name: str):
             **{
                 "name": app_name,
                 "test": pytest.app_path / "tests",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
             }
         )
     )
@@ -558,7 +558,7 @@ def test_plaintext(
         Namespace(
             **{
                 "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
                 "test": pytest.app_path / "tests",
                 "encrypt": False,  # We do not encrypt here
@@ -632,7 +632,7 @@ def test_plaintext(
             **{
                 "name": app_name,
                 "test": pytest.app_path / "tests",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
             }
         )
     )

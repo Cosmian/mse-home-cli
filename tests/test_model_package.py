@@ -15,7 +15,7 @@ def test_create(workspace: Path):
         code_tar=Path(__file__).parent / "data" / "package" / "code.tar",
         image_tar=Path(__file__).parent / "data" / "package" / "image.tar",
         test_path=Path(__file__).parent / "data" / "package" / "tests",
-        config_path=Path(__file__).parent / "data" / "code.toml",
+        config_path=Path(__file__).parent / "data" / "mse.toml",
     )
 
     package_tar_ref = Path(__file__).parent / "data" / "package" / "package.tar"
@@ -33,7 +33,7 @@ def test_extract(workspace: Path):
     assert package.code_tar == workspace / "code.tar"
     assert package.image_tar == workspace / "image.tar"
     assert package.test_path == workspace / "tests"
-    assert package.config_path == workspace / "code.toml"
+    assert package.config_path == workspace / "mse.toml"
 
     assert filecmp.cmp(
         Path(__file__).parent / "data" / "package" / "code.tar", package.code_tar
@@ -46,7 +46,7 @@ def test_extract(workspace: Path):
         package.test_path / "test.py",
     )
     assert filecmp.cmp(
-        Path(__file__).parent / "data" / "code.toml", package.config_path
+        Path(__file__).parent / "data" / "mse.toml", package.config_path
     )
 
 

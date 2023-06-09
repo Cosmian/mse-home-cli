@@ -46,7 +46,7 @@ __User__: the code provider
 ```console
 $ msehome test-dev --code example/mse_src/ \
                    --dockerfile example/Dockerfile \
-                   --config example/code.toml \
+                   --config example/mse.toml \
                    --test example/tests/
 ```
 
@@ -57,7 +57,7 @@ __User__: the code provider
 ```console
 $ msehome package --code example/mse_src/ \
                   --dockerfile example/Dockerfile \
-                  --config example/code.toml \
+                  --config example/mse.toml \
                   --test example/tests/ \
                   --output workspace/code_provider 
 ```
@@ -140,7 +140,7 @@ __User__: the sgx operator
 
 ```console
 $ msehome test --test workspace/sgx_operator/tests/ \
-               --config workspace/sgx_operator/code.toml \
+               --config workspace/sgx_operator/mse.toml \
                app_name
 ```
 
