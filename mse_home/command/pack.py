@@ -1,4 +1,4 @@
-"""mse_home.command.package module."""
+"""mse_home.command.pack module."""
 
 import shutil
 import tempfile
@@ -20,8 +20,8 @@ from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePac
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "package",
-        help="Generate a package containing the docker image and the code to run on MSE",
+        "pack",
+        help="Generate a package containing the Docker image and the code to run on MSE",
     )
 
     parser.add_argument(

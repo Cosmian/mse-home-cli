@@ -16,7 +16,7 @@ from mse_home.command.evidence import run as do_evidence
 from mse_home.command.fingerprint import run as do_fingerprint
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
-from mse_home.command.package import run as do_package
+from mse_home.command.pack import run as do_package
 from mse_home.command.restart import run as do_restart
 from mse_home.command.run import run as do_run
 from mse_home.command.scaffold import run as do_scaffold
@@ -78,7 +78,7 @@ def test_test_dev(cmd_log: io.StringIO):
 @pytest.mark.slow
 @pytest.mark.incremental
 def test_package(workspace: Path, cmd_log: io.StringIO):
-    """Test the `package` subcommand."""
+    """Test the `pack` subcommand."""
     do_package(
         Namespace(
             **{
