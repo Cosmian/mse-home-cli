@@ -21,7 +21,7 @@ from mse_home.model.code import CodeConfig
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "test-dev", help="Test a MSE app in development context"
+        "test-dev", help="Test a MSE app in a development context"
     )
 
     parser.add_argument(
@@ -33,21 +33,14 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
+        "--config",
+        type=Path,
+        required=False,
+        help="The conf path extracted from the MSE package",
+    )
+
+    parser.add_argument(
         "--dockerfile", type=Path, required=False, help="The path to the Dockerfile"
-    )
-
-    parser.add_argument(
-        "--secrets",
-        type=Path,
-        required=False,
-        help="The secrets.json file path",
-    )
-
-    parser.add_argument(
-        "--sealed-secrets",
-        type=Path,
-        required=False,
-        help="The secrets.json to seal file path (unsealed for the test purpose)",
     )
 
     parser.add_argument(
@@ -58,10 +51,17 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--config",
+        "--secrets",
         type=Path,
         required=False,
-        help="The conf path extracted from the MSE package",
+        help="The `secrets.json` file path",
+    )
+
+    parser.add_argument(
+        "--sealed-secrets",
+        type=Path,
+        required=False,
+        help="The secrets JSON to seal file path (unsealed for the test purpose)",
     )
 
     parser.set_defaults(func=run)
@@ -73,52 +73,49 @@ def run(args) -> None:
     test_path: Path
     config_path: Path
     dockerfile_path: Path
-    secrets_path: Path
-    sealed_secrets_path: Path
+    secrets_path: Optional[Path]
+    sealed_secrets_path: Optional[Path]
 
     if args.project:
-        if args.code or args.config or args.dockerfile or args.test:
+        if any([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
                 "[--project] and [--code & --config & --dockerfile & --test] "
                 "are mutually exclusive"
             )
 
-        if not args.project.is_dir():
-            raise IOError(f"{args.project} does not exist")
+        assert_is_dir(args.project)
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
         config_path = args.project / "code.toml"
         dockerfile_path = args.project / "Dockerfile"
         secrets_path = args.project / "secrets.json"
-        sealed_secrets_path = args.project / "sealed_secrets.json"
+        sealed_secrets_path = args.project / "secrets_to_seal.json"
 
     else:
-        if not args.code or not args.test or not args.dockerfile or not args.config:
+        if not all([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
                 "the following arguments are required: "
-                "--code, --dockerfile, --test, --config"
+                "--code, --dockerfile, --test, --config\n"
+                "the following arguments remain optional: "
+                "[--secrets], [--sealed-secrets]"
             )
 
         code_path = args.code
-        assert_is_dir(code_path)
-
         test_path = args.test
-        assert_is_dir(test_path)
-
-        dockerfile_path = args.dockerfile
-        assert_is_file(dockerfile_path)
-
         config_path = args.config
-        assert_is_file(config_path)
-
+        dockerfile_path = args.dockerfile
         secrets_path = args.secrets
-        if secrets_path:
-            assert_is_file(secrets_path)
-
         sealed_secrets_path = args.sealed_secrets
-        if sealed_secrets_path:
-            assert_is_file(sealed_secrets_path)
+
+    assert_is_dir(code_path)
+    assert_is_dir(test_path)
+    assert_is_file(config_path)
+    assert_is_file(dockerfile_path)
+    if secrets_path:
+        assert_is_file(secrets_path)
+    if sealed_secrets_path:
+        assert_is_file(sealed_secrets_path)
 
     code_config = CodeConfig.load(config_path)
     container_name = docker_name = f"{code_config.name}_test"
@@ -155,8 +152,8 @@ def try_run(
     container_name: str,
     docker_config: TestDockerConfig,
     test_path: Path,
-    secrets_path: Path,
-    sealed_secrets_path: Path,
+    secrets_path: Optional[Path],
+    sealed_secrets_path: Optional[Path],
 ):
     """Try to start the app docker to test"""
     success = False

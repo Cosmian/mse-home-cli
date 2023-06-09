@@ -68,14 +68,13 @@ def run(args) -> None:
     dockerfile_path: Path
 
     if args.project:
-        if args.code or args.config or args.dockerfile or args.test:
+        if any([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
                 "[--project] and [--code & --config & --dockerfile & --test] "
                 "are mutually exclusive"
             )
 
-        if not args.project.is_dir():
-            raise IOError(f"{args.project} does not exist")
+        assert_is_dir(args.project)
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
@@ -83,10 +82,10 @@ def run(args) -> None:
         dockerfile_path = args.project / "Dockerfile"
 
     else:
-        if not args.code or not args.test or not args.dockerfile or not args.config:
+        if not all([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
                 "the following arguments are required: "
-                "--code, --dockerfile, --test, --config"
+                "--code, --config, --dockerfile, --test"
             )
 
         code_path = args.code
