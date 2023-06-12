@@ -36,7 +36,7 @@ def add_subparser(subparsers):
         "--dockerfile", type=Path, required=True, help="The path to the Dockerfile"
     )
 
-    parser.add_argument("--test", type=Path, required=True, help="The test directory")
+    parser.add_argument("--test", type=Path, help="The test directory")
 
     parser.add_argument(
         "--output", type=Path, required=True, help="The directory to write the package"
@@ -60,8 +60,8 @@ def run(args) -> None:
     if not package_path.is_dir():
         raise IOError(f"{package_path} does not exist")
 
-    if not args.test.is_dir():
-        raise IOError(f"{args.test} does not exist")
+    if args.test is not None and not args.test.is_dir():
+        raise NotADirectoryError(f"{args.test} does not exist")
 
     if not args.dockerfile.is_file():
         raise IOError(f"{args.dockerfile} does not exist")
@@ -75,7 +75,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=args.test.resolve(),
+        test_path=args.test.resolve() if args.test else None,
         config_path=args.config,
     )
 
