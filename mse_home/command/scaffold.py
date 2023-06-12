@@ -35,7 +35,7 @@ def run(args) -> None:
         pkg_resources.resource_filename("mse_home", "template"), project_dir
     )
 
-    template_conf_file = project_dir / "code.toml.template"
+    template_conf_file = project_dir / "mse.toml.template"
     conf_file = template_conf_file.with_suffix("")  # Remove .template extension
 
     # Initialize the configuration file

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 CODE_TAR_NAME = "code.tar"
 DOCKER_IMAGE_TAR_NAME = "image.tar"
-CODE_CONFIG_NAME = "code.toml"
+MSE_CONFIG_NAME = "mse.toml"
 TEST_DIR_NAME = "tests"
 
 
@@ -28,7 +28,7 @@ class CodePackage(BaseModel):
             tar_file.add(self.code_tar, CODE_TAR_NAME)
             tar_file.add(self.image_tar, DOCKER_IMAGE_TAR_NAME)
             tar_file.add(self.test_path, TEST_DIR_NAME)
-            tar_file.add(self.config_path, CODE_CONFIG_NAME)
+            tar_file.add(self.config_path, MSE_CONFIG_NAME)
 
     @staticmethod
     def extract(workspace: Path, package: Path):
@@ -38,7 +38,7 @@ class CodePackage(BaseModel):
 
         code_tar_path = workspace / CODE_TAR_NAME
         image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME
-        code_config_path = workspace / CODE_CONFIG_NAME
+        code_config_path = workspace / MSE_CONFIG_NAME
         test_dir_path = workspace / TEST_DIR_NAME
 
         if not code_tar_path.exists():
@@ -50,7 +50,7 @@ class CodePackage(BaseModel):
             )
 
         if not code_config_path.exists():
-            raise Exception(f"'{CODE_CONFIG_NAME}' was not found in the mse package")
+            raise Exception(f"'{MSE_CONFIG_NAME}' was not found in the mse package")
 
         if not test_dir_path.exists():
             raise Exception(f"'{TEST_DIR_NAME}' was not found in the mse package")

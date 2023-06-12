@@ -69,7 +69,7 @@ subcommands:
 $ msehome scaffold example
 $ tree -a example
 example/
-├── code.toml
+├── mse.toml
 ├── Dockerfile
 ├── mse_src
     ├── app.py
@@ -150,7 +150,7 @@ This project also contains a test directory enabling you to test this project lo
 ```console
 $ msehome test-dev --code example/mse_src/ \
                    --dockerfile example/Dockerfile \
-                   --config example/code.toml \
+                   --config example/mse.toml \
                    --test example/tests/
 ```
 
@@ -163,7 +163,7 @@ $ msehome test-dev --code example/mse_src/ \
 ```console
 $ msehome package --code example/mse_src/ \
                   --dockerfile example/Dockerfile \
-                  --config example/code.toml \
+                  --config example/mse.toml \
                   --test example/tests/ \
                   --output workspace/code_provider 
 ```
@@ -266,7 +266,7 @@ $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.seal
 
 ```console
 $ msehome test --test workspace/sgx_operator/tests/ \
-               --config workspace/sgx_operator/code.toml \
+               --config workspace/sgx_operator/mse.toml \
                app_name
 ```
 

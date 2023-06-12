@@ -10,7 +10,7 @@ from mse_home.model.code import CodeConfig
 
 def test_load():
     """Test `load` function."""
-    toml = Path(__file__).parent / "data/code.toml"
+    toml = Path(__file__).parent / "data/mse.toml"
     conf = CodeConfig.load(path=toml)
 
     ref_conf = CodeConfig(
@@ -52,10 +52,10 @@ def test_python_variable():
 
 def test_save(workspace: Path):
     """Test the `save` method."""
-    toml = Path(__file__).parent / "data/code.toml"
+    toml = Path(__file__).parent / "data/mse.toml"
     conf = CodeConfig.load(path=toml)
 
-    tmp_toml = workspace / "code.toml"
+    tmp_toml = workspace / "mse.toml"
     conf.save(tmp_toml)
 
     assert filecmp.cmp(toml, tmp_toml)
