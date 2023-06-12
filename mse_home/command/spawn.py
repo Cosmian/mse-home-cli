@@ -63,7 +63,7 @@ def add_subparser(subparsers):
         "--size",
         type=int,
         required=True,
-        help="The enclave size to spawn",
+        help="The enclave size to spawn (in MB, must be a power of 2)",
     )
 
     parser.add_argument(
@@ -89,7 +89,7 @@ def run(args) -> None:
 
     if app_container_exists(client, args.name):
         raise Exception(
-            f"Docker container {args.name} is already running. "
+            f"Docker container `{args.name}` is already running. "
             "Stop and remove it before respawn it!"
         )
 

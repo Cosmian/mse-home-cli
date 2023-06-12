@@ -1,6 +1,6 @@
 !!! info User
 
-    This command is designed to be used by the **sgx operator**
+    This command is designed to be used by the **SGX operator**
 
 
 Application logs can be fetched as follow:

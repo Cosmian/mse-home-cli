@@ -1,6 +1,6 @@
 !!! info User
 
-    This command is designed to be used by the **sgx operator**
+    This command is designed to be used by the **SGX operator**
 
 
 You can get information about a given application as follow:
