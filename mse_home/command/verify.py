@@ -61,7 +61,7 @@ def run(args) -> None:
         LOG.error("Verification failed!")
         raise exc
 
-    LOG.info("Verification success")
+    LOG.info("Verification successful")
 
     ratls_cert_path = args.output.resolve() / "ratls.pem"
     ratls_cert_path.write_bytes(

@@ -75,7 +75,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=args.test.resolve(),
+        test_path=args.test.resolve() if args.test else None,
         config_path=args.config,
     )
 
