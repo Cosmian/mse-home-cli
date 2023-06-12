@@ -87,7 +87,7 @@ def run(args) -> None:
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
-        config_path = args.project / "code.toml"
+        config_path = args.project / "mse.toml"
         dockerfile_path = args.project / "Dockerfile"
         secrets_path = args.project / "secrets.json"
         sealed_secrets_path = args.project / "secrets_to_seal.json"

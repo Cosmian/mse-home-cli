@@ -54,9 +54,6 @@ class CodePackage(BaseModel):
         if not code_config_path.exists():
             raise Exception(f"'{MSE_CONFIG_NAME}' was not found in the mse package")
 
-        if not test_dir_path.exists():
-            raise Exception(f"'{TEST_DIR_NAME}' was not found in the MSE package")
-
         return CodePackage(
             code_tar=code_tar_path,
             image_tar=image_tar_path,

@@ -95,7 +95,7 @@ def test_test_dev_project(cmd_log: io.StringIO):
     )
 
     # Check the tar generation
-    assert "Tests succeed!" in capture_logs(cmd_log)
+    assert "Tests successful" in capture_logs(cmd_log)
 
 
 @pytest.mark.slow
@@ -144,6 +144,7 @@ def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
     do_package(
         Namespace(
             **{
+                "project": None,
                 "code": pytest.app_path / "mse_src",
                 "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
@@ -836,7 +837,7 @@ def test_plaintext_project(
             **{
                 "name": app_name,
                 "test": pytest.app_path / "tests",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
             }
         )
     )

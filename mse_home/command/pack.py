@@ -68,9 +68,9 @@ def run(args) -> None:
     dockerfile_path: Path
 
     if args.project:
-        if any([args.code, args.config, args.dockerfile, args.test]):
+        if any([args.code, args.config, args.dockerfile]):
             raise argparse.ArgumentTypeError(
-                "[--project] and [--code & --config & --dockerfile & --test] "
+                "[--project] and [--code & --config & --dockerfile] "
                 "are mutually exclusive"
             )
 
@@ -78,21 +78,22 @@ def run(args) -> None:
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
-        config_path = args.project / "code.toml"
+        config_path = args.project / "mse.toml"
         dockerfile_path = args.project / "Dockerfile"
 
     else:
-        if not all([args.code, args.config, args.dockerfile, args.test]):
+        if not all([args.code, args.config, args.dockerfile]):
             raise argparse.ArgumentTypeError(
                 "the following arguments are required: "
-                "--code, --config, --dockerfile, --test"
+                "--code, --config, --dockerfile"
             )
 
         code_path = args.code
         assert_is_dir(code_path)
 
         test_path = args.test
-        assert_is_dir(test_path)
+        if test_path:
+            assert_is_dir(test_path)
 
         dockerfile_path = args.dockerfile
         assert_is_file(dockerfile_path)
@@ -109,7 +110,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=test_path.resolve(),
+        test_path=test_path.resolve() if test_path else None,
         config_path=config_path.resolve(),
     )
 
