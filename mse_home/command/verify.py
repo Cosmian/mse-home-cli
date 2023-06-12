@@ -37,7 +37,7 @@ def add_subparser(subparsers):
         "--output",
         type=Path,
         required=True,
-        help="The path where the verified certificate will be written to",
+        help="Output path of the verified RA-TLS certificate",
     )
 
     parser.set_defaults(func=run)
@@ -45,9 +45,8 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    output_path: Path = args.output.resolve()
-    if not output_path.is_dir():
-        raise IOError(f"{output_path} does not exist")
+    if not args.output.is_dir():
+        raise NotADirectoryError(f"{args.output} does not exist")
 
     evidence = ApplicationEvidence.load(args.evidence)
 
@@ -64,7 +63,7 @@ def run(args) -> None:
 
     LOG.info("Verification success")
 
-    ratls_cert_path = output_path / "ratls.pem"
+    ratls_cert_path = args.output.resolve() / "ratls.pem"
     ratls_cert_path.write_bytes(
         evidence.ratls_certificate.public_bytes(encoding=Encoding.PEM)
     )

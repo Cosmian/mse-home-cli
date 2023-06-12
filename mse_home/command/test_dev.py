@@ -190,7 +190,7 @@ def run_tests(
     try:
         subprocess.check_call(code_config.tests_cmd, cwd=tests, env=env)
 
-        LOG.info("Tests success")
+        LOG.info("Tests successful")
         return True
     except subprocess.CalledProcessError:
         LOG.error("Tests failed!")

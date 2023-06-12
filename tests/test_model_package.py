@@ -56,7 +56,7 @@ def test_create_no_test_folder(workspace2: Path):
         code_tar=Path(__file__).parent / "data" / "package_no_test_folder" / "code.tar",
         image_tar=Path(__file__).parent / "data" / "package_no_test_folder" / "image.tar",
         test_path=None,
-        config_path=Path(__file__).parent / "data" / "code.toml",
+        config_path=Path(__file__).parent / "data" / "mse.toml",
     )
 
     package_tar_ref = Path(__file__).parent / "data" / "package_no_test_folder" / "package.tar"
@@ -74,7 +74,7 @@ def test_extract_no_test_folder(workspace2: Path):
     assert package.code_tar == workspace2 / "code.tar"
     assert package.image_tar == workspace2 / "image.tar"
     assert package.test_path is None
-    assert package.config_path == workspace2 / "code.toml"
+    assert package.config_path == workspace2 / "mse.toml"
 
     assert filecmp.cmp(
         Path(__file__).parent / "data" / "package_no_test_folder" / "code.tar", package.code_tar
@@ -83,7 +83,7 @@ def test_extract_no_test_folder(workspace2: Path):
         Path(__file__).parent / "data" / "package_no_test_folder" / "image.tar", package.image_tar
     )
     assert filecmp.cmp(
-        Path(__file__).parent / "data" / "code.toml", package.config_path
+        Path(__file__).parent / "data" / "mse.toml", package.config_path
     )
 
 

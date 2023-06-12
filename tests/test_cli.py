@@ -72,7 +72,7 @@ def test_test_dev(cmd_log: io.StringIO):
     )
 
     # Check the tar generation
-    assert "Tests success" in capture_logs(cmd_log)
+    assert "Tests successful" in capture_logs(cmd_log)
 
 
 @pytest.mark.slow
@@ -121,7 +121,7 @@ def test_package_no_test_folder(workspace: Path, cmd_log: io.StringIO):
         Namespace(
             **{
                 "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "code.toml",
+                "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
                 "test": None,
                 "encrypt": True,
@@ -300,7 +300,7 @@ def test_verify(workspace: Path, cmd_log: io.StringIO):
 
     output = capture_logs(cmd_log)
 
-    assert "Verification success" in output
+    assert "Verification successful" in output
 
     try:
         pytest.ratls_cert = Path(
