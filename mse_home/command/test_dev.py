@@ -24,43 +24,31 @@ def add_subparser(subparsers):
         "test-dev", help="Test a MSE app in a development context"
     )
 
-    parser.add_argument(
-        "--project", type=Path, required=False, help="The path of the project to test"
-    )
+    parser.add_argument("--project", type=Path, help="The path of the project to test")
+
+    parser.add_argument("--code", type=Path, help="The path to the code to run")
 
     parser.add_argument(
-        "--code", type=Path, required=False, help="The path to the code to run"
+        "--config", type=Path, help="The conf path extracted from the MSE package"
     )
 
-    parser.add_argument(
-        "--config",
-        type=Path,
-        required=False,
-        help="The conf path extracted from the MSE package",
-    )
-
-    parser.add_argument(
-        "--dockerfile", type=Path, required=False, help="The path to the Dockerfile"
-    )
+    parser.add_argument("--dockerfile", type=Path, help="The path to the Dockerfile")
 
     parser.add_argument(
         "--test",
         type=Path,
-        required=False,
         help="The path of the test directory extracted from the MSE package",
     )
 
     parser.add_argument(
         "--secrets",
         type=Path,
-        required=False,
         help="The `secrets.json` file path",
     )
 
     parser.add_argument(
         "--sealed-secrets",
         type=Path,
-        required=False,
         help="The secrets JSON to seal file path (unsealed for the test purpose)",
     )
 

@@ -25,21 +25,15 @@ def add_subparser(subparsers):
         help="Generate a package containing the Docker image and the code to run on MSE",
     )
 
-    parser.add_argument(
-        "--project", type=Path, required=False, help="The path of the project to pack"
-    )
+    parser.add_argument("--project", type=Path, help="The path of the project to pack")
+
+    parser.add_argument("--code", type=Path, help="The path of the code to run")
 
     parser.add_argument(
-        "--code", type=Path, required=False, help="The path of the code to run"
+        "--config", type=Path, help="The path to the code configuration"
     )
 
-    parser.add_argument(
-        "--config", type=Path, required=False, help="The path to the code configuration"
-    )
-
-    parser.add_argument(
-        "--dockerfile", type=Path, required=False, help="The path to the Dockerfile"
-    )
+    parser.add_argument("--dockerfile", type=Path, help="The path to the Dockerfile")
 
     parser.add_argument("--test", type=Path, help="The test directory")
 

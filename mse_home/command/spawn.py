@@ -1,5 +1,6 @@
 """mse_home.command.spawn module."""
 
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -48,7 +49,6 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--days",
         type=int,
-        required=False,
         help="The number of days before the certificate expires",
         default=365,
     )
@@ -71,9 +71,8 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--signer-key",
         type=Path,
-        required=False,
         help="The enclave signer key",
-        default="/opt/cosmian-internal/cosmian-signer-key.pem",
+        default=f"{os.getenv('HOME', '/root')}/.config/gramine/enclave-key.pem",
     )
 
     parser.add_argument(
