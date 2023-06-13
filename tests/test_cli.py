@@ -246,19 +246,11 @@ def test_spawn(
                 "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
-
-        pytest.args_path = Path(
-            re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
-            ).group(1)
-        )
     except AttributeError:
         print(output)
         assert False
 
     assert pytest.evidence_path.exists()
-    assert pytest.args_path.exists()
 
 
 @pytest.mark.slow
@@ -309,7 +301,6 @@ def test_verify(workspace: Path, cmd_log: io.StringIO):
         Namespace(
             **{
                 "package": pytest.package_path,
-                "args": pytest.args_path,
                 "evidence": pytest.evidence_path,
                 "output": workspace,
             }
@@ -661,17 +652,16 @@ def test_plaintext(
 
     output = capture_logs(cmd_log)
     try:
-        pytest.args_path = Path(
+        pytest.evidence_path = Path(
             re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
         print(output)
         assert False
 
-    assert pytest.args_path.exists()
+    assert pytest.evidence_path.exists()
 
     do_run(
         Namespace(
@@ -767,17 +757,16 @@ def test_plaintext_project(
 
     output = capture_logs(cmd_log)
     try:
-        pytest.args_path = Path(
+        pytest.evidence_path = Path(
             re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
         print(output)
         assert False
 
-    assert pytest.args_path.exists()
+    assert pytest.evidence_path.exists()
 
     do_run(
         Namespace(

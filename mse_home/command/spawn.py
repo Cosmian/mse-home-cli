@@ -153,14 +153,11 @@ def run(args) -> None:
     )
     LOG.info("The application is now ready to receive the secrets!")
 
-    app_args = NoSgxDockerConfig.from_sgx(docker_config)
-    args_path = workspace / "args.toml"
-    LOG.info("You can share '%s' with the other participants.", args_path)
-    app_args.save(args_path)
-
     # Generate evidence and RA-TLS certificate files
+    app_args = NoSgxDockerConfig.from_sgx(docker_config)
     container: Container = get_app_container(client, args.name)
-    collect_evidence_and_certificate(container, args.pccs, args.output)
+
+    collect_evidence_and_certificate(container, args.pccs, args.output, app_args)
 
 
 def run_docker_image(
@@ -192,10 +189,12 @@ def run_docker_image(
         )
 
 
+# pylint: disable=too-many-locals
 def collect_evidence_and_certificate(
     container: Container,
     pccs_url: str,
     output: Path,
+    app_args: NoSgxDockerConfig,
 ):
     """Collect evidence JSON file and RA-TLS certificate from running enclave."""
     docker = SgxDockerConfig.load(container.attrs, container.labels)
@@ -223,6 +222,7 @@ def collect_evidence_and_certificate(
     )
 
     evidence = ApplicationEvidence(
+        app_args=app_args.json(),
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,

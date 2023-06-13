@@ -72,11 +72,11 @@ $ msehome spawn --host myapp.fr \
                 app_name
 ```
 
-The microservice is now up, and evidences have been automatically collected.
+Now, evidences have been automatically collected and the microservice is up.
 
-Evidences are useful for the code provider to verify the trustworthiness of the running application.
+Evidences are essential for the code provider to verify the trustworthiness of the running application.
 
-The files `workspace/sgx_operator/evidence.json` and `workspace/sgx_operator/args.toml` can now be shared with the other participants.
+The file `workspace/sgx_operator/evidence.json` can now be shared with the other participants.
 
 ### Check the trustworthiness of the application
 
@@ -92,7 +92,6 @@ Verification of the enclave information:
 
     ```console
     $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                     --args workspace/sgx_operator/args.toml \
                      --evidence output/evidence.json \
                      --output /tmp
     ```

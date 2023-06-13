@@ -1,5 +1,6 @@
 """mse_home.command.verify module."""
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -37,14 +38,6 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--args",
-        type=str,
-        required=True,
-        help="The path to the enclave argument file generating when "
-        "spawning the application (ex: `args.toml`)",
-    )
-
-    parser.add_argument(
         "--output",
         type=Path,
         required=True,
@@ -62,7 +55,9 @@ def run(args) -> None:
     workspace = Path(tempfile.mkdtemp())
     log_path = workspace / "docker.log"
 
-    app_args = NoSgxDockerConfig.load(args.args)
+    evidence = ApplicationEvidence.load(args.evidence)
+
+    app_args = NoSgxDockerConfig(**json.loads(evidence.app_args))
 
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
@@ -76,8 +71,6 @@ def run(args) -> None:
         package.code_tar,
         log_path,
     )
-
-    evidence = ApplicationEvidence.load(args.evidence)
 
     try:
         verify_enclave(

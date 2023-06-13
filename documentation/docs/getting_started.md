@@ -219,15 +219,13 @@ Mandatory arguments are:
 - `size`: memory size (in MB) of the enclave to spawn
 - `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
-- `output`: directory to write the args file
+- `output`: directory to write the evidence file
 
 This command first unpacks the tarball specified by the `--package` argument. Note that a lot of files are created in `output` folder.
 
-Verification parts are then automatically collected:
-- `workspace/sgx_operator/args.toml` file corresponds to the arguments used to spawn the container.
-- `workspace/sgx_operator/evidence.json` file contains cryptographic proofs related to the enclave.
+The generated file `workspace/sgx_operator/evidence.json` contains cryptographic proofs related to the enclave. It can be shared with other participants.
 
-Both files are part of verification signature and thus are needed to [verify the app](#check-the-trustworthiness-of-the-application) of the microservice, and can now be shared with other participants.
+This evidence file is helpful for the code provider to [verify](#check-the-trustworthiness-of-the-application) the running app.
 
 ## Check the trustworthiness of the application
 
@@ -238,14 +236,12 @@ Both files are part of verification signature and thus are needed to [verify the
 
 The trustworthiness is established based on multiple information:
 - the full code package (tarball)
-- the arguments used to spawn the microservice
 - evidences captured from the running microservice
 
 Verification of the enclave information:
 
     ```console
     $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                     --args workspace/sgx_operator/args.toml \
                      --evidence output/evidence.json \
                      --output /tmp
     ```
