@@ -13,7 +13,7 @@ from mse_cli_core.bootstrap import is_ready
 from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.test_docker import TestDockerConfig
 
-from mse_home.command.helpers import assert_is_dir, assert_is_file, get_client_docker
+from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
 
@@ -83,7 +83,8 @@ def run(args) -> None:
                 "are mutually exclusive"
             )
 
-        assert_is_dir(args.project)
+        if not args.project.is_dir():
+            raise NotADirectoryError(f"`{args.project}` does not exist")
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
@@ -108,14 +109,23 @@ def run(args) -> None:
         secrets_path = args.secrets
         sealed_secrets_path = args.sealed_secrets
 
-    assert_is_dir(code_path)
-    assert_is_dir(test_path)
-    assert_is_file(config_path)
-    assert_is_file(dockerfile_path)
-    if secrets_path:
-        assert_is_file(secrets_path)
-    if sealed_secrets_path:
-        assert_is_file(sealed_secrets_path)
+    if not code_path.is_dir():
+        raise NotADirectoryError(f"`{code_path}` does not exist")
+
+    if not test_path.is_dir():
+        raise NotADirectoryError(f"`{test_path}` does not exist")
+
+    if not config_path.is_file():
+        raise FileNotFoundError(f"`{config_path}` does not exist")
+
+    if not dockerfile_path.is_file():
+        raise FileNotFoundError(f"`{dockerfile_path}` does not exist")
+
+    if secrets_path and not secrets_path.is_file():
+        raise FileNotFoundError(f"`{secrets_path}` does not exist")
+
+    if sealed_secrets_path and not sealed_secrets_path.is_file():
+        raise FileNotFoundError(f"`{sealed_secrets_path}` does not exist")
 
     code_config = CodeConfig.load(config_path)
     container_name = docker_name = f"{code_config.name}_test"

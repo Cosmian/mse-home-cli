@@ -12,7 +12,7 @@ from mse_cli_core.fs import tar, whitelist
 from mse_cli_core.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
-from mse_home.command.helpers import assert_is_dir, assert_is_file, get_client_docker
+from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
 from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePackage
@@ -74,7 +74,8 @@ def run(args) -> None:
                 "are mutually exclusive"
             )
 
-        assert_is_dir(args.project)
+        if not args.project.is_dir():
+            raise NotADirectoryError(f"`{args.project}` does not exist")
 
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
@@ -89,17 +90,21 @@ def run(args) -> None:
             )
 
         code_path = args.code
-        assert_is_dir(code_path)
-
         test_path = args.test
-        if test_path:
-            assert_is_dir(test_path)
-
-        dockerfile_path = args.dockerfile
-        assert_is_file(dockerfile_path)
-
         config_path = args.config
-        assert_is_file(config_path)
+        dockerfile_path = args.dockerfile
+
+    if not code_path.is_dir():
+        raise NotADirectoryError(f"`{code_path}` does not exist")
+
+    if test_path and not test_path.is_dir():
+        raise NotADirectoryError(f"`{test_path}` does not exist")
+
+    if not config_path.is_file():
+        raise FileNotFoundError(f"`{config_path}` does not exist")
+
+    if not dockerfile_path.is_file():
+        raise FileNotFoundError(f"`{dockerfile_path}` does not exist")
 
     code_config = CodeConfig.load(config_path)
 
