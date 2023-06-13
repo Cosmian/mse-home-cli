@@ -25,7 +25,7 @@ It is recommended to use [pyenv](https://github.com/pyenv/pyenv) to manage diffe
 ```{.console}
 $ pip3 install mse-home-cli
 $ msehome --help
-usage: msehome [-h] [--version] {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
+usage: msehome [-h] [--version] {pack,decrypt,evidence,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
 
 Microservice Encryption Home CLI - 0.1.0
 
@@ -34,23 +34,22 @@ options:
   --version             version of msehome binary
 
 subcommands:
-  {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
-    pack             Generate a package containing the Docker image and the code to run on MSE
-    decrypt          Decrypt a file encrypted using the sealed key
-    evidence         Collect the evidences to verify on offline mode the application and the enclave
-    fingerprint      Compute the code fingerprint
-    scaffold         create a new boilerplate MSE web application
-    list             List the running MSE applications
-    logs             Print the MSE docker logs
-    restart          Restart an stopped MSE docker
-    run              Finalise the configuration of the application docker and run the application code
-    status           Print the MSE docker status
-    seal             Seal the secrets to be share with an MSE app
-    spawn            Spawn a MSE docker
-    stop             Stop and optionally remove a running MSE docker
-    test             Test a deployed MSE app
-    test-dev         Test a MSE app in a development context
-    verify           Verify the trustworthiness of a running MSE web application and get the ratls certificate
+  {pack,decrypt,evidence,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
+    pack                Generate a package containing the Docker image and the code to run on MSE
+    decrypt             Decrypt a file encrypted using the sealed key
+    evidence            Collect the evidences to verify on offline mode the application and the enclave
+    scaffold            create a new boilerplate MSE web application
+    list                List the running MSE applications
+    logs                Print the MSE docker logs
+    restart             Restart an stopped MSE docker
+    run                 Finalise the configuration of the application docker and run the application code
+    status              Print the MSE docker status
+    seal                Seal the secrets to be share with an MSE app
+    spawn               Spawn a MSE docker
+    stop                Stop and optionally remove a running MSE docker
+    test                Test a deployed MSE app
+    test-dev            Test a MSE app in a development context
+    verify              Verify the trustworthiness of a running MSE web application and get the RA-TLS certificate
 ```
 
 !!! info "Pre-requisites"
@@ -248,20 +247,17 @@ The file `workspace/sgx_operator/evidence.json` and the previous file `workspace
     This command is designed to be used by the **code provider**
 
 
-1. Compute the fingerprint
+The trustworthiness is established based on multiple information:
+- the full code package (tarball)
+- the arguments used to spawn the microservice
+- evidences captured from the running microservice
+
+Verification of the enclave information:
 
     ```console
-    $ msehome fingerprint --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                          --args workspace/sgx_operator/args.toml
-    ```
-
-    Save the output fingerprint for the next command. 
-
-2. Verify the fingerprint and the enclave information
-
-    ```console
-    $ msehome verify --evidence output/evidence.json \
-                     --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3 \
+    $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
+                     --args workspace/sgx_operator/args.toml \
+                     --evidence output/evidence.json \
                      --output /tmp
     ```
 

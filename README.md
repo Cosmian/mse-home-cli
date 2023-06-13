@@ -90,24 +90,21 @@ The file `workspace/sgx_operator/evidence.json` and the previous file `workspace
 __User__: the code provider
 
 
-1. Compute the fingerprint
+The trustworthiness is established based on multiple information:
+- the full code package (tarball)
+- the arguments used to spawn the microservice
+- evidences captured from the running microservice
+
+Verification of the enclave information:
 
     ```console
-    $ msehome fingerprint --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                          --args workspace/sgx_operator/args.toml
-    ```
-
-    Save the output fingerprint for the next command. 
-
-2. Verify the fingerprint and the enclave information
-
-    ```console
-    $ msehome verify --evidence output/evidence.json \
-                     --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3 \
+    $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
+                     --args workspace/sgx_operator/args.toml \
+                     --evidence output/evidence.json \
                      --output /tmp
     ```
 
-    If the verification succeed, you get the ratls certificat and you can now seal the code key to share it with the sgx operator.
+    If the verification succeed, you get the RA-TLS certificate (writte as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
 
 ### Seal your secrets
 

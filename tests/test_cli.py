@@ -13,7 +13,6 @@ from conftest import capture_logs
 
 from mse_home.command.decrypt import run as do_decrypt
 from mse_home.command.evidence import run as do_evidence
-from mse_home.command.fingerprint import run as do_fingerprint
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
 from mse_home.command.pack import run as do_package
@@ -324,36 +323,13 @@ def test_evidence(workspace: Path, cmd_log: io.StringIO, app_name: str, pccs_url
 
 @pytest.mark.slow
 @pytest.mark.incremental
-def test_fingerprint(cmd_log: io.StringIO):
-    """Test the `fingerprint` subcommand."""
-    do_fingerprint(
-        Namespace(
-            **{
-                "package": pytest.package_path,
-                "args": pytest.args_path,
-            }
-        )
-    )
-
-    output = capture_logs(cmd_log)
-    try:
-        assert pytest.fingerprint == re.search(
-            "Fingerprint is: ([a-z0-9]+)", output
-        ).group(1)
-
-    except AttributeError:
-        print(output)
-        assert False
-
-
-@pytest.mark.slow
-@pytest.mark.incremental
 def test_verify(workspace: Path, cmd_log: io.StringIO):
     """Test the `verify` subcommand."""
     do_verify(
         Namespace(
             **{
-                "fingerprint": pytest.fingerprint,
+                "package": pytest.package_path,
+                "args": pytest.args_path,
                 "evidence": pytest.evidence_path,
                 "output": workspace,
             }
@@ -367,7 +343,7 @@ def test_verify(workspace: Path, cmd_log: io.StringIO):
     try:
         pytest.ratls_cert = Path(
             re.search(
-                "The ratls certificate has been saved at: ([A-Za-z0-9/._-]+)", output
+                "The RA-TLS certificate has been saved at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
