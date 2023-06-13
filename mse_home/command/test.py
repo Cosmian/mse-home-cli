@@ -14,7 +14,7 @@ from mse_home.model.code import CodeConfig
 
 def add_subparser(subparsers):
     """Define the subcommand."""
-    parser = subparsers.add_parser("test", help="Test a deployed mse app")
+    parser = subparsers.add_parser("test", help="Test a deployed MSE app")
 
     parser.add_argument(
         "name",
@@ -26,14 +26,14 @@ def add_subparser(subparsers):
         "--test",
         type=Path,
         required=True,
-        help="The path of the test directory extracted from the mse package",
+        help="The path of the test directory extracted from the MSE package",
     )
 
     parser.add_argument(
         "--config",
         type=Path,
         required=True,
-        help="The conf path extracted from the mse package",
+        help="The conf path extracted from the MSE package",
     )
 
     parser.set_defaults(func=run)

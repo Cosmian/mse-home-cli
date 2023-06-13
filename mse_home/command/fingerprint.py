@@ -19,7 +19,7 @@ def add_subparser(subparsers):
         "--package",
         type=Path,
         required=True,
-        help="The MSE package containing the docker images and the code",
+        help="The MSE package containing the Docker images and the code",
     )
 
     parser.add_argument(

@@ -13,7 +13,7 @@ from mse_home.command import (
     fingerprint,
     list_all,
     logs,
-    package,
+    pack,
     restart,
     run,
     scaffold,
@@ -44,7 +44,7 @@ def main() -> int:
 
     subparsers = parser.add_subparsers(title="subcommands")
 
-    package.add_subparser(subparsers)
+    pack.add_subparser(subparsers)
     decrypt.add_subparser(subparsers)
     evidence.add_subparser(subparsers)
     fingerprint.add_subparser(subparsers)

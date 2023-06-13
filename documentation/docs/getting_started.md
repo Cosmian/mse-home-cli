@@ -25,7 +25,7 @@ It is recommended to use [pyenv](https://github.com/pyenv/pyenv) to manage diffe
 ```{.console}
 $ pip3 install mse-home-cli
 $ msehome --help
-usage: msehome [-h] [--version] {package,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
+usage: msehome [-h] [--version] {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
 
 Microservice Encryption Home CLI - 0.1.0
 
@@ -34,23 +34,23 @@ options:
   --version             version of msehome binary
 
 subcommands:
-  {package,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
-    package             Generate a package containing the docker image and the code to run on MSE
-    decrypt             Decrypt a file encrypted using the sealed key
-    evidence            Collect the evidences to verify on offline mode the application and the enclave
-    fingerprint         Compute the code fingerprint
-    scaffold            create a new boilerplate MSE web application
-    list                List the running MSE applications
-    logs                Print the MSE docker logs
-    restart             Restart an stopped MSE docker
-    run                 Finalise the configuration of the application docker and run the application code
-    status              Print the MSE docker status
-    seal                Seal the secrets to be share with an MSE app
-    spawn               Spawn a MSE docker
-    stop                Stop and remove a running MSE docker
-    test                Test a deployed mse app
-    test-dev            Test a mse app when developing it
-    verify              Verify the trustworthiness of a running MSE web application and get the ratls certificate
+  {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
+    pack             Generate a package containing the Docker image and the code to run on MSE
+    decrypt          Decrypt a file encrypted using the sealed key
+    evidence         Collect the evidences to verify on offline mode the application and the enclave
+    fingerprint      Compute the code fingerprint
+    scaffold         create a new boilerplate MSE web application
+    list             List the running MSE applications
+    logs             Print the MSE docker logs
+    restart          Restart an stopped MSE docker
+    run              Finalise the configuration of the application docker and run the application code
+    status           Print the MSE docker status
+    seal             Seal the secrets to be share with an MSE app
+    spawn            Spawn a MSE docker
+    stop             Stop and optionally remove a running MSE docker
+    test             Test a deployed MSE app
+    test-dev         Test a MSE app in a development context
+    verify           Verify the trustworthiness of a running MSE web application and get the ratls certificate
 ```
 
 !!! info "Pre-requisites"
@@ -178,10 +178,7 @@ This project also contains a test directory enabling you to test this project lo
 
 
 ```console
-$ msehome test-dev --code example/mse_src/ \
-                   --dockerfile example/Dockerfile \
-                   --config example/mse.toml \
-                   --test example/tests/
+$ msehome test-dev --project example
 ```
 
 ## Create the MSE package with the code and the docker image
@@ -192,11 +189,8 @@ $ msehome test-dev --code example/mse_src/ \
 
 
 ```console
-$ msehome package --code example/mse_src/ \
-                  --dockerfile example/Dockerfile \
-                  --config example/mse.toml \
-                  --test example/tests/ \
-                  --output workspace/code_provider 
+$ msehome pack --project example \
+               --output workspace/code_provider 
 ```
 
 This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
@@ -213,24 +207,20 @@ The generated package can now be sent to the SGX operator.
 ```console
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
-                --days 345 \
-                --signer-key /opt/cosmian-internal/cosmian-signer-key.pem \
                 --size 4096 \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
 ```
 
-Arguments are:
+Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
-- `days`: number of days before the certificate expires
-- `signer-key`: key used to sign the enclave
-- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.)
+- `size`: memory size (in MB) of the enclave to spawn
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the args file
 
-This command unpacks the tarball (thus a lot of files are created in `output` folder) specified by the `--package` argument , and generates a `args.toml` file, corresponding to arguments used to spawn the container. This file is also needed to [compute the fingerprint](#check-the-trustworthiness-of-the-application) of the microservice.
+This command unpacks the tarball (thus a lot of files are created in `output` folder) specified by the `--package` argument, and generates a `args.toml` file, corresponding to arguments used to spawn the container. This file is also needed to [compute the fingerprint](#check-the-trustworthiness-of-the-application) of the microservice.
 
 Keep the `workspace/sgx_operator/args.toml` to share it with other participants. 
 

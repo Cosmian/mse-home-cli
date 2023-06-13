@@ -24,7 +24,7 @@ class CodePackage(BaseModel):
         self,
         output_tar: Path,
     ):
-        """Create the package containing the code and docker image tarballs."""
+        """Create the package containing the code and Docker image tarballs."""
         with tarfile.open(output_tar, "w:") as tar_file:
             tar_file.add(self.code_tar, CODE_TAR_NAME)
             tar_file.add(self.image_tar, DOCKER_IMAGE_TAR_NAME)
@@ -34,7 +34,7 @@ class CodePackage(BaseModel):
 
     @staticmethod
     def extract(workspace: Path, package: Path):
-        """Extract the code and image tarballs from the mse package."""
+        """Extract the code and image tarballs from the MSE package."""
         with tarfile.open(package, "r") as f:
             f.extractall(path=workspace)
 
@@ -44,11 +44,11 @@ class CodePackage(BaseModel):
         test_dir_path = workspace / TEST_DIR_NAME
 
         if not code_tar_path.exists():
-            raise Exception(f"'{CODE_TAR_NAME}' was not found in the mse package")
+            raise Exception(f"'{CODE_TAR_NAME}' was not found in the MSE package")
 
         if not image_tar_path.exists():
             raise Exception(
-                f"'{DOCKER_IMAGE_TAR_NAME}' was not found in the mse package"
+                f"'{DOCKER_IMAGE_TAR_NAME}' was not found in the MSE package"
             )
 
         if not code_config_path.exists():

@@ -1,12 +1,12 @@
 # 🏕️ MSE Home CLI 
 
-MSE Home CLI is designed to start an mse application on your own SGX hardware without using all the mse cloud infrastructure. 
+MSE Home CLI is designed to start an MSE application on your own SGX hardware without using all the MSE cloud infrastructure. 
 
 We explain later how all the subscommands can be chained to deploy your own application. 
 
 Two actors are required:
-- The code provider (who can also consume the result of the mse application)
-- The sgx operator (who also owns the data to run against the mse application)
+- The code provider (who can also consume the result of the MSE application)
+- The SGX operator (who also owns the data to run against the MSE application)
 
 ## Install
 
@@ -44,35 +44,27 @@ $ msehome scaffold example
 __User__: the code provider
 
 ```console
-$ msehome test-dev --code example/mse_src/ \
-                   --dockerfile example/Dockerfile \
-                   --config example/mse.toml \
-                   --test example/tests/
+$ msehome test-dev --project example/
 ```
 
-### Create the mse package with the code and the docker image
+### Create the MSE package with the code and the docker image
 
 __User__: the code provider
 
 ```console
-$ msehome package --code example/mse_src/ \
-                  --dockerfile example/Dockerfile \
-                  --config example/mse.toml \
-                  --test example/tests/ \
-                  --output workspace/code_provider 
+$ msehome pack --project example/ \
+               --output workspace/code_provider 
 ```
 
 The generating package can now be sent to the sgx operator.
 
-### Spawn the mse docker
+### Spawn the MSE docker
 
-__User__: the sgx operator
+__User__: the SGX operator
 
 ```console
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
-                --days 345 \
-                --signer-key /opt/cosmian-internal/cosmian-signer-key.pem \
                 --size 4096 \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
@@ -83,7 +75,7 @@ Keep the `workspace/sgx_operator/args.toml` to share it with the other participa
 
 ### Collect the evidences to verify the application
 
-__User__: the sgx operator
+__User__: the SGX operator
 
 ```console
 $ msehome evidence --pccs https://pccs.example.com \
@@ -127,7 +119,7 @@ $ msehome seal --secrets example/secrets_to_seal.json --cert /tmp/ratls.pem  --o
 
 ### Finalize the configuration and run the application
 
-__User__: the sgx operator
+__User__: the SGX operator
 
 ```console
 $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.sealed \
@@ -136,7 +128,7 @@ $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.seal
 
 ### Test the deployed application
 
-__User__: the sgx operator
+__User__: the SGX operator
 
 ```console
 $ msehome test --test workspace/sgx_operator/tests/ \
@@ -148,7 +140,7 @@ $ msehome test --test workspace/sgx_operator/tests/ \
 
 __User__: the code provider
 
-Assume the sgx operator gets a result as follow: `curl https://localhost:7788/result --cacert /tmp/ratls.pem > result.enc`
+Assume the SGX operator gets a result as follow: `curl https://localhost:7788/result --cacert /tmp/ratls.pem > result.enc`
 
 Then, the code provider can decrypt the result has follow:
 
@@ -161,7 +153,7 @@ $ cat workspace/code_provider/result.plain
 
 ### Manage the mse docker
 
-__User__: the sgx operator
+__User__: the SGX operator
 
 You can stop and remove the docker as follow:
 

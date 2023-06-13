@@ -1,5 +1,6 @@
-"""mse_home.command.package module."""
+"""mse_home.command.pack module."""
 
+import argparse
 import shutil
 import tempfile
 import time
@@ -20,21 +21,19 @@ from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePac
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "package",
-        help="Generate a package containing the docker image and the code to run on MSE",
+        "pack",
+        help="Generate a package containing the Docker image and the code to run on MSE",
     )
 
-    parser.add_argument(
-        "--code", type=Path, required=True, help="The path to the code to run"
-    )
+    parser.add_argument("--project", type=Path, help="The path of the project to pack")
+
+    parser.add_argument("--code", type=Path, help="The path of the code to run")
 
     parser.add_argument(
-        "--config", type=Path, required=True, help="The path to the code configuration"
+        "--config", type=Path, help="The path to the code configuration"
     )
 
-    parser.add_argument(
-        "--dockerfile", type=Path, required=True, help="The path to the Dockerfile"
-    )
+    parser.add_argument("--dockerfile", type=Path, help="The path to the Dockerfile")
 
     parser.add_argument("--test", type=Path, help="The test directory")
 
@@ -53,20 +52,55 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    if not args.code.is_dir():
-        raise IOError(f"{args.code} does not exist")
-
     package_path: Path = args.output.resolve()
     if not package_path.is_dir():
         raise IOError(f"{package_path} does not exist")
 
-    if args.test is not None and not args.test.is_dir():
-        raise NotADirectoryError(f"{args.test} does not exist")
+    code_path: Path
+    test_path: Path
+    config_path: Path
+    dockerfile_path: Path
 
-    if not args.dockerfile.is_file():
-        raise IOError(f"{args.dockerfile} does not exist")
+    if args.project:
+        if any([args.code, args.config, args.dockerfile]):
+            raise argparse.ArgumentTypeError(
+                "[--project] and [--code & --config & --dockerfile] "
+                "are mutually exclusive"
+            )
 
-    code_config = CodeConfig.load(args.config)
+        if not args.project.is_dir():
+            raise NotADirectoryError(f"`{args.project}` does not exist")
+
+        code_path = args.project / "mse_src"
+        test_path = args.project / "tests"
+        config_path = args.project / "mse.toml"
+        dockerfile_path = args.project / "Dockerfile"
+
+    else:
+        if not all([args.code, args.config, args.dockerfile]):
+            raise argparse.ArgumentTypeError(
+                "the following arguments are required: "
+                "--code, --config, --dockerfile"
+            )
+
+        code_path = args.code
+        test_path = args.test
+        config_path = args.config
+        dockerfile_path = args.dockerfile
+
+    if not code_path.is_dir():
+        raise NotADirectoryError(f"`{code_path}` does not exist")
+
+    if test_path and not test_path.is_dir():
+        raise NotADirectoryError(f"`{test_path}` does not exist")
+
+    if not config_path.is_file():
+        raise FileNotFoundError(f"`{config_path}` does not exist")
+
+    if not dockerfile_path.is_file():
+        raise FileNotFoundError(f"`{dockerfile_path}` does not exist")
+
+    code_config = CodeConfig.load(config_path)
 
     workspace = Path(tempfile.mkdtemp())
 
@@ -75,8 +109,8 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=args.test.resolve() if args.test else None,
-        config_path=args.config,
+        test_path=test_path.resolve() if test_path else None,
+        config_path=config_path.resolve(),
     )
 
     now = time.time_ns()
@@ -84,14 +118,14 @@ def run(args) -> None:
     package_path = package_path / f"package_{code_config.name}_{now}.tar"
 
     (secret_key, _) = create_code_tar(
-        args.code.resolve(), package.code_tar, args.encrypt
+        code_path.resolve(), package.code_tar, args.encrypt
     )
 
     if secret_key:
         code_secret_path.write_bytes(secret_key)
         LOG.info("Your code secret key has been saved at: %s", code_secret_path)
 
-    create_image_tar(args.dockerfile.resolve(), code_config.name, package.image_tar)
+    create_image_tar(dockerfile_path.resolve(), code_config.name, package.image_tar)
 
     LOG.info("Creating the final package...")
 
