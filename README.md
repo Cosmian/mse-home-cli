@@ -56,7 +56,7 @@ $ msehome pack --project example/ \
                --output workspace/code_provider 
 ```
 
-The generating package can now be sent to the sgx operator.
+The generated package can now be sent to the sgx operator.
 
 ### Spawn the MSE docker
 
@@ -66,24 +66,17 @@ __User__: the SGX operator
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
+                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
 ```
 
-Keep the `workspace/sgx_operator/args.toml` to share it with the other participants. 
+The microservice is now up, and evidences have been automatically collected.
 
-### Collect the evidences to verify the application
+Evidences are useful for the code provider to verify the trustworthiness of the running application.
 
-__User__: the SGX operator
-
-```console
-$ msehome evidence --pccs https://pccs.example.com \
-                   --output workspace/sgx_operator/ \
-                   app_name
-```
-
-The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with the orther participants.
+The files `workspace/sgx_operator/evidence.json` and `workspace/sgx_operator/args.toml` can now be shared with the other participants.
 
 ### Check the trustworthiness of the application
 

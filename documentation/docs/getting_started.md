@@ -196,7 +196,7 @@ This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
 
 The generated package can now be sent to the SGX operator.
 
-## Spawn the mse docker
+## Spawn the MSE docker
 
 !!! info User
 
@@ -207,6 +207,7 @@ The generated package can now be sent to the SGX operator.
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
+                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
@@ -216,29 +217,17 @@ Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
 - `size`: memory size (in MB) of the enclave to spawn
+- `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the args file
 
-This command unpacks the tarball (thus a lot of files are created in `output` folder) specified by the `--package` argument, and generates a `args.toml` file, corresponding to arguments used to spawn the container. This file is also needed to [compute the fingerprint](#check-the-trustworthiness-of-the-application) of the microservice.
+This command first unpacks the tarball specified by the `--package` argument. Note that a lot of files are created in `output` folder.
 
-Keep the `workspace/sgx_operator/args.toml` to share it with other participants. 
+Verification parts are then automatically collected:
+- `workspace/sgx_operator/args.toml` file corresponds to the arguments used to spawn the container.
+- `workspace/sgx_operator/evidence.json` file contains cryptographic proofs related to the enclave.
 
-## Collect the evidences to verify the application
-
-!!! info User
-
-    This command is designed to be used by the **SGX operator**
-
-
-```console
-$ msehome evidence --pccs https://pccs.example.com \
-                   --output workspace/sgx_operator/ \
-                   app_name
-```
-
-This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
-
-The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
+Both files are part of verification signature and thus are needed to [verify the app](#check-the-trustworthiness-of-the-application) of the microservice, and can now be shared with other participants.
 
 ## Check the trustworthiness of the application
 

@@ -12,7 +12,6 @@ import requests
 from conftest import capture_logs
 
 from mse_home.command.decrypt import run as do_decrypt
-from mse_home.command.evidence import run as do_evidence
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
 from mse_home.command.pack import run as do_package
@@ -221,12 +220,14 @@ def test_spawn(
     port: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the `spawn` subcommand."""
     do_spawn(
         Namespace(
             **{
                 "name": app_name,
+                "pccs": pccs_url,
                 "package": pytest.package_path,
                 "host": host,
                 "days": 2,
@@ -240,6 +241,12 @@ def test_spawn(
 
     output = capture_logs(cmd_log)
     try:
+        pytest.evidence_path = Path(
+            re.search(
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
+            ).group(1)
+        )
+
         pytest.args_path = Path(
             re.search(
                 "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
@@ -250,6 +257,7 @@ def test_spawn(
         print(output)
         assert False
 
+    assert pytest.evidence_path.exists()
     assert pytest.args_path.exists()
 
 
@@ -291,34 +299,6 @@ def test_status_conf_server(cmd_log: io.StringIO, app_name: str, port: int, host
     assert f"Port = {port}" in output
     assert "Healthcheck = /health" in output
     assert "Status = waiting secret keys" in output
-
-
-@pytest.mark.slow
-@pytest.mark.incremental
-def test_evidence(workspace: Path, cmd_log: io.StringIO, app_name: str, pccs_url: str):
-    """Test the `evidence` subcommand."""
-    do_evidence(
-        Namespace(
-            **{
-                "name": app_name,
-                "pccs": pccs_url,
-                "output": workspace,
-            }
-        )
-    )
-
-    output = capture_logs(cmd_log)
-    try:
-        pytest.evidence_path = Path(
-            re.search(
-                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert pytest.evidence_path.exists()
 
 
 @pytest.mark.slow
@@ -628,6 +608,7 @@ def test_plaintext(
     port2: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the process subcommand without encryption."""
     do_package(
@@ -672,6 +653,7 @@ def test_plaintext(
                 "port": port2,
                 "size": 4096,
                 "signer_key": signer_key,
+                "pccs": pccs_url,
                 "output": workspace,
             }
         )
@@ -732,6 +714,7 @@ def test_plaintext_project(
     port3: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the process subcommand without encryption by specifying a project directory."""
     do_package(
@@ -768,6 +751,7 @@ def test_plaintext_project(
         Namespace(
             **{
                 "name": app_name,
+                "pccs": pccs_url,
                 "package": pytest.package_path,
                 "host": host,
                 "days": 2,

@@ -9,7 +9,6 @@ filterwarnings("ignore")  # noqa: E402
 from mse_home import __version__
 from mse_home.command import (
     decrypt,
-    evidence,
     list_all,
     logs,
     pack,
@@ -45,7 +44,6 @@ def main() -> int:
 
     pack.add_subparser(subparsers)
     decrypt.add_subparser(subparsers)
-    evidence.add_subparser(subparsers)
     scaffold.add_subparser(subparsers)
     list_all.add_subparser(subparsers)
     logs.add_subparser(subparsers)
