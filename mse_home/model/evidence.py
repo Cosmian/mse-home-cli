@@ -34,7 +34,7 @@ class ApplicationEvidence(BaseModel):
 
     signer_pk: PublicKeyTypes
 
-    app_args: str
+    input_args: str
 
     class Config:
         """Overwrite internal structure."""
@@ -57,7 +57,7 @@ class ApplicationEvidence(BaseModel):
             dataMap = json.load(f)
 
             return ApplicationEvidence(
-                app_args=dataMap["app_args"].encode("utf-8"),
+                input_args=dataMap["input_args"].encode("utf-8"),
                 ratls_certificate=load_pem_x509_certificate(
                     dataMap["ratls_certificate"].encode("utf-8")
                 ),
@@ -76,7 +76,7 @@ class ApplicationEvidence(BaseModel):
         """Save the evidence into a json file."""
         with open(path, "w", encoding="utf8") as f:
             dataMap: Dict[str, Any] = {
-                "app_args": self.app_args,
+                "input_args": self.input_args,
                 "ratls_certificate": self.ratls_certificate.public_bytes(
                     encoding=Encoding.PEM
                 ).decode("utf-8"),

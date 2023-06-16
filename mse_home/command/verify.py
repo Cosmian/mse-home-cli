@@ -57,7 +57,7 @@ def run(args) -> None:
 
     evidence = ApplicationEvidence.load(args.evidence)
 
-    app_args = NoSgxDockerConfig(**json.loads(evidence.app_args))
+    input_args = NoSgxDockerConfig(**json.loads(evidence.input_args))
 
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
@@ -67,7 +67,7 @@ def run(args) -> None:
     mrenclave = compute_mr_enclave(
         client,
         image,
-        app_args,
+        input_args,
         package.code_tar,
         log_path,
     )

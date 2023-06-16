@@ -90,7 +90,7 @@ def test_extract_no_test_folder(workspace2: Path):
 def test_extract_bad_tar(workspace: Path):
     """Test the `extract` method with errors."""
     # Not a tar
-    package_tar = Path(__file__).parent / "data" / "args.toml"
+    package_tar = Path(__file__).parent / "data" / "evidence.json"
 
     with pytest.raises(Exception):
         CodePackage.extract(workspace, package_tar)
