@@ -1,7 +1,5 @@
 """mse_home.command.evidence module."""
 
-import json
-import os
 import socket
 import ssl
 from pathlib import Path
@@ -11,6 +9,7 @@ from cryptography.x509 import load_pem_x509_certificate
 from docker.models.containers import Container
 from intel_sgx_ra.attest import retrieve_collaterals
 from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_app_container, get_client_docker
@@ -67,16 +66,8 @@ def collect_evidence_and_certificate(
     output: Path,
 ):
     """Collect evidence JSON file and RA-TLS certificate from running enclave."""
-    # Get input args from the Docker container
-    (exit_code, exec_run) = container.exec_run(
-        f"cat {os.getenv('HOME', '/root')}/input_args"
-    )
-    if exit_code != 0:
-        raise Exception("cannot get content of input args file from container")
-
-    input_args = json.loads(exec_run.output.decode("utf-8"))
-
     docker = SgxDockerConfig.load(container.attrs, container.labels)
+    input_args = NoSgxDockerConfig.from_sgx(docker_config=docker)
 
     # Get the certificate from the application
     try:
@@ -101,7 +92,7 @@ def collect_evidence_and_certificate(
     )
 
     evidence = ApplicationEvidence(
-        input_args=input_args,
+        input_args=input_args.json(),
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
