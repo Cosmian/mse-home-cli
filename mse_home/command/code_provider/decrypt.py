@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.fernet import Fernet
 
 from mse_home.log import LOGGER as LOG
 
@@ -10,28 +10,28 @@ from mse_home.log import LOGGER as LOG
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "decrypt", help="Decrypt a file encrypted using the sealed key"
+        "decrypt", help="Decrypt a file using Fernet symmetric encryption"
     )
 
     parser.add_argument(
-        "--aes",
-        type=str,
-        metavar="KEY",
-        required=True,
-        help="Decrypt using AES-CBC and the given key (in hex)",
-    )
-
-    parser.add_argument(
-        "encrypted_file",
+        "--key",
         type=Path,
-        help="The file to decrypt",
+        required=True,
+        help="Path to the file within a 32 bytes key URL Safe Base64 encoded",
+    )
+
+    parser.add_argument(
+        "file",
+        type=Path,
+        required=True,
+        help="File to decrypt",
     )
 
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
-        help="The plaintext file",
+        help="Output file within plaintext",
     )
 
     parser.set_defaults(func=run)
@@ -39,17 +39,11 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
-    LOG.info("Decrypting your file...")
+    LOG.info("Decrypting %s...", args.file)
 
-    key = bytes.fromhex(args.aes)
-    encrypted_bytes = args.encrypted_file.read_bytes()
-    iv = encrypted_bytes[:16]
+    key: bytes = args.key.read_bytes()
+    encrypted_data: bytes = args.file.read_bytes()
 
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
-    decryptor = cipher.decryptor()
+    args.output.write_bytes(Fernet(key).decrypt(encrypted_data))
 
-    args.output.write_bytes(
-        decryptor.update(encrypted_bytes[16:]) + decryptor.finalize()
-    )
-
-    LOG.info("Your file has been decrypted and saved at: %s", args.output)
+    LOG.info("File sucessfully decrypted in %s", args.output)

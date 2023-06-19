@@ -1,11 +1,13 @@
 """Microservice Encryption application."""
 
+import base64
 import json
 import os
 from http import HTTPStatus
 from pathlib import Path
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from flask import Flask, Response
 
 {{ app }} = Flask(__name__)
@@ -26,27 +28,19 @@ def hello():
     return "Hello world"
 
 
-def aes_encrypt(text: bytes, key: bytes) -> bytes:
-    """Encrypt a text using AES-CBC."""
-    iv = os.urandom(16)
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
-    encryptor = cipher.encryptor()
-    return iv + encryptor.update(text) + encryptor.finalize()
-
-
 @app.route("/result/secrets")
 def result_with_secret():
-    """Get a simple result using secrets."""
-    return aes_encrypt(
-        b"secret message with secrets.json",
-        bytes.fromhex(json.loads(secret_json.read_bytes())["key"]),
-    )
+    """Get a simple result using password and salt."""
+    salt: bytes = base64.urlsafe_b64decode(
+        json.loads(secret_json.read_bytes())["salt"].encode("ascii"))
+    password: bytes = json.loads(secret_json.read_bytes())["password"].encode("utf-8")
+    kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
+    sk: bytes = base64.urlsafe_b64encode(kdf.derive(password))
+    return Fernet(sk).encrypt(b"message using password and salt from SECRETS")
 
 
 @app.route("/result/sealed_secrets")
 def result_with_sealed_secret():
     """Get a simple result using sealed secrets."""
-    return aes_encrypt(
-        b"message with sealed_secrets.json",
-        bytes.fromhex(json.loads(sealed_secret_json.read_bytes())["key"]),
-    )
+    sk: bytes = json.loads(sealed_secret_json.read_bytes())["result_sk"].encode("ascii")
+    return Fernet(sk).encrypt(b"message using result_sk from SEALED_SECRETS")
