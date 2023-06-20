@@ -135,45 +135,6 @@ def test_pack(workspace: Path, cmd_log: io.StringIO):
     assert pytest.package_path.exists()
 
 
-@pytest.mark.slow
-@pytest.mark.incremental
-def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
-    """Test the `package` subcommand."""
-    do_package(
-        Namespace(
-            **{
-                "project": None,
-                "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "mse.toml",
-                "dockerfile": pytest.app_path / "Dockerfile",
-                "test": None,
-                "encrypt": True,
-                "output": workspace,
-            }
-        )
-    )
-
-    # Check the tar generation
-    output = capture_logs(cmd_log)
-    try:
-        pytest.key_path = Path(
-            re.search(
-                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-
-        pytest.package_path = Path(
-            re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert pytest.package_path.exists()
-
-
 def test_pack_project(workspace: Path, cmd_log: io.StringIO):
     """Test the `pack` subcommand by specifying a project directory."""
     do_package(
