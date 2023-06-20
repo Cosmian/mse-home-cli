@@ -9,7 +9,7 @@ from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
 from docker.models.containers import Container
 
-from mse_home.error import AppContainerNotFound
+from mse_home.error import AppContainerNotFound, AppContainerNotRunning
 from mse_home.log import LOGGER as LOG
 
 
@@ -52,7 +52,7 @@ def get_running_app_container(client: DockerClient, name: str) -> Container:
     container = get_app_container(client, name)
 
     if not is_running(container):
-        raise AppContainerNotFound(f"Your application '{name}' is not running")
+        raise AppContainerNotRunning(f"Your application '{name}' is not running")
 
     return container
 

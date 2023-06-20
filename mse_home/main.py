@@ -1,8 +1,12 @@
 """mse_home.main module."""
 
 import argparse
-from warnings import filterwarnings
+from warnings import filterwarnings  # noqa: E402
 
+filterwarnings("ignore")  # noqa: E402
+
+# pylint: disable=wrong-import-position
+from mse_home import __version__
 from mse_home.command.code_provider import (
     decrypt,
     package,
@@ -10,8 +14,7 @@ from mse_home.command.code_provider import (
     seal,
     test_dev,
     verify,
-)  # noqa: E402
-
+)
 from mse_home.command.sgx_operator import (
     evidence,
     list_all,
@@ -19,12 +22,10 @@ from mse_home.command.sgx_operator import (
     restart,
     run,
     spawn,
-)  # noqa: E402
-
-filterwarnings("ignore")  # noqa: E402
-
-# pylint: disable=wrong-import-position
-from mse_home import __version__
+    status,
+    stop,
+    test,
+)
 from mse_home.log import LOGGER as LOG
 from mse_home.log import setup_logging
 
@@ -32,7 +33,7 @@ from mse_home.log import setup_logging
 def main() -> int:
     """Entrypoint of the CLI."""
     parser = argparse.ArgumentParser(
-        description="Microservice Encryption Home CLI" f" - {__version__}",
+        description="Microservice Encryption Home CLI" f" - {__version__}"
     )
 
     parser.add_argument(
