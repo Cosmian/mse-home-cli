@@ -71,6 +71,7 @@ def run(args) -> None:
         if not args.project.is_dir():
             raise NotADirectoryError(f"`{args.project}` does not exist")
 
+        # TODO: do not hardcode that
         code_path = args.project / "mse_src"
         test_path = args.project / "tests"
         config_path = args.project / "mse.toml"
@@ -124,6 +125,11 @@ def run(args) -> None:
     if secret_key:
         code_secret_path.write_bytes(secret_key)
         LOG.info("Your code secret key has been saved at: %s", code_secret_path)
+
+    create_test_tar(
+        test_path.resolve(),
+        package.test_tar,
+    )
 
     create_image_tar(dockerfile_path.resolve(), code_config.name, package.image_tar)
 
@@ -184,6 +190,23 @@ def create_code_tar(
     tar(dir_path=mirror_path, tar_path=output_tar_path)
 
     return (None, None)
+
+
+def create_test_tar(test_path: Path, output_tar_path: Path):
+    """Create the tarball for the tests directory."""
+    LOG.info("Building the tests archive...")
+
+    mirror_path = output_tar_path.parent / "mirrored_tests"
+
+    # We copy the code directory to remove the files to ignore when taring
+    shutil.copytree(
+        test_path,
+        mirror_path,
+        ignore=shutil.ignore_patterns(["__pycache__", ".pytest_cache"]),
+    )
+
+    # Generate the tarball
+    tar(dir_path=mirror_path, tar_path=output_tar_path)
 
 
 def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):
