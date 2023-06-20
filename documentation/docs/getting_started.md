@@ -88,21 +88,15 @@ The `mse_src` is your application directory designed to be started by `msehome` 
 
 The `Dockerfile` should inherit from the `mse-docker-base` and include all dependencies required to run your app. This docker will be run by the SGX operator.
 
-The file `app.py` is a basic Flask application with no extra code. Adapting your own application to MSE does not require any modification to your Python code:
+The file `app.py` is a basic Flask application with no extra code. Adapting your own application to MSE does not require any modification to your Python code.
+
+Example of a basic Flask application:
 
 ```python
-import json
-import os
 from http import HTTPStatus
-from pathlib import Path
-
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from flask import Flask, Response
 
 app = Flask(__name__)
-
-sealed_secret_json = Path(os.getenv("SEALED_SECRETS_PATH"))
-secret_json = Path(os.getenv("SECRETS_PATH"))
 
 
 @app.get("/health")
@@ -117,30 +111,8 @@ def hello():
     return "Hello world"
 
 
-def aes_encrypt(text: bytes, key: bytes) -> bytes:
-    """Encrypt a text using AES-CBC."""
-    iv = os.urandom(16)
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
-    encryptor = cipher.encryptor()
-    return iv + encryptor.update(text) + encryptor.finalize()
-
-
-@app.route("/result/secrets")
-def result_with_secret():
-    """Get a simple result using secrets."""
-    return aes_encrypt(
-        b"secret message with secrets.json",
-        bytes.fromhex(json.loads(secret_json.read_bytes())["key"]),
-    )
-
-
-@app.route("/result/sealed_secrets")
-def result_with_sealed_secret():
-    """Get a simple result using sealed secrets."""
-    return aes_encrypt(
-        b"message with sealed_secrets.json",
-        bytes.fromhex(json.loads(sealed_secret_json.read_bytes())["key"]),
-    )
+# other endpoints
+# ...
 ```
 
 The [configuration file](./configuration.md) is a TOML file used to give information to the SGX operator, allowing to start correctly the application:
