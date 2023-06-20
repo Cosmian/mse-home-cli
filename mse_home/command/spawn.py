@@ -17,6 +17,7 @@ from mse_home.command.helpers import (
     get_app_container,
     get_client_docker,
     is_port_free,
+    is_valid_enclave_size,
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
@@ -64,10 +65,9 @@ def add_subparser(subparsers):
 
     parser.add_argument(
         "--size",
-        type=int,
+        type=is_valid_enclave_size,
         required=True,
-        help="The enclave size to spawn",
-        choices=[4096, 8192, 16384, 32768, 65536],
+        help="The enclave size to spawn (must be a power of 2)",
     )
 
     parser.add_argument(

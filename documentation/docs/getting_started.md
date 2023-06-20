@@ -207,7 +207,7 @@ $ msehome spawn --host myapp.fr \
 Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
-- `size`: memory size (in MB) of the enclave to spawn
+- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.). This size is bounded by the SGX EPC memory.
 - `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the evidence file

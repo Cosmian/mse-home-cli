@@ -1,5 +1,6 @@
 """mse_home.command.helpers module."""
 
+import math
 import socket
 from pathlib import Path
 from typing import Optional
@@ -60,3 +61,11 @@ def is_port_free(port: int):
         return False
 
     return True
+
+
+def is_valid_enclave_size(n) -> bool:
+    """Check if `n` is a valid enclave size."""
+    if n < 2048:
+        return False
+    # must be a power of 2
+    return math.log2(n) % 1 == 0
