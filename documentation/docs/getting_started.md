@@ -149,6 +149,15 @@ This project also contains a test directory enabling you to test this project lo
 
 
 ```console
+$ msehome test-dev --code example/mse_src/ \
+                   --dockerfile example/Dockerfile \
+                   --config example/mse.toml \
+                   --test example/tests/
+```
+
+or more concisely:
+
+```console
 $ msehome test-dev --project example
 ```
 
@@ -159,14 +168,24 @@ $ msehome test-dev --project example
     This command is designed to be used by the **code provider**
 
 
+This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
+
+The generated package can now be sent to the SGX operator.
+
+```console
+$ msehome pack --code example/mse_src/ \
+               --dockerfile example/Dockerfile \
+               --config example/mse.toml \
+               --test example/tests/ \
+               --output workspace/code_provider
+```
+
+or more concisely:
+
 ```console
 $ msehome pack --project example \
                --output workspace/code_provider 
 ```
-
-This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
-
-The generated package can now be sent to the SGX operator.
 
 ## Spawn the MSE docker
 
