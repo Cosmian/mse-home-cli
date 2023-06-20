@@ -302,8 +302,17 @@ $ msehome test --test workspace/sgx_operator/tests/ \
 First, the SGX operator collects the result (which is encrypted):
 
 ```console
-$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/secrets > result.enc
+$ curl --cacert /tmp/ratls.pem https://myapp.fr:7788/result/secrets > result.enc
 ```
+
+!!! info Hostname and certificate
+
+    At the [spawn](#spawn-the-mse-docker) step, remember that the parameter `--host`
+    has been set to `myapp.fr`. Thus the certificate `/tmp/ratls.pem` has been setup
+    to use this name as the target host name.
+    If `localhost` is fetched instead of `myapp.fr`, a SSL message will legitimately
+    complain about not having the expected hostname, and no secure connection can be established.
+
 
 This encrypted result is then sent by external means to the code provider.
 
@@ -342,7 +351,7 @@ This demonstrates that `secrets.json` file has been well setup for the enclave a
 First, the SGX operator collects the encrypted result:
 
 ```console
-$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/sealed_secrets > result.enc
+$ curl --cacert /tmp/ratls.pem https://myapp.fr:7788/result/sealed_secrets > result.enc
 ```
 
 This encrypted result is then sent by external means to the code provider.
