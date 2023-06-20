@@ -9,7 +9,7 @@ from docker.client import DockerClient
 from docker.errors import DockerException, NotFound
 from docker.models.containers import Container
 
-from mse_home.error import AppContainerNotFound
+from mse_home.error import AppContainerNotFound, AppContainerNotRunning
 from mse_home.log import LOGGER as LOG
 
 
@@ -42,6 +42,21 @@ def get_app_container(client: DockerClient, name: str) -> Container:
         ) from exc
 
 
+def is_running(container) -> bool:
+    """Test whether the given container is running."""
+    return container.status == "running"
+
+
+def get_running_app_container(client: DockerClient, name: str) -> Container:
+    """Raise an error if the container is not running or return the running container."""
+    container = get_app_container(client, name)
+
+    if not is_running(container):
+        raise AppContainerNotRunning(f"Your application '{name}' is not running")
+
+    return container
+
+
 def load_docker_image(client: DockerClient, image_tar_path: Path) -> str:
     """Load the docker image from the image tarball."""
     LOG.info("Loading the docker image...")
@@ -62,9 +77,15 @@ def is_port_free(port: int):
     return True
 
 
-def is_valid_enclave_size(n) -> bool:
-    """Check if `n` is a valid enclave size."""
-    if n < 1024:
-        return False
-    # must be a power of 2
-    return (n & (n - 1) == 0) and n != 0
+def enclave_size_integer(n: str) -> int:
+    """Define a new integer type for the enclave size arg."""
+    m = int(n)
+    min_value = 1024
+    if m < min_value:
+        raise ValueError(f"Enclave size should be greater than {min_value}")
+
+    is_power_of_two = (m & (m - 1) == 0) and m != 0
+    if not is_power_of_two:
+        raise ValueError("Enclave size should be a power of two (lower than EPC size)")
+
+    return m

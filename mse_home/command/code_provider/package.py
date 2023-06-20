@@ -1,4 +1,4 @@
-"""mse_home.command.pack module."""
+"""mse_home.command.code_provider.package module."""
 
 import argparse
 import shutil
@@ -15,7 +15,16 @@ from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
-from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePackage
+from mse_home.model.package import (
+    CODE_TAR_NAME,
+    DEFAULT_CODE_DIR,
+    DEFAULT_CONFIG_FILENAME,
+    DEFAULT_DOCKERFILE_FILENAME,
+    DEFAULT_TEST_DIR,
+    DOCKER_IMAGE_TAR_NAME,
+    TEST_TAR_NAME,
+    CodePackage,
+)
 
 
 def add_subparser(subparsers):
@@ -71,11 +80,10 @@ def run(args) -> None:
         if not args.project.is_dir():
             raise NotADirectoryError(f"`{args.project}` does not exist")
 
-        code_path = args.project / "mse_src"
-        test_path = args.project / "tests"
-        config_path = args.project / "mse.toml"
-        dockerfile_path = args.project / "Dockerfile"
-
+        code_path = args.project / DEFAULT_CODE_DIR
+        test_path = args.project / DEFAULT_TEST_DIR
+        config_path = args.project / DEFAULT_CONFIG_FILENAME
+        dockerfile_path = args.project / DEFAULT_DOCKERFILE_FILENAME
     else:
         if not all([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
@@ -109,7 +117,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=test_path.resolve(),
+        test_tar=workspace / TEST_TAR_NAME,
         config_path=config_path.resolve(),
     )
 
@@ -125,6 +133,11 @@ def run(args) -> None:
         code_secret_path.write_bytes(secret_key)
         LOG.info("Your code secret key has been saved at: %s", code_secret_path)
 
+    create_test_tar(
+        test_path.resolve(),
+        package.test_tar,
+    )
+
     create_image_tar(dockerfile_path.resolve(), code_config.name, package.image_tar)
 
     LOG.info("Creating the final package...")
@@ -134,6 +147,7 @@ def run(args) -> None:
     LOG.info("Your package is now ready to be shared: %s", package_path)
 
     # Clean up the workspace
+    LOG.info("Cleaning up the temporary workspace...")
     shutil.rmtree(workspace)
 
 
@@ -183,6 +197,23 @@ def create_code_tar(
     tar(dir_path=mirror_path, tar_path=output_tar_path)
 
     return (None, None)
+
+
+def create_test_tar(test_path: Path, output_tar_path: Path):
+    """Create the tarball for the tests directory."""
+    LOG.info("Building the tests archive...")
+
+    mirror_path = output_tar_path.parent / "mirrored_tests"
+
+    # We copy the code directory to remove the files to ignore when taring
+    shutil.copytree(
+        test_path,
+        mirror_path,
+        ignore=shutil.ignore_patterns(*["__pycache__", ".pytest_cache"]),
+    )
+
+    # Generate the tarball
+    tar(dir_path=mirror_path, tar_path=output_tar_path)
 
 
 def create_image_tar(dockerfile: Path, image_name: str, output_tar_path: Path):

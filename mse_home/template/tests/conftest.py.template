@@ -31,9 +31,9 @@ def sealed_secret_json() -> Optional[Path]:
 
 
 @pytest.fixture(scope="module")
-def workspace() -> Path:
+def workspace(tmp_path_factory) -> Path:
     """Get the path of the test work directory."""
-    return Path(tempfile.mkdtemp())
+    return tmp_path_factory.mktemp("workspace")
 
 
 @pytest.fixture(scope="module")

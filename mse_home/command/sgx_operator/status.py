@@ -1,11 +1,11 @@
-"""mse_home.command.status module."""
+"""mse_home.command.sgx_operator.status module."""
 
 from datetime import datetime
 
 import requests
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_app_container, get_client_docker
+from mse_home.command.helpers import get_app_container, get_client_docker, is_running
 from mse_home.log import LOGGER as LOG
 
 
@@ -40,7 +40,7 @@ def run(args) -> None:
     LOG.info(
         "      Status = %s",
         app_state(docker.port, docker.healthcheck)
-        if container.status == "running"
+        if is_running(container)
         else container.status,
     )
     LOG.info(

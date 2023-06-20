@@ -18,7 +18,7 @@ You should edit the following files:
 $ msehome test-dev --code mse_src/ \
                    --dockerfile Dockerfile \
                    --config mse.toml \
-                   --tests tests/
+                   --test tests/
 ```
 
 ### Create the MSE package with the code and the Docker image
@@ -27,6 +27,7 @@ $ msehome test-dev --code mse_src/ \
 $ msehome package --code mse_src/ \
                   --dockerfile Dockerfile \
                   --config mse.toml \
+                  --test tests/ \
                   --output code_provider
 ```
 The generated package can now be sent to the SGX operator.

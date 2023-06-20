@@ -32,6 +32,8 @@ class ApplicationEvidence(BaseModel):
 
     tcb_info: bytes
 
+    qe_identity: bytes
+
     tcb_cert: Certificate
 
     signer_pk: PublicKeyTypes
@@ -47,10 +49,16 @@ class ApplicationEvidence(BaseModel):
     def collaterals(
         self,
     ) -> Tuple[
-        bytes, Certificate, CertificateRevocationList, CertificateRevocationList
+        bytes, bytes, Certificate, CertificateRevocationList, CertificateRevocationList
     ]:
         """Return the PCCS collaterals."""
-        return (self.tcb_info, self.tcb_cert, self.root_ca_crl, self.pck_platform_crl)
+        return (
+            self.tcb_info,
+            self.qe_identity,
+            self.tcb_cert,
+            self.root_ca_crl,
+            self.pck_platform_crl,
+        )
 
     @staticmethod
     def load(path: Path):
@@ -68,6 +76,7 @@ class ApplicationEvidence(BaseModel):
                     dataMap["pck_platform_crl"].encode("utf-8")
                 ),
                 tcb_info=base64.b64decode(dataMap["tcb_info"].encode("utf-8")),
+                qe_identity=base64.b64decode(dataMap["qe_identity"].encode("utf-8")),
                 tcb_cert=load_pem_x509_certificate(dataMap["tcb_cert"].encode("utf-8")),
                 signer_pk=load_pem_public_key(
                     dataMap["signer_pk"].encode("utf-8"),
@@ -98,6 +107,7 @@ class ApplicationEvidence(BaseModel):
                     encoding=Encoding.PEM,
                 ).decode("utf-8"),
                 "tcb_info": base64.b64encode(self.tcb_info).decode("utf-8"),
+                "qe_identity": base64.b64encode(self.qe_identity).decode("utf-8"),
                 "tcb_cert": self.tcb_cert.public_bytes(encoding=Encoding.PEM).decode(
                     "utf-8"
                 ),

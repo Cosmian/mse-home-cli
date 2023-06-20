@@ -7,22 +7,24 @@ filterwarnings("ignore")  # noqa: E402
 
 # pylint: disable=wrong-import-position
 from mse_home import __version__
-from mse_home.command import (
+from mse_home.command.code_provider import (
     decrypt,
+    package,
+    scaffold,
+    seal,
+    test_dev,
+    verify,
+)
+from mse_home.command.sgx_operator import (
     evidence,
     list_all,
     logs,
-    package,
     restart,
     run,
-    scaffold,
-    seal,
     spawn,
     status,
     stop,
     test,
-    test_dev,
-    verify,
 )
 from mse_home.log import LOGGER as LOG
 from mse_home.log import setup_logging

@@ -1,4 +1,4 @@
-"""mse_home.command.seal module."""
+"""mse_home.command.code_provider.seal module."""
 
 from pathlib import Path
 

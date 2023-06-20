@@ -1,4 +1,4 @@
-"""mse_home.command.list module."""
+"""mse_home.command.sgx_operator.list module."""
 
 from mse_cli_core.sgx_docker import SgxDockerConfig
 

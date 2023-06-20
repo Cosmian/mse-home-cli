@@ -83,7 +83,6 @@ example/
 2 directories, 9 files
 ```
 
-
 The `mse_src` is your application directory designed to be started by `msehome` cli. 
 
 The `Dockerfile` should inherit from the `mse-docker-base` and include all dependencies required to run your app. This docker will be run by the SGX operator.
@@ -161,6 +160,8 @@ or more concisely:
 $ msehome test-dev --project example
 ```
 
+Testing your code before sending it to the SGX operator is recommended. Be aware that any error will require to restart the deployment flow from scratch.
+
 ## Create the MSE package with the code and the docker image
 
 !!! info User
@@ -198,7 +199,6 @@ $ msehome package --project example \
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
-                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
@@ -207,7 +207,7 @@ $ msehome spawn --host myapp.fr \
 Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
-- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.). This size is bounded by the SGX EPC memory.
+- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 greater than 1024. This size is bounded by the SGX EPC memory.
 - `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the evidence file
@@ -217,6 +217,26 @@ This command first unpacks the tarball specified by the `--package` argument. No
 The generated file `workspace/sgx_operator/evidence.json` contains cryptographic proofs related to the enclave. It can be shared with other participants.
 
 This evidence file is helpful for the code provider to [verify](#check-the-trustworthiness-of-the-application) the running app.
+
+The application is now started in an intermediate state waiting for any secrets: we call that the configuration server. 
+
+## Collect the evidences to verify the application
+
+!!! info User
+
+    This command is designed to be used by the **SGX operator**
+
+
+```console
+$ msehome evidence --output workspace/sgx_operator/ \
+                   app_name
+```
+
+This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
+
+This command will determine your PCCS url by parsing the aesmd service configuration file: `/etc/sgx_default_qcnl.conf`. You can choose another PCCS by specifying the `--pccs` parameter.
+
+The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
 
 ## Check the trustworthiness of the application
 
@@ -269,6 +289,8 @@ $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.seal
               app_name
 ```
 
+From now, the real application developed by the code provider is fully operational and running. The configuration server started during the previous `spawn` step has been shutdown. Therefore, if you want to change the configuration or the secrets, you need to stop&remove this application and restart the deployment flow from scratch.
+
 ## Test the deployed application
 
 !!! info User
@@ -280,6 +302,10 @@ $ msehome test --test workspace/sgx_operator/tests/ \
                --config workspace/sgx_operator/mse.toml \
                app_name
 ```
+
+This step is mandatory to check that the application is executed properly as the code provider expects. 
+
+Always run this step before communicating to the users about the deployment completion.
 
 ## Decrypt the results
 
@@ -357,3 +383,9 @@ $ cat workspace/code_provider/result.plain
 ```
 
 Note that the `--aes` parameter is the key contained in `secrets_to_seal.json`.
+
+
+!!! info Fix or Update
+
+    In case of errors or if the code/the configuration needs to be updated, you shall stop&remove the current running application and restart from scratch the whole deployment flow. 
+

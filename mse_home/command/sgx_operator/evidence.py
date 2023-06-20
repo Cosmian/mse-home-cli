@@ -1,8 +1,11 @@
-"""mse_home.command.evidence module."""
+"""mse_home.command.sgx_operator.evidence module."""
 
+import json
 import socket
 import ssl
 from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse
 
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
@@ -12,7 +15,7 @@ from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
 from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_app_container, get_client_docker
+from mse_home.command.helpers import get_client_docker, get_running_app_container
 from mse_home.log import LOGGER as LOG
 from mse_home.model.evidence import ApplicationEvidence
 
@@ -25,11 +28,12 @@ def add_subparser(subparsers):
         "the application and the enclave",
     )
 
+    pccs_url_default = guess_pccs_url() or "https://pccs.example.com"
     parser.add_argument(
         "--pccs",
         type=str,
-        required=True,
-        help="URL to the PCCS (ex: https://pccs.example.com)",
+        help=f"URL to the PCCS (default: {pccs_url_default})",
+        default=pccs_url_default,
     )
 
     parser.add_argument(
@@ -54,8 +58,7 @@ def run(args) -> None:
         raise NotADirectoryError(f"`{args.output}` does not exist")
 
     client = get_client_docker()
-
-    container = get_app_container(client, args.name)
+    container = get_running_app_container(client, args.name)
 
     collect_evidence_and_certificate(
         container=container, pccs_url=args.pccs, output=args.output
@@ -69,6 +72,8 @@ def collect_evidence_and_certificate(
     output: Path,
 ):
     """Collect evidence JSON file and RA-TLS certificate from running enclave."""
+    LOG.info("Collecting the enclave and application evidences...")
+
     docker = SgxDockerConfig.load(container.attrs, container.labels)
     input_args = NoSgxDockerConfig.from_sgx(docker_config=docker)
 
@@ -85,9 +90,13 @@ def collect_evidence_and_certificate(
 
     quote = ratls_verify(ratls_cert)
 
-    (tcb_info, tcb_cert, root_ca_crl, pck_platform_crl) = retrieve_collaterals(
-        quote, pccs_url
-    )
+    (
+        tcb_info,
+        qe_identity,
+        tcb_cert,
+        root_ca_crl,
+        pck_platform_crl,
+    ) = retrieve_collaterals(quote, pccs_url)
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -100,6 +109,7 @@ def collect_evidence_and_certificate(
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
         tcb_info=tcb_info,
+        qe_identity=qe_identity,
         tcb_cert=tcb_cert,
         signer_pk=signer_key.public_key(),
     )
@@ -115,3 +125,28 @@ def collect_evidence_and_certificate(
     )
 
     LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)
+
+
+def guess_pccs_url(
+    aemsd_conf_file: Path = Path("/etc/sgx_default_qcnl.conf"),
+) -> Optional[str]:
+    """Get the pccs url from aesmd service configuration file."""
+    try:
+        with open(aemsd_conf_file, encoding="utf-8") as f:
+            # The configuration is not a valid json: it contains comments
+            # First remove them and then deserialize the json string
+            content = f.readlines()
+            content = [
+                line
+                for line in content
+                if line.strip() and not line.strip().startswith("//")
+            ]
+            url = json.loads("".join(content)).get("pccs_url", None)
+
+            if url:
+                url = urlparse(url)
+                return f"{url.scheme}://{url.netloc}"
+    except Exception:  # pylint: disable=broad-except
+        pass
+
+    return None
