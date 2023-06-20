@@ -1,5 +1,6 @@
 """mse_home.model.evidence module."""
 
+import base64
 import json
 from pathlib import Path
 from typing import Any, Dict, Tuple
@@ -65,7 +66,7 @@ class ApplicationEvidence(BaseModel):
                 pck_platform_crl=load_pem_x509_crl(
                     dataMap["pck_platform_crl"].encode("utf-8")
                 ),
-                tcb_info=bytes.fromhex(dataMap["tcb_info"]),
+                tcb_info=base64.b64decode(dataMap["tcb_info"].encode("utf-8")),
                 tcb_cert=load_pem_x509_certificate(dataMap["tcb_cert"].encode("utf-8")),
                 signer_pk=load_pem_public_key(
                     dataMap["signer_pk"].encode("utf-8"),
@@ -86,7 +87,7 @@ class ApplicationEvidence(BaseModel):
                 "pck_platform_crl": self.pck_platform_crl.public_bytes(
                     encoding=Encoding.PEM,
                 ).decode("utf-8"),
-                "tcb_info": self.tcb_info.hex(),
+                "tcb_info": base64.b64encode(self.tcb_info).decode("utf-8"),
                 "tcb_cert": self.tcb_cert.public_bytes(encoding=Encoding.PEM).decode(
                     "utf-8"
                 ),
