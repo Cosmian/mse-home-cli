@@ -1,8 +1,12 @@
 """mse_home.command.evidence module."""
 
+import argparse
+import json
 import socket
 import ssl
 from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse
 
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
@@ -25,14 +29,17 @@ def add_subparser(subparsers):
         "the application and the enclave",
     )
 
+    required = parser.add_argument_group("required arguments")
+
+    pccs_url_default = guess_pccs_url() or "https://pccs.example.com"
     parser.add_argument(
         "--pccs",
         type=str,
-        required=True,
-        help="URL to the PCCS (ex: https://pccs.example.com)",
+        help=f"URL to the PCCS (default: {pccs_url_default})",
+        default=pccs_url_default,
     )
 
-    parser.add_argument(
+    required.add_argument(
         "--output",
         type=Path,
         required=True,
@@ -115,3 +122,26 @@ def collect_evidence_and_certificate(
     )
 
     LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)
+
+
+def guess_pccs_url(
+    aemsd_conf_file: Path = "/etc/sgx_default_qcnl.conf",
+) -> Optional[str]:
+    """Get the pccs url from aesmd service configuration file."""
+    try:
+        with open(aemsd_conf_file) as f:
+            # The configuration is not a valid json: it contains comments
+            # First remove them and then deserialize the json string
+            content = f.readlines()
+            content = [
+                l for l in content if l.strip() and not l.strip().startswith("//")
+            ]
+            url = json.loads("".join(content)).get("pccs_url", None)
+
+            if url:
+                url = urlparse(url)
+                return f"{url.scheme}://{url.netloc}"
+    except:
+        return None
+
+    return None

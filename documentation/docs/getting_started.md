@@ -216,7 +216,27 @@ This command first unpacks the tarball specified by the `--package` argument. No
 
 The generated file `workspace/sgx_operator/evidence.json` contains cryptographic proofs related to the enclave. It can be shared with other participants.
 
+<<<<<<< HEAD
 This evidence file is helpful for the code provider to [verify](#check-the-trustworthiness-of-the-application) the running app.
+=======
+## Collect the evidences to verify the application
+
+!!! info User
+
+    This command is designed to be used by the **SGX operator**
+
+
+```console
+$ msehome evidence --output workspace/sgx_operator/ \
+                   app_name
+```
+
+This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
+
+This command will determine your pccs url by parsing the aesmd service configuration file: `/etc/sgx_default_qcnl.conf`. You can choose another pccs by specifying the `--pccs` parameter.
+
+The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
+>>>>>>> d237a36 (:sparkles: determine the pccs url by default)
 
 ## Check the trustworthiness of the application
 

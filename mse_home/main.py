@@ -31,7 +31,7 @@ from mse_home.log import setup_logging
 def main() -> int:
     """Entrypoint of the CLI."""
     parser = argparse.ArgumentParser(
-        description="Microservice Encryption Home CLI" f" - {__version__}"
+        description="Microservice Encryption Home CLI" f" - {__version__}",
     )
 
     parser.add_argument(
