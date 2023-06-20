@@ -1,5 +1,6 @@
-"""mse_home.command.verify module."""
+"""mse_home.command.code_provider.verify module."""
 
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -58,6 +59,8 @@ def run(args) -> None:
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
 
+    LOG.info("A log file is generating at: %s", log_path)
+
     client = get_client_docker()
     image = load_docker_image(client, package.image_tar)
     mrenclave = compute_mr_enclave(
@@ -67,6 +70,8 @@ def run(args) -> None:
         package.code_tar,
         log_path,
     )
+
+    LOG.info("Fingerprint is: %s", mrenclave)
 
     try:
         verify_enclave(
@@ -87,3 +92,7 @@ def run(args) -> None:
     )
 
     LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)
+
+    # Clean up the workspace
+    LOG.info("Cleaning up the temporary workspace...")
+    shutil.rmtree(workspace)

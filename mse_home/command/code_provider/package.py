@@ -1,4 +1,4 @@
-"""mse_home.command.pack module."""
+"""mse_home.command.code_provider.package module."""
 
 import argparse
 import shutil
@@ -22,6 +22,7 @@ from mse_home.model.package import (
     DEFAULT_DOCKERFILE_FILENAME,
     DEFAULT_TEST_DIR,
     DOCKER_IMAGE_TAR_NAME,
+    TEST_TAR_NAME,
     CodePackage,
 )
 
@@ -116,7 +117,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=test_path.resolve(),
+        test_tar=workspace / TEST_TAR_NAME,
         config_path=config_path.resolve(),
     )
 
@@ -208,7 +209,7 @@ def create_test_tar(test_path: Path, output_tar_path: Path):
     shutil.copytree(
         test_path,
         mirror_path,
-        ignore=shutil.ignore_patterns(["__pycache__", ".pytest_cache"]),
+        ignore=shutil.ignore_patterns(*["__pycache__", ".pytest_cache"]),
     )
 
     # Generate the tarball

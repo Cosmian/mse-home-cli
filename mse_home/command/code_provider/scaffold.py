@@ -1,4 +1,4 @@
-"""mse_home.command.scaffold module."""
+"""mse_home.command.code_provider.scaffold module."""
 
 import os
 import shutil

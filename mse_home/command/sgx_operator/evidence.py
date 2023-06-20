@@ -1,4 +1,4 @@
-"""mse_home.command.evidence module."""
+"""mse_home.command.sgx_operator.evidence module."""
 
 import json
 import socket
@@ -72,6 +72,8 @@ def collect_evidence_and_certificate(
     output: Path,
 ):
     """Collect evidence JSON file and RA-TLS certificate from running enclave."""
+    LOG.info("Collecting the enclave and application evidences...")
+
     docker = SgxDockerConfig.load(container.attrs, container.labels)
     input_args = NoSgxDockerConfig.from_sgx(docker_config=docker)
 
@@ -94,7 +96,7 @@ def collect_evidence_and_certificate(
         tcb_cert,
         root_ca_crl,
         pck_platform_crl,
-    ) = retrieve_collaterals(quote, args.pccs)
+    ) = retrieve_collaterals(quote, pccs_url)
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -126,23 +128,25 @@ def collect_evidence_and_certificate(
 
 
 def guess_pccs_url(
-    aemsd_conf_file: Path = "/etc/sgx_default_qcnl.conf",
+    aemsd_conf_file: Path = Path("/etc/sgx_default_qcnl.conf"),
 ) -> Optional[str]:
     """Get the pccs url from aesmd service configuration file."""
     try:
-        with open(aemsd_conf_file) as f:
+        with open(aemsd_conf_file, encoding="utf-8") as f:
             # The configuration is not a valid json: it contains comments
             # First remove them and then deserialize the json string
             content = f.readlines()
             content = [
-                l for l in content if l.strip() and not l.strip().startswith("//")
+                line
+                for line in content
+                if line.strip() and not line.strip().startswith("//")
             ]
             url = json.loads("".join(content)).get("pccs_url", None)
 
             if url:
                 url = urlparse(url)
                 return f"{url.scheme}://{url.netloc}"
-    except:
-        return None
+    except Exception:  # pylint: disable=broad-except
+        pass
 
     return None

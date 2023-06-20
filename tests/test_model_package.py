@@ -14,7 +14,7 @@ def test_create(workspace: Path):
     package = CodePackage(
         code_tar=Path(__file__).parent / "data" / "package" / "code.tar",
         image_tar=Path(__file__).parent / "data" / "package" / "image.tar",
-        test_path=Path(__file__).parent / "data" / "package" / "tests",
+        test_tar=Path(__file__).parent / "data" / "package" / "tests.tar",
         config_path=Path(__file__).parent / "data" / "mse.toml",
     )
 
@@ -32,7 +32,7 @@ def test_extract(workspace: Path):
 
     assert package.code_tar == workspace / "code.tar"
     assert package.image_tar == workspace / "image.tar"
-    assert package.test_path == workspace / "tests"
+    assert package.test_tar == workspace / "tests.tar"
     assert package.config_path == workspace / "mse.toml"
 
     assert filecmp.cmp(
@@ -42,12 +42,9 @@ def test_extract(workspace: Path):
         Path(__file__).parent / "data" / "package" / "image.tar", package.image_tar
     )
     assert filecmp.cmp(
-        Path(__file__).parent / "data" / "package" / "tests" / "test.py",
-        package.test_path / "test.py",
+        Path(__file__).parent / "data" / "package" / "tests.tar", package.test_tar
     )
-    assert filecmp.cmp(
-        Path(__file__).parent / "data" / "mse.toml", package.config_path
-    )
+    assert filecmp.cmp(Path(__file__).parent / "data" / "mse.toml", package.config_path)
 
 
 def test_extract_bad_tar(workspace: Path):

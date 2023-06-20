@@ -11,23 +11,21 @@ import pytest
 import requests
 from conftest import capture_logs
 
-
 from mse_home.command.code_provider.decrypt import run as do_decrypt
-from mse_home.command.sgx_operator.evidence import run as do_evidence
-from mse_home.command.code_provider.fingerprint import run as do_fingerprint
-from mse_home.command.sgx_operator.list_all import run as do_list
-from mse_home.command.sgx_operator.logs import run as do_logs
-from mse_home.command.code_provider.pack import run as do_package
-from mse_home.command.sgx_operator.restart import run as do_restart
-from mse_home.command.sgx_operator.run import run as do_run
+from mse_home.command.code_provider.package import run as do_package
 from mse_home.command.code_provider.scaffold import run as do_scaffold
 from mse_home.command.code_provider.seal import run as do_seal
+from mse_home.command.code_provider.test_dev import run as do_test_dev
+from mse_home.command.code_provider.verify import run as do_verify
+from mse_home.command.sgx_operator.evidence import run as do_evidence
+from mse_home.command.sgx_operator.list_all import run as do_list
+from mse_home.command.sgx_operator.logs import run as do_logs
+from mse_home.command.sgx_operator.restart import run as do_restart
+from mse_home.command.sgx_operator.run import run as do_run
 from mse_home.command.sgx_operator.spawn import run as do_spawn
 from mse_home.command.sgx_operator.status import run as do_status
 from mse_home.command.sgx_operator.stop import run as do_stop
 from mse_home.command.sgx_operator.test import run as do_test
-from mse_home.command.code_provider.test_dev import run as do_test_dev
-from mse_home.command.code_provider.verify import run as do_verify
 
 
 @pytest.mark.slow
@@ -101,8 +99,8 @@ def test_test_dev_project(cmd_log: io.StringIO):
 
 @pytest.mark.slow
 @pytest.mark.incremental
-def test_pack(workspace: Path, cmd_log: io.StringIO):
-    """Test the `pack` subcommand."""
+def test_package(workspace: Path, cmd_log: io.StringIO):
+    """Test the `package` subcommand."""
     do_package(
         Namespace(
             **{
@@ -122,13 +120,13 @@ def test_pack(workspace: Path, cmd_log: io.StringIO):
     try:
         pytest.key_path = Path(
             re.search(
-                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
+                "Your code secret key has been saved at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
 
         pytest.package_path = Path(
             re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+                "Your package is now ready to be shared: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
@@ -138,8 +136,8 @@ def test_pack(workspace: Path, cmd_log: io.StringIO):
     assert pytest.package_path.exists()
 
 
-def test_pack_project(workspace: Path, cmd_log: io.StringIO):
-    """Test the `pack` subcommand by specifying a project directory."""
+def test_package_project(workspace: Path, cmd_log: io.StringIO):
+    """Test the `package` subcommand by specifying a project directory."""
     do_package(
         Namespace(
             **{
@@ -159,13 +157,13 @@ def test_pack_project(workspace: Path, cmd_log: io.StringIO):
     try:
         pytest.key_path = Path(
             re.search(
-                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
+                "Your code secret key has been saved at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
 
         pytest.package_path = Path(
             re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+                "Your package is now ready to be shared: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
@@ -197,6 +195,7 @@ def test_spawn(
                 "days": 2,
                 "port": port,
                 "size": 4096,
+                "timeout": 5,
                 "signer_key": signer_key,
                 "output": workspace,
             }
@@ -353,6 +352,7 @@ def test_run(cmd_log: io.StringIO, app_name: str):
             **{
                 "name": app_name,
                 "key": pytest.key_path,
+                "timeout": 5,
                 "secrets": pytest.app_path / "secrets.json",
                 "sealed_secrets": pytest.sealed_secrets,
             }
@@ -615,7 +615,7 @@ def test_plaintext(
 
         pytest.package_path = Path(
             re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+                "Your package is now ready to be shared: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
@@ -635,6 +635,7 @@ def test_plaintext(
                 # docker releases the free previous port
                 "port": port2,
                 "size": 4096,
+                "timeout": 5,
                 "signer_key": signer_key,
                 "pccs": pccs_url,
                 "output": workspace,
@@ -660,6 +661,7 @@ def test_plaintext(
             **{
                 "name": app_name,
                 "key": None,
+                "timeout": 5,
                 "secrets": None,
                 "sealed_secrets": None,
             }
@@ -719,7 +721,7 @@ def test_plaintext_project(
 
         pytest.package_path = Path(
             re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
+                "Your package is now ready to be shared: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
@@ -739,6 +741,7 @@ def test_plaintext_project(
                 # We use `port3` because we do not manage when
                 # docker releases the free previous port
                 "port": port3,
+                "timeout": 5,
                 "size": 4096,
                 "signer_key": signer_key,
                 "output": workspace,
@@ -764,6 +767,7 @@ def test_plaintext_project(
             **{
                 "name": app_name,
                 "key": None,
+                "timeout": 5,
                 "secrets": None,
                 "sealed_secrets": None,
             }

@@ -1,4 +1,4 @@
-"""mse_home.command.spawn module."""
+"""mse_home.command.sgx_operator.spawn module."""
 
 import os
 from datetime import datetime, timedelta
@@ -12,15 +12,18 @@ from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.sgx_docker import SgxDockerConfig
 from mse_cli_core.spinner import Spinner
 
-from mse_home.command.evidence import collect_evidence_and_certificate
 from mse_home.command.helpers import (
     app_container_exists,
+    enclave_size_integer,
     get_app_container,
     get_client_docker,
     get_running_app_container,
     is_port_free,
-    is_valid_enclave_size,
     load_docker_image,
+)
+from mse_home.command.sgx_operator.evidence import (
+    collect_evidence_and_certificate,
+    guess_pccs_url,
 )
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
@@ -67,7 +70,7 @@ def add_subparser(subparsers):
 
     parser.add_argument(
         "--size",
-        type=is_valid_enclave_size,
+        type=enclave_size_integer,
         required=True,
         help="The enclave size to spawn (must be a power of 2)",
     )
@@ -79,11 +82,12 @@ def add_subparser(subparsers):
         default=f"{os.getenv('HOME', '/root')}/.config/gramine/enclave-key.pem",
     )
 
+    pccs_url_default = guess_pccs_url() or "https://pccs.example.com"
     parser.add_argument(
         "--pccs",
         type=str,
-        required=True,
-        help="URL to the PCCS (ex: https://pccs.example.com)",
+        help=f"URL to the PCCS (default: {pccs_url_default})",
+        default=pccs_url_default,
     )
 
     parser.add_argument(
@@ -149,7 +153,7 @@ def run(args) -> None:
         wait_for_conf_server(
             ClockTick(
                 period=5,
-                timeout=args.timeout,
+                timeout=60 * args.timeout,
                 message="The configuration server is unreachable!",
             ),
             f"https://localhost:{args.port}",

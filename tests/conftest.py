@@ -3,7 +3,6 @@
 import io
 import logging
 import os
-import tempfile
 import time
 from pathlib import Path
 
@@ -27,9 +26,9 @@ def cmd_log() -> io.StringIO:
 
 
 @pytest.fixture(scope="session")
-def workspace() -> Path:
+def workspace(tmp_path_factory) -> Path:
     """Create a workspace for the test session."""
-    return Path(tempfile.mkdtemp())
+    return tmp_path_factory.mktemp("workspace")
 
 
 def capture_logs(f: io.StringIO) -> str:

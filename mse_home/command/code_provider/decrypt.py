@@ -1,4 +1,4 @@
-"""mse_home.command.decrypt module."""
+"""mse_home.command.code_provider.decrypt module."""
 
 from pathlib import Path
 

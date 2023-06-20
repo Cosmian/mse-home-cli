@@ -77,9 +77,15 @@ def is_port_free(port: int):
     return True
 
 
-def is_valid_enclave_size(n) -> bool:
-    """Check if `n` is a valid enclave size."""
-    if n < 1024:
-        return False
-    # must be a power of 2
-    return (n & (n - 1) == 0) and n != 0
+def enclave_size_integer(n: str) -> int:
+    """Define a new integer type for the enclave size arg."""
+    m = int(n)
+    min_value = 1024
+    if m < min_value:
+        raise ValueError(f"Enclave size should be greater than {min_value}")
+
+    is_power_of_two = (m & (m - 1) == 0) and m != 0
+    if not is_power_of_two:
+        raise ValueError("Enclave size should be a power of two (lower than EPC size)")
+
+    return m

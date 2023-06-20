@@ -66,7 +66,6 @@ __User__: the SGX operator
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
-                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
@@ -82,7 +81,6 @@ The file `workspace/sgx_operator/evidence.json` can now be shared with the other
 
 __User__: the code provider
 
-
 The trustworthiness is established based on multiple information:
 - the full code package (tarball)
 - the arguments used to spawn the microservice
@@ -90,13 +88,13 @@ The trustworthiness is established based on multiple information:
 
 Verification of the enclave information:
 
-    ```console
-    $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                     --evidence output/evidence.json \
-                     --output /tmp
-    ```
+```console
+$ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
+                 --evidence output/evidence.json \
+                 --output /tmp
+```
 
-    If the verification succeed, you get the RA-TLS certificate (written as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
+If the verification succeeds, you get the RA-TLS certificate (written as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
 
 ### Seal your secrets
 

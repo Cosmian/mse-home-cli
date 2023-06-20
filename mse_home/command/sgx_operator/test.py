@@ -1,4 +1,4 @@
-"""mse_home.command.test module."""
+"""mse_home.command.sgx_operator.test module."""
 
 import os
 import subprocess

@@ -1,4 +1,4 @@
-"""mse_home.command.logds module."""
+"""mse_home.command.sgx_operator.logs module."""
 
 from mse_home.command.helpers import get_app_container, get_client_docker
 from mse_home.log import LOGGER as LOG

@@ -1,4 +1,4 @@
-"""mse_home.command.run module."""
+"""mse_home.command.sgx_operator.run module."""
 
 import json
 from pathlib import Path
@@ -94,7 +94,7 @@ def run(args) -> None:
         wait_for_app_server(
             ClockTick(
                 period=5,
-                timeout=args.timeout,
+                timeout=60 * args.timeout,
                 message="Your application is unreachable!",
             ),
             f"https://localhost:{docker.port}",

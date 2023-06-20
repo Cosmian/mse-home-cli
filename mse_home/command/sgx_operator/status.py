@@ -1,4 +1,4 @@
-"""mse_home.command.status module."""
+"""mse_home.command.sgx_operator.status module."""
 
 from datetime import datetime
 

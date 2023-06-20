@@ -83,7 +83,6 @@ example/
 2 directories, 9 files
 ```
 
-
 The `mse_src` is your application directory designed to be started by `msehome` cli. 
 
 The `Dockerfile` should inherit from the `mse-docker-base` and include all dependencies required to run your app. This docker will be run by the SGX operator.
@@ -200,7 +199,6 @@ $ msehome package --project example \
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
-                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
@@ -209,7 +207,7 @@ $ msehome spawn --host myapp.fr \
 Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
-- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.). This size is bounded by the SGX EPC memory.
+- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 greater than 1024. This size is bounded by the SGX EPC memory.
 - `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
 - `output`: directory to write the evidence file
@@ -239,7 +237,6 @@ This command collects cryptographic proofs related to the enclave and serialize 
 This command will determine your PCCS url by parsing the aesmd service configuration file: `/etc/sgx_default_qcnl.conf`. You can choose another PCCS by specifying the `--pccs` parameter.
 
 The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
->>>>>>> d237a36 (:sparkles: determine the pccs url by default)
 
 ## Check the trustworthiness of the application
 

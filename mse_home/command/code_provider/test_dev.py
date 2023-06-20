@@ -1,4 +1,4 @@
-"""mse_home.command.test_dev module."""
+"""mse_home.command.code_provider.test_dev module."""
 
 import argparse
 import os
