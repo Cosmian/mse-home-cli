@@ -6,6 +6,13 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+DEFAULT_CODE_DIR = "mse_src"
+DEFAULT_CONFIG_FILENAME = "mse.toml"
+DEFAULT_TEST_DIR = "tests"
+DEFAULT_DOCKERFILE_FILENAME = "Dockerfile"
+DEFAULT_SECRETS_FILENAME = "secrets.json"
+DEFAULT_SEAL_SECRETS_FILENAME = "secrets_to_seal.json"
+
 CODE_TAR_NAME = "code.tar"
 DOCKER_IMAGE_TAR_NAME = "image.tar"
 MSE_CONFIG_NAME = "mse.toml"

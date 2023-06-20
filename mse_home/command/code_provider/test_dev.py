@@ -16,6 +16,14 @@ from mse_cli_core.test_docker import TestDockerConfig
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
+from mse_home.model.package import (
+    DEFAULT_CODE_DIR,
+    DEFAULT_CONFIG_FILENAME,
+    DEFAULT_DOCKERFILE_FILENAME,
+    DEFAULT_SEAL_SECRETS_FILENAME,
+    DEFAULT_SECRETS_FILENAME,
+    DEFAULT_TEST_DIR,
+)
 
 
 def add_subparser(subparsers):
@@ -74,12 +82,13 @@ def run(args) -> None:
         if not args.project.is_dir():
             raise NotADirectoryError(f"`{args.project}` does not exist")
 
-        code_path = args.project / "mse_src"
-        test_path = args.project / "tests"
-        config_path = args.project / "mse.toml"
-        dockerfile_path = args.project / "Dockerfile"
-        secrets_path = args.project / "secrets.json"
-        sealed_secrets_path = args.project / "secrets_to_seal.json"
+        code_path = args.project / DEFAULT_CODE_DIR
+        test_path = args.project / DEFAULT_TEST_DIR
+        config_path = args.project / DEFAULT_CONFIG_FILENAME
+        dockerfile_path = args.project / DEFAULT_DOCKERFILE_FILENAME
+
+        secrets_path = args.project / DEFAULT_SECRETS_FILENAME
+        sealed_secrets_path = args.project / DEFAULT_SEAL_SECRETS_FILENAME
 
     else:
         if not all([args.code, args.config, args.dockerfile, args.test]):

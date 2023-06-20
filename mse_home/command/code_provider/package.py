@@ -15,7 +15,15 @@ from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
-from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePackage
+from mse_home.model.package import (
+    CODE_TAR_NAME,
+    DEFAULT_CODE_DIR,
+    DEFAULT_CONFIG_FILENAME,
+    DEFAULT_DOCKERFILE_FILENAME,
+    DEFAULT_TEST_DIR,
+    DOCKER_IMAGE_TAR_NAME,
+    CodePackage,
+)
 
 
 def add_subparser(subparsers):
@@ -71,12 +79,10 @@ def run(args) -> None:
         if not args.project.is_dir():
             raise NotADirectoryError(f"`{args.project}` does not exist")
 
-        # TODO: do not hardcode that
-        code_path = args.project / "mse_src"
-        test_path = args.project / "tests"
-        config_path = args.project / "mse.toml"
-        dockerfile_path = args.project / "Dockerfile"
-
+        code_path = args.project / DEFAULT_CODE_DIR
+        test_path = args.project / DEFAULT_TEST_DIR
+        config_path = args.project / DEFAULT_CONFIG_FILENAME
+        dockerfile_path = args.project / DEFAULT_DOCKERFILE_FILENAME
     else:
         if not all([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(

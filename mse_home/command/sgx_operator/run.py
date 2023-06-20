@@ -11,6 +11,7 @@ from mse_cli_core.bootstrap import (
 )
 from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.sgx_docker import SgxDockerConfig
+from mse_cli_core.spinner import Spinner
 
 from mse_home.command.helpers import get_client_docker, get_running_app_container
 from mse_home.log import LOGGER as LOG

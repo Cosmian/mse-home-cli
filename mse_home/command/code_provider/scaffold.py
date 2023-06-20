@@ -9,6 +9,11 @@ from jinja2 import Template
 
 from mse_home.log import LOGGER as LOG
 from mse_home.model.code import CodeConfig
+from mse_home.model.package import (
+    DEFAULT_CODE_DIR,
+    DEFAULT_CONFIG_FILENAME,
+    DEFAULT_TEST_DIR,
+)
 
 
 def add_subparser(subparsers):
@@ -36,7 +41,7 @@ def run(args) -> None:
     )
 
     template_conf_file = project_dir / "mse.toml.template"
-    conf_file = template_conf_file.with_suffix("")  # Remove .template extension
+    conf_file = project_dir / DEFAULT_CONFIG_FILENAME
 
     # Initialize the configuration file
     tm = Template(template_conf_file.read_text())
@@ -47,7 +52,7 @@ def run(args) -> None:
     app_conf = CodeConfig.load(conf_file)
 
     # Initialize the python code file
-    code_dir = project_dir / "mse_src"
+    code_dir = project_dir / DEFAULT_CODE_DIR
     template_code_file = code_dir / (app_conf.python_module + ".py.template")
     code_file = template_code_file.with_suffix("")
 
@@ -64,7 +69,7 @@ def run(args) -> None:
     ignore_file.rename(code_dir / ".mseignore")
 
     # Initialize the pytest code files
-    pytest_dir = project_dir / "tests"
+    pytest_dir = project_dir / DEFAULT_TEST_DIR
     template_pytest_file = pytest_dir / "conftest.py.template"
     pytest_file = template_pytest_file.with_suffix("")
 
@@ -73,7 +78,7 @@ def run(args) -> None:
     pytest_file.write_text(content)
     template_pytest_file.unlink()
 
-    pytest_dir = project_dir / "tests"
+    pytest_dir = project_dir / DEFAULT_TEST_DIR
     template_pytest_file = pytest_dir / "test_app.py.template"
     pytest_file = template_pytest_file.with_suffix("")
 

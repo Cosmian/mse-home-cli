@@ -10,6 +10,7 @@ from docker.models.containers import Container
 from mse_cli_core.bootstrap import wait_for_conf_server
 from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.sgx_docker import SgxDockerConfig
+from mse_cli_core.spinner import Spinner
 
 from mse_home.command.evidence import collect_evidence_and_certificate
 from mse_home.command.helpers import (
