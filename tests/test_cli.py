@@ -12,6 +12,7 @@ import requests
 from conftest import capture_logs
 
 from mse_home.command.decrypt import run as do_decrypt
+from mse_home.command.evidence import run as do_evidence
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
 from mse_home.command.pack import run as do_package
@@ -291,6 +292,34 @@ def test_status_conf_server(cmd_log: io.StringIO, app_name: str, port: int, host
     assert f"Port = {port}" in output
     assert "Healthcheck = /health" in output
     assert "Status = waiting secret keys" in output
+
+
+@pytest.mark.slow
+@pytest.mark.incremental
+def test_evidence(workspace: Path, cmd_log: io.StringIO, app_name: str, pccs_url: str):
+    """Test the `evidence` subcommand."""
+    do_evidence(
+        Namespace(
+            **{
+                "name": app_name,
+                "pccs": pccs_url,
+                "output": workspace,
+            }
+        )
+    )
+
+    output = capture_logs(cmd_log)
+    try:
+        pytest.evidence_path = Path(
+            re.search(
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
+            ).group(1)
+        )
+    except AttributeError:
+        print(output)
+        assert False
+
+    assert pytest.evidence_path.exists()
 
 
 @pytest.mark.slow

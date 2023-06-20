@@ -1,12 +1,10 @@
 """mse_home.command.verify module."""
 
-import json
 import tempfile
 from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from mse_cli_core.enclave import compute_mr_enclave, verify_enclave
-from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker, load_docker_image
 from mse_home.log import LOGGER as LOG
@@ -57,8 +55,6 @@ def run(args) -> None:
 
     evidence = ApplicationEvidence.load(args.evidence)
 
-    input_args = NoSgxDockerConfig(**json.loads(evidence.input_args))
-
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
 
@@ -67,7 +63,7 @@ def run(args) -> None:
     mrenclave = compute_mr_enclave(
         client,
         image,
-        input_args,
+        evidence.input_args,
         package.code_tar,
         log_path,
     )

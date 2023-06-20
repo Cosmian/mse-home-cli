@@ -92,7 +92,7 @@ def collect_evidence_and_certificate(
     )
 
     evidence = ApplicationEvidence(
-        input_args=input_args.json(),
+        input_args=input_args,
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,

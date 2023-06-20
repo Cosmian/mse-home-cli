@@ -17,6 +17,7 @@ from cryptography.x509 import (
     load_pem_x509_certificate,
     load_pem_x509_crl,
 )
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from pydantic import BaseModel
 
 
@@ -35,7 +36,7 @@ class ApplicationEvidence(BaseModel):
 
     signer_pk: PublicKeyTypes
 
-    input_args: str
+    input_args: NoSgxDockerConfig
 
     class Config:
         """Overwrite internal structure."""
@@ -58,7 +59,7 @@ class ApplicationEvidence(BaseModel):
             dataMap = json.load(f)
 
             return ApplicationEvidence(
-                input_args=dataMap["input_args"].encode("utf-8"),
+                input_args=NoSgxDockerConfig(**dataMap["input_args"]),
                 ratls_certificate=load_pem_x509_certificate(
                     dataMap["ratls_certificate"].encode("utf-8")
                 ),
@@ -77,7 +78,16 @@ class ApplicationEvidence(BaseModel):
         """Save the evidence into a json file."""
         with open(path, "w", encoding="utf8") as f:
             dataMap: Dict[str, Any] = {
-                "input_args": self.input_args,
+                "input_args": {
+                    "host": self.input_args.host,
+                    "expiration_date": self.input_args.expiration_date,
+                    "app_cert": str(self.input_args.app_cert)
+                    if self.input_args.app_cert
+                    else None,
+                    "size": self.input_args.size,
+                    "app_id": str(self.input_args.app_id),
+                    "application": self.input_args.application,
+                },
                 "ratls_certificate": self.ratls_certificate.public_bytes(
                     encoding=Encoding.PEM
                 ).decode("utf-8"),

@@ -96,7 +96,7 @@ Verification of the enclave information:
                      --output /tmp
     ```
 
-    If the verification succeed, you get the RA-TLS certificate (writte as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
+    If the verification succeed, you get the RA-TLS certificate (written as a file named `ratls.pem`) and you can now seal the code key to share it with the SGX operator.
 
 ### Seal your secrets
 
