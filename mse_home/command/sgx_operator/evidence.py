@@ -88,9 +88,13 @@ def collect_evidence_and_certificate(
 
     quote = ratls_verify(ratls_cert)
 
-    (tcb_info, tcb_cert, root_ca_crl, pck_platform_crl) = retrieve_collaterals(
-        quote, pccs_url
-    )
+    (
+        tcb_info,
+        qe_identity,
+        tcb_cert,
+        root_ca_crl,
+        pck_platform_crl,
+    ) = retrieve_collaterals(quote, args.pccs)
 
     signer_key = load_pem_private_key(
         docker.signer_key.read_bytes(),
@@ -103,6 +107,7 @@ def collect_evidence_and_certificate(
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
         tcb_info=tcb_info,
+        qe_identity=qe_identity,
         tcb_cert=tcb_cert,
         signer_pk=signer_key.public_key(),
     )

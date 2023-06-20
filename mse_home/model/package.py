@@ -9,7 +9,7 @@ from pydantic import BaseModel
 CODE_TAR_NAME = "code.tar"
 DOCKER_IMAGE_TAR_NAME = "image.tar"
 MSE_CONFIG_NAME = "mse.toml"
-TEST_DIR_NAME = "tests"
+TEST_TAR_NAME = "tests.tar"
 
 
 class CodePackage(BaseModel):
@@ -17,7 +17,7 @@ class CodePackage(BaseModel):
 
     code_tar: Path
     image_tar: Path
-    test_path: Optional[Path]
+    test_tar: Optional[Path]
     config_path: Path
 
     def create(
@@ -28,8 +28,8 @@ class CodePackage(BaseModel):
         with tarfile.open(output_tar, "w:") as tar_file:
             tar_file.add(self.code_tar, CODE_TAR_NAME)
             tar_file.add(self.image_tar, DOCKER_IMAGE_TAR_NAME)
-            if self.test_path:
-                tar_file.add(self.test_path, TEST_DIR_NAME)
+            if self.test_tar:
+                tar_file.add(self.test_tar, TEST_TAR_NAME)
             tar_file.add(self.config_path, MSE_CONFIG_NAME)
 
     @staticmethod
@@ -41,7 +41,7 @@ class CodePackage(BaseModel):
         code_tar_path = workspace / CODE_TAR_NAME
         image_tar_path = workspace / DOCKER_IMAGE_TAR_NAME
         code_config_path = workspace / MSE_CONFIG_NAME
-        test_dir_path = workspace / TEST_DIR_NAME
+        test_tar_path = workspace / TEST_TAR_NAME
 
         if not code_tar_path.exists():
             raise Exception(f"'{CODE_TAR_NAME}' was not found in the MSE package")
@@ -57,6 +57,6 @@ class CodePackage(BaseModel):
         return CodePackage(
             code_tar=code_tar_path,
             image_tar=image_tar_path,
-            test_path=test_dir_path if test_dir_path.is_dir() else None,
+            test_tar=test_tar_path if test_tar_path.is_dir() else None,
             config_path=code_config_path,
         )
