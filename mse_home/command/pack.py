@@ -54,7 +54,7 @@ def run(args) -> None:
     """Run the subcommand."""
     package_path: Path = args.output.resolve()
     if not package_path.is_dir():
-        raise IOError(f"{package_path} does not exist")
+        raise NotADirectoryError(f"{package_path} does not exist")
 
     code_path: Path
     test_path: Path

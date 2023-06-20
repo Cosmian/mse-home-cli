@@ -50,6 +50,9 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
+    if not args.output.is_dir():
+        raise NotADirectoryError(f"`{args.output}` does not exist")
+
     client = get_client_docker()
 
     container = get_app_container(client, args.name)
