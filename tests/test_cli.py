@@ -15,7 +15,7 @@ from mse_home.command.decrypt import run as do_decrypt
 from mse_home.command.evidence import run as do_evidence
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
-from mse_home.command.pack import run as do_package
+from mse_home.command.package import run as do_package
 from mse_home.command.restart import run as do_restart
 from mse_home.command.run import run as do_run
 from mse_home.command.scaffold import run as do_scaffold
@@ -109,45 +109,6 @@ def test_pack(workspace: Path, cmd_log: io.StringIO):
                 "config": pytest.app_path / "mse.toml",
                 "dockerfile": pytest.app_path / "Dockerfile",
                 "test": pytest.app_path / "tests",
-                "encrypt": True,
-                "output": workspace,
-            }
-        )
-    )
-
-    # Check the tar generation
-    output = capture_logs(cmd_log)
-    try:
-        pytest.key_path = Path(
-            re.search(
-                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-
-        pytest.package_path = Path(
-            re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert pytest.package_path.exists()
-
-
-@pytest.mark.slow
-@pytest.mark.incremental
-def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
-    """Test the `package` subcommand."""
-    do_package(
-        Namespace(
-            **{
-                "project": None,
-                "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "mse.toml",
-                "dockerfile": pytest.app_path / "Dockerfile",
-                "test": None,
                 "encrypt": True,
                 "output": workspace,
             }

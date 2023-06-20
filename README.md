@@ -52,8 +52,8 @@ $ msehome test-dev --project example/
 __User__: the code provider
 
 ```console
-$ msehome pack --project example/ \
-               --output workspace/code_provider 
+$ msehome package --project example/ \
+                  --output workspace/code_provider 
 ```
 
 The generated package can now be sent to the sgx operator.
