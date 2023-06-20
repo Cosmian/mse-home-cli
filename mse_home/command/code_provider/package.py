@@ -134,6 +134,7 @@ def run(args) -> None:
     LOG.info("Your package is now ready to be shared: %s", package_path)
 
     # Clean up the workspace
+    LOG.info("Cleaning up the temporary workspace...", workspace)
     shutil.rmtree(workspace)
 
 

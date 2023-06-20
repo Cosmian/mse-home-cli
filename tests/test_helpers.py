@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from mse_home.command.evidence import guess_pccs_url
+from mse_home.command.sgx_operator.evidence import guess_pccs_url
 
 
 def test_guess_pccs_url():

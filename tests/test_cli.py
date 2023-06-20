@@ -11,21 +11,23 @@ import pytest
 import requests
 from conftest import capture_logs
 
-from mse_home.command.decrypt import run as do_decrypt
-from mse_home.command.evidence import run as do_evidence
-from mse_home.command.list_all import run as do_list
-from mse_home.command.logs import run as do_logs
-from mse_home.command.package import run as do_package
-from mse_home.command.restart import run as do_restart
-from mse_home.command.run import run as do_run
-from mse_home.command.scaffold import run as do_scaffold
-from mse_home.command.seal import run as do_seal
-from mse_home.command.spawn import run as do_spawn
-from mse_home.command.status import run as do_status
-from mse_home.command.stop import run as do_stop
-from mse_home.command.test import run as do_test
-from mse_home.command.test_dev import run as do_test_dev
-from mse_home.command.verify import run as do_verify
+
+from mse_home.command.code_provider.decrypt import run as do_decrypt
+from mse_home.command.sgx_operator.evidence import run as do_evidence
+from mse_home.command.code_provider.fingerprint import run as do_fingerprint
+from mse_home.command.sgx_operator.list_all import run as do_list
+from mse_home.command.sgx_operator.logs import run as do_logs
+from mse_home.command.code_provider.pack import run as do_package
+from mse_home.command.sgx_operator.restart import run as do_restart
+from mse_home.command.sgx_operator.run import run as do_run
+from mse_home.command.code_provider.scaffold import run as do_scaffold
+from mse_home.command.code_provider.seal import run as do_seal
+from mse_home.command.sgx_operator.spawn import run as do_spawn
+from mse_home.command.sgx_operator.status import run as do_status
+from mse_home.command.sgx_operator.stop import run as do_stop
+from mse_home.command.sgx_operator.test import run as do_test
+from mse_home.command.code_provider.test_dev import run as do_test_dev
+from mse_home.command.code_provider.verify import run as do_verify
 
 
 @pytest.mark.slow
@@ -682,7 +684,6 @@ def test_plaintext(
 
     assert f"Docker '{app_name}' has been stopped!" in output
     assert f"Docker '{app_name}' has been removed!" in output
-
 
 
 @pytest.mark.slow

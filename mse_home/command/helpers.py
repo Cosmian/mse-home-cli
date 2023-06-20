@@ -42,6 +42,11 @@ def get_app_container(client: DockerClient, name: str) -> Container:
         ) from exc
 
 
+def is_running(container) -> bool:
+    """Test whether the given container is running."""
+    return container.status == "running"
+
+
 def load_docker_image(client: DockerClient, image_tar_path: Path) -> str:
     """Load the docker image from the image tarball."""
     LOG.info("Loading the docker image...")
