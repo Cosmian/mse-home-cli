@@ -29,8 +29,6 @@ def add_subparser(subparsers):
         "the application and the enclave",
     )
 
-    required = parser.add_argument_group("required arguments")
-
     pccs_url_default = guess_pccs_url() or "https://pccs.example.com"
     parser.add_argument(
         "--pccs",
@@ -39,7 +37,7 @@ def add_subparser(subparsers):
         default=pccs_url_default,
     )
 
-    required.add_argument(
+    parser.add_argument(
         "--output",
         type=Path,
         required=True,

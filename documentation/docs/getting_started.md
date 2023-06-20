@@ -161,6 +161,8 @@ or more concisely:
 $ msehome test-dev --project example
 ```
 
+Testing your code before sending it to the SGX operator is recommanded. Be aware that any errors will require to restart the deployment flow from scratch.
+
 ## Create the MSE package with the code and the docker image
 
 !!! info User
@@ -216,9 +218,10 @@ This command first unpacks the tarball specified by the `--package` argument. No
 
 The generated file `workspace/sgx_operator/evidence.json` contains cryptographic proofs related to the enclave. It can be shared with other participants.
 
-<<<<<<< HEAD
 This evidence file is helpful for the code provider to [verify](#check-the-trustworthiness-of-the-application) the running app.
-=======
+
+The application is now started in an intermediate state waiting for any secrets: we call that the configuration server. 
+
 ## Collect the evidences to verify the application
 
 !!! info User
@@ -289,6 +292,8 @@ $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.seal
               app_name
 ```
 
+From now, the real application developped by the code provider is fully operationnal and running. The configuration server started during the previous `spawn` step has been shutdown. Therefore, if you want to change the configuration or the secrets, you need to stop&remove this application and restart the deployment flow from scratch.
+
 ## Test the deployed application
 
 !!! info User
@@ -300,6 +305,10 @@ $ msehome test --test workspace/sgx_operator/tests/ \
                --config workspace/sgx_operator/mse.toml \
                app_name
 ```
+
+This step is mandatory to check that the application is executed properly as the code provider expects. 
+
+Always run this step before communicating to the users about the deployment completion.
 
 ## Decrypt the results
 
@@ -377,3 +386,9 @@ $ cat workspace/code_provider/result.plain
 ```
 
 Note that the `--aes` parameter is the key contained in `secrets_to_seal.json`.
+
+
+!!! info Fix or Update
+
+    In case of errors or if the code/the configuration needs to be updated, you shall stop&remove the current rurnning application and restart from scratch the whole deployment flow. 
+
