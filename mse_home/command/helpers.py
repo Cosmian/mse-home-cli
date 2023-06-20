@@ -1,6 +1,5 @@
 """mse_home.command.helpers module."""
 
-import math
 import socket
 from pathlib import Path
 from typing import Optional
@@ -68,4 +67,4 @@ def is_valid_enclave_size(n) -> bool:
     if n < 1024:
         return False
     # must be a power of 2
-    return (n & (n-1) == 0) and n != 0
+    return (n & (n - 1) == 0) and n != 0
