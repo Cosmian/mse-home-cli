@@ -24,7 +24,7 @@ $ msehome test-dev --code mse_src/ \
 ### Create the MSE package with the code and the Docker image
 
 ```console
-$ msehome pack --code mse_src/ \
+$ msehome package --code mse_src/ \
                   --dockerfile Dockerfile \
                   --config mse.toml \
                   --output code_provider

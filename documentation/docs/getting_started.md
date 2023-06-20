@@ -25,7 +25,7 @@ It is recommended to use [pyenv](https://github.com/pyenv/pyenv) to manage diffe
 ```{.console}
 $ pip3 install mse-home-cli
 $ msehome --help
-usage: msehome [-h] [--version] {pack,decrypt,evidence,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
+usage: msehome [-h] [--version] {decrypt,evidence,scaffold,list,logs,package,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
 
 Microservice Encryption Home CLI - 0.1.0
 
@@ -34,13 +34,13 @@ options:
   --version             version of msehome binary
 
 subcommands:
-  {pack,decrypt,evidence,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
-    pack                Generate a package containing the Docker image and the code to run on MSE
+  {decrypt,evidence,scaffold,list,logs,package,restart,run,status,seal,spawn,stop,test,test-dev,verify}
     decrypt             Decrypt a file encrypted using the sealed key
     evidence            Collect the evidences to verify on offline mode the application and the enclave
     scaffold            create a new boilerplate MSE web application
     list                List the running MSE applications
     logs                Print the MSE docker logs
+    package             Generate a package containing the Docker image and the code to run on MSE
     restart             Restart an stopped MSE docker
     run                 Finalise the configuration of the application docker and run the application code
     status              Print the MSE docker status
@@ -173,18 +173,18 @@ This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
 The generated package can now be sent to the SGX operator.
 
 ```console
-$ msehome pack --code example/mse_src/ \
-               --dockerfile example/Dockerfile \
-               --config example/mse.toml \
-               --test example/tests/ \
-               --output workspace/code_provider
+$ msehome package --code example/mse_src/ \
+                  --dockerfile example/Dockerfile \
+                  --config example/mse.toml \
+                  --test example/tests/ \
+                  --output workspace/code_provider
 ```
 
 or more concisely:
 
 ```console
-$ msehome pack --project example \
-               --output workspace/code_provider 
+$ msehome package --project example \
+                  --output workspace/code_provider 
 ```
 
 ## Spawn the MSE docker

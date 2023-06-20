@@ -14,7 +14,7 @@ from conftest import capture_logs
 from mse_home.command.decrypt import run as do_decrypt
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
-from mse_home.command.pack import run as do_package
+from mse_home.command.package import run as do_package
 from mse_home.command.restart import run as do_restart
 from mse_home.command.run import run as do_run
 from mse_home.command.scaffold import run as do_scaffold
