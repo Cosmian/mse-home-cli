@@ -16,6 +16,7 @@ from mse_home.command.helpers import (
     app_container_exists,
     get_app_container,
     get_client_docker,
+    get_running_app_container,
     is_port_free,
     is_valid_enclave_size,
     load_docker_image,
@@ -143,6 +144,11 @@ def run(args) -> None:
         ),
         f"https://localhost:{args.port}",
         False,
+        get_running_app_container,
+        (
+            client,
+            args.name,
+        ),
     )
     LOG.info("The application is now ready to receive the secrets!")
 

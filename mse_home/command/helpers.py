@@ -47,6 +47,16 @@ def is_running(container) -> bool:
     return container.status == "running"
 
 
+def get_running_app_container(client: DockerClient, name: str) -> Container:
+    """Raise an error if the container is not running or return the running container."""
+    container = get_app_container(client, name)
+
+    if not is_running(container):
+        raise AppContainerNotFound(f"Your application '{name}' is not running")
+
+    return container
+
+
 def load_docker_image(client: DockerClient, image_tar_path: Path) -> str:
     """Load the docker image from the image tarball."""
     LOG.info("Loading the docker image...")

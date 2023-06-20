@@ -12,7 +12,7 @@ from mse_cli_core.bootstrap import (
 from mse_cli_core.clock_tick import ClockTick
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_app_container, get_client_docker
+from mse_home.command.helpers import get_client_docker, get_running_app_container
 from mse_home.log import LOGGER as LOG
 
 
@@ -54,7 +54,7 @@ def add_subparser(subparsers):
 def run(args) -> None:
     """Run the subcommand."""
     client = get_client_docker()
-    container = get_app_container(client, args.name)
+    container = get_running_app_container(client, args.name)
 
     docker = SgxDockerConfig.load(container.attrs, container.labels)
 
@@ -90,6 +90,11 @@ def run(args) -> None:
         f"https://localhost:{docker.port}",
         docker.healthcheck,
         False,
+        get_running_app_container,
+        (
+            client,
+            args.name,
+        ),
     )
     LOG.info("Application ready!")
     LOG.info("Feel free to test it using the `msehome test` command")

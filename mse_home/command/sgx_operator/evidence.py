@@ -1,6 +1,5 @@
 """mse_home.command.evidence module."""
 
-import argparse
 import json
 import socket
 import ssl
@@ -16,7 +15,7 @@ from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
 from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
-from mse_home.command.helpers import get_app_container, get_client_docker
+from mse_home.command.helpers import get_client_docker, get_running_app_container
 from mse_home.log import LOGGER as LOG
 from mse_home.model.evidence import ApplicationEvidence
 
@@ -59,8 +58,7 @@ def run(args) -> None:
         raise NotADirectoryError(f"`{args.output}` does not exist")
 
     client = get_client_docker()
-
-    container = get_app_container(client, args.name)
+    container = get_running_app_container(client, args.name)
 
     collect_evidence_and_certificate(
         container=container, pccs_url=args.pccs, output=args.output
