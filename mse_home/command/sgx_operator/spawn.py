@@ -86,6 +86,15 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
+        "--timeout",
+        type=int,
+        required=False,
+        default=24 * 60,
+        help="Stop the deployment if the application does not "
+        "response after a delay (in min). (Default: 1440 min)",
+    )
+
+    parser.add_argument(
         "--output",
         type=Path,
         required=True,
@@ -135,21 +144,21 @@ def run(args) -> None:
         docker_config,
     )
 
-    LOG.info("Waiting for the configuration server to be ready...")
-    wait_for_conf_server(
-        ClockTick(
-            period=5,
-            timeout=5 * 60,
-            message="The configuration server is unreachable!",
-        ),
-        f"https://localhost:{args.port}",
-        False,
-        get_running_app_container,
-        (
-            client,
-            args.name,
-        ),
-    )
+    with Spinner("Waiting for the configuration server to be ready... "):
+        wait_for_conf_server(
+            ClockTick(
+                period=5,
+                timeout=args.timeout,
+                message="The configuration server is unreachable!",
+            ),
+            f"https://localhost:{args.port}",
+            False,
+            get_running_app_container,
+            (
+                client,
+                args.name,
+            ),
+        )
     LOG.info("The application is now ready to receive the secrets!")
 
     # Generate evidence and RA-TLS certificate files

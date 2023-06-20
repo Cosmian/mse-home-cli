@@ -36,14 +36,14 @@ setup(
     packages=find_packages(),
     zip_safe=True,
     install_requires=[
-        "cryptography>=40.0.2,<41.0",
+        "cryptography>=41.0.1,<42.0.0",
         "docker>=6.0.1,<7.0.0",
-        "intel-sgx-ra==2.0a7",
+        "intel-sgx-ra==2.0a11",
         "jinja2>=3.0,<3.1",
         "mse-cli-core==0.1a5",
         "mse-lib-crypto>=1.2,<1.3",
         "pydantic>=1.10.2,<2.0.0",
-        "requests>=2.31.0,<2.32.0",
+        "requests>=2.31.0,<3.0.0",
         "toml>=0.10.2,<0.11.0",
     ],
     entry_points={

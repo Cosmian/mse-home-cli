@@ -48,6 +48,15 @@ def add_subparser(subparsers):
         help="The code decryption sealed key file path",
     )
 
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        required=False,
+        default=24 * 60,
+        help="Stop the deployment if the application does not "
+        "response after a delay (in min). (Default: 1440 min)",
+    )
+
     parser.set_defaults(func=run)
 
 
@@ -80,21 +89,22 @@ def run(args) -> None:
     )
     LOG.info("Your application is now configured!")
 
-    LOG.info("Waiting for your application to be ready...")
-    wait_for_app_server(
-        ClockTick(
-            period=5,
-            timeout=5 * 60,
-            message="Your application is unreachable!",
-        ),
-        f"https://localhost:{docker.port}",
-        docker.healthcheck,
-        False,
-        get_running_app_container,
-        (
-            client,
-            args.name,
-        ),
-    )
+    with Spinner("Waiting for your application to be ready... "):
+        wait_for_app_server(
+            ClockTick(
+                period=5,
+                timeout=args.timeout,
+                message="Your application is unreachable!",
+            ),
+            f"https://localhost:{docker.port}",
+            docker.healthcheck,
+            False,
+            get_running_app_container,
+            (
+                client,
+                args.name,
+            ),
+        )
+
     LOG.info("Application ready!")
     LOG.info("Feel free to test it using the `msehome test` command")
