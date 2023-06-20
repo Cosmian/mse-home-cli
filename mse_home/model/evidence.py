@@ -1,5 +1,6 @@
 """mse_home.model.evidence module."""
 
+import base64
 import json
 from pathlib import Path
 from typing import Any, Dict, Tuple
@@ -16,6 +17,7 @@ from cryptography.x509 import (
     load_pem_x509_certificate,
     load_pem_x509_crl,
 )
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from pydantic import BaseModel
 
 
@@ -33,6 +35,8 @@ class ApplicationEvidence(BaseModel):
     tcb_cert: Certificate
 
     signer_pk: PublicKeyTypes
+
+    input_args: NoSgxDockerConfig
 
     class Config:
         """Overwrite internal structure."""
@@ -55,6 +59,7 @@ class ApplicationEvidence(BaseModel):
             dataMap = json.load(f)
 
             return ApplicationEvidence(
+                input_args=NoSgxDockerConfig(**dataMap["input_args"]),
                 ratls_certificate=load_pem_x509_certificate(
                     dataMap["ratls_certificate"].encode("utf-8")
                 ),
@@ -62,7 +67,7 @@ class ApplicationEvidence(BaseModel):
                 pck_platform_crl=load_pem_x509_crl(
                     dataMap["pck_platform_crl"].encode("utf-8")
                 ),
-                tcb_info=bytes.fromhex(dataMap["tcb_info"]),
+                tcb_info=base64.b64decode(dataMap["tcb_info"].encode("utf-8")),
                 tcb_cert=load_pem_x509_certificate(dataMap["tcb_cert"].encode("utf-8")),
                 signer_pk=load_pem_public_key(
                     dataMap["signer_pk"].encode("utf-8"),
@@ -73,6 +78,16 @@ class ApplicationEvidence(BaseModel):
         """Save the evidence into a json file."""
         with open(path, "w", encoding="utf8") as f:
             dataMap: Dict[str, Any] = {
+                "input_args": {
+                    "host": self.input_args.host,
+                    "expiration_date": self.input_args.expiration_date,
+                    "app_cert": str(self.input_args.app_cert)
+                    if self.input_args.app_cert
+                    else None,
+                    "size": self.input_args.size,
+                    "app_id": str(self.input_args.app_id),
+                    "application": self.input_args.application,
+                },
                 "ratls_certificate": self.ratls_certificate.public_bytes(
                     encoding=Encoding.PEM
                 ).decode("utf-8"),
@@ -82,7 +97,7 @@ class ApplicationEvidence(BaseModel):
                 "pck_platform_crl": self.pck_platform_crl.public_bytes(
                     encoding=Encoding.PEM,
                 ).decode("utf-8"),
-                "tcb_info": self.tcb_info.hex(),
+                "tcb_info": base64.b64encode(self.tcb_info).decode("utf-8"),
                 "tcb_cert": self.tcb_cert.public_bytes(encoding=Encoding.PEM).decode(
                     "utf-8"
                 ),

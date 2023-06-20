@@ -6,8 +6,10 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
+from docker.models.containers import Container
 from intel_sgx_ra.attest import retrieve_collaterals
 from intel_sgx_ra.ratls import get_server_certificate, ratls_verify
+from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_app_container, get_client_docker
@@ -48,10 +50,27 @@ def add_subparser(subparsers):
 
 def run(args) -> None:
     """Run the subcommand."""
+    if not args.output.is_dir():
+        raise NotADirectoryError(f"`{args.output}` does not exist")
+
     client = get_client_docker()
+
     container = get_app_container(client, args.name)
 
+    collect_evidence_and_certificate(
+        container=container, pccs_url=args.pccs, output=args.output
+    )
+
+
+# pylint: disable=too-many-locals
+def collect_evidence_and_certificate(
+    container: Container,
+    pccs_url: str,
+    output: Path,
+):
+    """Collect evidence JSON file and RA-TLS certificate from running enclave."""
     docker = SgxDockerConfig.load(container.attrs, container.labels)
+    input_args = NoSgxDockerConfig.from_sgx(docker_config=docker)
 
     # Get the certificate from the application
     try:
@@ -67,7 +86,7 @@ def run(args) -> None:
     quote = ratls_verify(ratls_cert)
 
     (tcb_info, tcb_cert, root_ca_crl, pck_platform_crl) = retrieve_collaterals(
-        quote, args.pccs
+        quote, pccs_url
     )
 
     signer_key = load_pem_private_key(
@@ -76,6 +95,7 @@ def run(args) -> None:
     )
 
     evidence = ApplicationEvidence(
+        input_args=input_args,
         ratls_certificate=ratls_cert,
         root_ca_crl=root_ca_crl,
         pck_platform_crl=pck_platform_crl,
@@ -84,14 +104,14 @@ def run(args) -> None:
         signer_pk=signer_key.public_key(),
     )
 
-    evidence_path = args.output / "evidence.json"
+    evidence_path = output / "evidence.json"
     evidence.save(evidence_path)
     LOG.info("The evidence file has been generated at: %s", evidence_path)
     LOG.info("The evidence file can now be shared!")
 
-    ratls_cert_path = args.output / "ratls.pem"
+    ratls_cert_path = output / "ratls.pem"
     ratls_cert_path.write_bytes(
         evidence.ratls_certificate.public_bytes(encoding=Encoding.PEM)
     )
 
-    LOG.info("The ratls certificate has been saved at: %s", ratls_cert_path)
+    LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)

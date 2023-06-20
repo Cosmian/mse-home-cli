@@ -25,7 +25,7 @@ It is recommended to use [pyenv](https://github.com/pyenv/pyenv) to manage diffe
 ```{.console}
 $ pip3 install mse-home-cli
 $ msehome --help
-usage: msehome [-h] [--version] {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
+usage: msehome [-h] [--version] {decrypt,evidence,scaffold,list,logs,package,restart,run,status,seal,spawn,stop,test,test-dev,verify} ...
 
 Microservice Encryption Home CLI - 0.1.0
 
@@ -34,23 +34,22 @@ options:
   --version             version of msehome binary
 
 subcommands:
-  {pack,decrypt,evidence,fingerprint,scaffold,list,logs,restart,run,status,seal,spawn,stop,test,test-dev,verify}
-    pack             Generate a package containing the Docker image and the code to run on MSE
-    decrypt          Decrypt a file encrypted using the sealed key
-    evidence         Collect the evidences to verify on offline mode the application and the enclave
-    fingerprint      Compute the code fingerprint
-    scaffold         create a new boilerplate MSE web application
-    list             List the running MSE applications
-    logs             Print the MSE docker logs
-    restart          Restart an stopped MSE docker
-    run              Finalise the configuration of the application docker and run the application code
-    status           Print the MSE docker status
-    seal             Seal the secrets to be share with an MSE app
-    spawn            Spawn a MSE docker
-    stop             Stop and optionally remove a running MSE docker
-    test             Test a deployed MSE app
-    test-dev         Test a MSE app in a development context
-    verify           Verify the trustworthiness of a running MSE web application and get the ratls certificate
+  {decrypt,evidence,scaffold,list,logs,package,restart,run,status,seal,spawn,stop,test,test-dev,verify}
+    decrypt             Decrypt a file encrypted using the sealed key
+    evidence            Collect the evidences to verify on offline mode the application and the enclave
+    scaffold            create a new boilerplate MSE web application
+    list                List the running MSE applications
+    logs                Print the MSE docker logs
+    package             Generate a package containing the Docker image and the code to run on MSE
+    restart             Restart an stopped MSE docker
+    run                 Finalise the configuration of the application docker and run the application code
+    status              Print the MSE docker status
+    seal                Seal the secrets to be share with an MSE app
+    spawn               Spawn a MSE docker
+    stop                Stop and optionally remove a running MSE docker
+    test                Test a deployed MSE app
+    test-dev            Test a MSE app in a development context
+    verify              Verify the trustworthiness of a running MSE web application and get the RA-TLS certificate
 ```
 
 !!! info "Pre-requisites"
@@ -89,21 +88,15 @@ The `mse_src` is your application directory designed to be started by `msehome` 
 
 The `Dockerfile` should inherit from the `mse-docker-base` and include all dependencies required to run your app. This docker will be run by the SGX operator.
 
-The file `app.py` is a basic Flask application with no extra code. Adapting your own application to MSE does not require any modification to your Python code:
+The file `app.py` is a basic Flask application with no extra code. Adapting your own application to MSE does not require any modification to your Python code.
+
+Example of a basic Flask application:
 
 ```python
-import json
-import os
 from http import HTTPStatus
-from pathlib import Path
-
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from flask import Flask, Response
 
 app = Flask(__name__)
-
-sealed_secret_json = Path(os.getenv("SEALED_SECRETS_PATH"))
-secret_json = Path(os.getenv("SECRETS_PATH"))
 
 
 @app.get("/health")
@@ -118,30 +111,8 @@ def hello():
     return "Hello world"
 
 
-def aes_encrypt(text: bytes, key: bytes) -> bytes:
-    """Encrypt a text using AES-CBC."""
-    iv = os.urandom(16)
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
-    encryptor = cipher.encryptor()
-    return iv + encryptor.update(text) + encryptor.finalize()
-
-
-@app.route("/result/secrets")
-def result_with_secret():
-    """Get a simple result using secrets."""
-    return aes_encrypt(
-        b"secret message with secrets.json",
-        bytes.fromhex(json.loads(secret_json.read_bytes())["key"]),
-    )
-
-
-@app.route("/result/sealed_secrets")
-def result_with_sealed_secret():
-    """Get a simple result using sealed secrets."""
-    return aes_encrypt(
-        b"message with sealed_secrets.json",
-        bytes.fromhex(json.loads(sealed_secret_json.read_bytes())["key"]),
-    )
+# other endpoints
+# ...
 ```
 
 The [configuration file](./configuration.md) is a TOML file used to give information to the SGX operator, allowing to start correctly the application:
@@ -178,6 +149,15 @@ This project also contains a test directory enabling you to test this project lo
 
 
 ```console
+$ msehome test-dev --code example/mse_src/ \
+                   --dockerfile example/Dockerfile \
+                   --config example/mse.toml \
+                   --test example/tests/
+```
+
+or more concisely:
+
+```console
 $ msehome test-dev --project example
 ```
 
@@ -188,16 +168,26 @@ $ msehome test-dev --project example
     This command is designed to be used by the **code provider**
 
 
-```console
-$ msehome pack --project example \
-               --output workspace/code_provider 
-```
-
 This command generates a tarball named `package_<app_name>_<timestamp>.tar`.
 
 The generated package can now be sent to the SGX operator.
 
-## Spawn the mse docker
+```console
+$ msehome package --code example/mse_src/ \
+                  --dockerfile example/Dockerfile \
+                  --config example/mse.toml \
+                  --test example/tests/ \
+                  --output workspace/code_provider
+```
+
+or more concisely:
+
+```console
+$ msehome package --project example \
+                  --output workspace/code_provider 
+```
+
+## Spawn the MSE docker
 
 !!! info User
 
@@ -208,6 +198,7 @@ The generated package can now be sent to the SGX operator.
 $ msehome spawn --host myapp.fr \
                 --port 7777 \
                 --size 4096 \
+                --pccs https://pccs.example.com \
                 --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
                 --output workspace/sgx_operator/ \
                 app_name
@@ -216,30 +207,16 @@ $ msehome spawn --host myapp.fr \
 Mandatory arguments are:
 - `host`: common name of the certificate generated later on during [verification step](#check-the-trustworthiness-of-the-application)
 - `port`: localhost port used by Docker to bind the application
-- `size`: memory size (in MB) of the enclave to spawn
+- `size`: memory size (in MB) of the enclave to spawn. Must be a power of 2 (4096, 8192, etc.). This size is bounded by the SGX EPC memory.
+- `pccs`: the URL of the PCCS (Provisioning Certificate Caching Service) used to generate certificate
 - `package`: the MSE application package containing the Docker images and the code
-- `output`: directory to write the args file
+- `output`: directory to write the evidence file
 
-This command unpacks the tarball (thus a lot of files are created in `output` folder) specified by the `--package` argument, and generates a `args.toml` file, corresponding to arguments used to spawn the container. This file is also needed to [compute the fingerprint](#check-the-trustworthiness-of-the-application) of the microservice.
+This command first unpacks the tarball specified by the `--package` argument. Note that a lot of files are created in `output` folder.
 
-Keep the `workspace/sgx_operator/args.toml` to share it with other participants. 
+The generated file `workspace/sgx_operator/evidence.json` contains cryptographic proofs related to the enclave. It can be shared with other participants.
 
-## Collect the evidences to verify the application
-
-!!! info User
-
-    This command is designed to be used by the **SGX operator**
-
-
-```console
-$ msehome evidence --pccs https://pccs.example.com \
-                   --output workspace/sgx_operator/ \
-                   app_name
-```
-
-This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
-
-The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
+This evidence file is helpful for the code provider to [verify](#check-the-trustworthiness-of-the-application) the running app.
 
 ## Check the trustworthiness of the application
 
@@ -248,20 +225,15 @@ The file `workspace/sgx_operator/evidence.json` and the previous file `workspace
     This command is designed to be used by the **code provider**
 
 
-1. Compute the fingerprint
+The trustworthiness is established based on multiple information:
+- the full code package (tarball)
+- evidences captured from the running microservice
+
+Verification of the enclave information:
 
     ```console
-    $ msehome fingerprint --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
-                          --args workspace/sgx_operator/args.toml
-    ```
-
-    Save the output fingerprint for the next command. 
-
-2. Verify the fingerprint and the enclave information
-
-    ```console
-    $ msehome verify --evidence output/evidence.json \
-                     --fingerprint 6b7f6edd6082c7157a537139f99a20b8fc118d59cfb608558d5ad3b2ba35b2e3 \
+    $ msehome verify --package workspace/code_provider/package_mse_src_1683276327723953661.tar \
+                     --evidence output/evidence.json \
                      --output /tmp
     ```
 
@@ -321,8 +293,17 @@ $ msehome test --test workspace/sgx_operator/tests/ \
 First, the SGX operator collects the result (which is encrypted):
 
 ```console
-$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/secrets > result.enc
+$ curl --cacert /tmp/ratls.pem https://myapp.fr:7788/result/secrets > result.enc
 ```
+
+!!! info Hostname and certificate
+
+    At the [spawn](#spawn-the-mse-docker) step, remember that the parameter `--host`
+    has been set to `myapp.fr`. Thus the certificate `/tmp/ratls.pem` has been setup
+    to use this name as the target host name.
+    If `localhost` is fetched instead of `myapp.fr`, a SSL message will legitimately
+    complain about not having the expected hostname, and no secure connection can be established.
+
 
 This encrypted result is then sent by external means to the code provider.
 
@@ -361,7 +342,7 @@ This demonstrates that `secrets.json` file has been well setup for the enclave a
 First, the SGX operator collects the encrypted result:
 
 ```console
-$ curl --insecure --cacert /tmp/ratls.pem https://localhost:7788/result/sealed_secrets > result.enc
+$ curl --cacert /tmp/ratls.pem https://myapp.fr:7788/result/sealed_secrets > result.enc
 ```
 
 This encrypted result is then sent by external means to the code provider.

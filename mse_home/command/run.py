@@ -33,21 +33,18 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--secrets",
         type=Path,
-        required=False,
         help="The secrets.json file path",
     )
 
     parser.add_argument(
         "--sealed-secrets",
         type=Path,
-        required=False,
         help="The sealed secrets.json file path",
     )
 
     parser.add_argument(
         "--key",
         type=Path,
-        required=False,
         help="The code decryption sealed key file path",
     )
 

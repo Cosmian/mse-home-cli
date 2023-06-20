@@ -6,15 +6,18 @@ from pathlib import Path
 from uuid import uuid4
 
 from docker.client import DockerClient
+from docker.models.containers import Container
 from mse_cli_core.bootstrap import wait_for_conf_server
 from mse_cli_core.clock_tick import ClockTick
-from mse_cli_core.no_sgx_docker import NoSgxDockerConfig
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
+from mse_home.command.evidence import collect_evidence_and_certificate
 from mse_home.command.helpers import (
     app_container_exists,
+    get_app_container,
     get_client_docker,
     is_port_free,
+    is_valid_enclave_size,
     load_docker_image,
 )
 from mse_home.log import LOGGER as LOG
@@ -62,10 +65,9 @@ def add_subparser(subparsers):
 
     parser.add_argument(
         "--size",
-        type=int,
+        type=is_valid_enclave_size,
         required=True,
-        help="The enclave size to spawn",
-        choices=[4096, 8192, 16384, 32768, 65536],
+        help="The enclave size to spawn (must be a power of 2)",
     )
 
     parser.add_argument(
@@ -73,6 +75,13 @@ def add_subparser(subparsers):
         type=Path,
         help="The enclave signer key",
         default=f"{os.getenv('HOME', '/root')}/.config/gramine/enclave-key.pem",
+    )
+
+    parser.add_argument(
+        "--pccs",
+        type=str,
+        required=True,
+        help="URL to the PCCS (ex: https://pccs.example.com)",
     )
 
     parser.add_argument(
@@ -137,10 +146,10 @@ def run(args) -> None:
     )
     LOG.info("The application is now ready to receive the secrets!")
 
-    app_args = NoSgxDockerConfig.from_sgx(docker_config)
-    args_path = workspace / "args.toml"
-    LOG.info("You can share '%s' with the other participants.", args_path)
-    app_args.save(args_path)
+    # Generate evidence and RA-TLS certificate files
+    container: Container = get_app_container(client, args.name)
+
+    collect_evidence_and_certificate(container, args.pccs, args.output)
 
 
 def run_docker_image(

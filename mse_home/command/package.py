@@ -21,7 +21,7 @@ from mse_home.model.package import CODE_TAR_NAME, DOCKER_IMAGE_TAR_NAME, CodePac
 def add_subparser(subparsers):
     """Define the subcommand."""
     parser = subparsers.add_parser(
-        "pack",
+        "package",
         help="Generate a package containing the Docker image and the code to run on MSE",
     )
 
@@ -54,7 +54,7 @@ def run(args) -> None:
     """Run the subcommand."""
     package_path: Path = args.output.resolve()
     if not package_path.is_dir():
-        raise IOError(f"{package_path} does not exist")
+        raise NotADirectoryError(f"{package_path} does not exist")
 
     code_path: Path
     test_path: Path
@@ -62,9 +62,9 @@ def run(args) -> None:
     dockerfile_path: Path
 
     if args.project:
-        if any([args.code, args.config, args.dockerfile]):
+        if any([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
-                "[--project] and [--code & --config & --dockerfile] "
+                "[--project] and [--code & --config & --dockerfile & --test] "
                 "are mutually exclusive"
             )
 
@@ -77,10 +77,10 @@ def run(args) -> None:
         dockerfile_path = args.project / "Dockerfile"
 
     else:
-        if not all([args.code, args.config, args.dockerfile]):
+        if not all([args.code, args.config, args.dockerfile, args.test]):
             raise argparse.ArgumentTypeError(
                 "the following arguments are required: "
-                "--code, --config, --dockerfile"
+                "--code, --config, --dockerfile, --test"
             )
 
         code_path = args.code
@@ -91,7 +91,7 @@ def run(args) -> None:
     if not code_path.is_dir():
         raise NotADirectoryError(f"`{code_path}` does not exist")
 
-    if test_path and not test_path.is_dir():
+    if not test_path.is_dir():
         raise NotADirectoryError(f"`{test_path}` does not exist")
 
     if not config_path.is_file():
@@ -109,7 +109,7 @@ def run(args) -> None:
     package = CodePackage(
         code_tar=workspace / CODE_TAR_NAME,
         image_tar=workspace / DOCKER_IMAGE_TAR_NAME,
-        test_path=test_path.resolve() if test_path else None,
+        test_path=test_path.resolve(),
         config_path=config_path.resolve(),
     )
 

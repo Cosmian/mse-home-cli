@@ -60,3 +60,11 @@ def is_port_free(port: int):
         return False
 
     return True
+
+
+def is_valid_enclave_size(n) -> bool:
+    """Check if `n` is a valid enclave size."""
+    if n < 1024:
+        return False
+    # must be a power of 2
+    return (n & (n - 1) == 0) and n != 0

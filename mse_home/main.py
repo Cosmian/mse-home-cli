@@ -10,10 +10,9 @@ from mse_home import __version__
 from mse_home.command import (
     decrypt,
     evidence,
-    fingerprint,
     list_all,
     logs,
-    pack,
+    package,
     restart,
     run,
     scaffold,
@@ -44,13 +43,12 @@ def main() -> int:
 
     subparsers = parser.add_subparsers(title="subcommands")
 
-    pack.add_subparser(subparsers)
     decrypt.add_subparser(subparsers)
     evidence.add_subparser(subparsers)
-    fingerprint.add_subparser(subparsers)
     scaffold.add_subparser(subparsers)
     list_all.add_subparser(subparsers)
     logs.add_subparser(subparsers)
+    package.add_subparser(subparsers)
     restart.add_subparser(subparsers)
     run.add_subparser(subparsers)
     status.add_subparser(subparsers)

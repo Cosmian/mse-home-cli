@@ -13,10 +13,9 @@ from conftest import capture_logs
 
 from mse_home.command.decrypt import run as do_decrypt
 from mse_home.command.evidence import run as do_evidence
-from mse_home.command.fingerprint import run as do_fingerprint
 from mse_home.command.list_all import run as do_list
 from mse_home.command.logs import run as do_logs
-from mse_home.command.pack import run as do_package
+from mse_home.command.package import run as do_package
 from mse_home.command.restart import run as do_restart
 from mse_home.command.run import run as do_run
 from mse_home.command.scaffold import run as do_scaffold
@@ -137,45 +136,6 @@ def test_pack(workspace: Path, cmd_log: io.StringIO):
     assert pytest.package_path.exists()
 
 
-@pytest.mark.slow
-@pytest.mark.incremental
-def test_pack_no_test_folder(workspace: Path, cmd_log: io.StringIO):
-    """Test the `package` subcommand."""
-    do_package(
-        Namespace(
-            **{
-                "project": None,
-                "code": pytest.app_path / "mse_src",
-                "config": pytest.app_path / "mse.toml",
-                "dockerfile": pytest.app_path / "Dockerfile",
-                "test": None,
-                "encrypt": True,
-                "output": workspace,
-            }
-        )
-    )
-
-    # Check the tar generation
-    output = capture_logs(cmd_log)
-    try:
-        pytest.key_path = Path(
-            re.search(
-                "Your code secret key has been saved at: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-
-        pytest.package_path = Path(
-            re.search(
-                "Your package is now ready to be shared: ([A-Za-z0-9/._]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert pytest.package_path.exists()
-
-
 def test_pack_project(workspace: Path, cmd_log: io.StringIO):
     """Test the `pack` subcommand by specifying a project directory."""
     do_package(
@@ -222,12 +182,14 @@ def test_spawn(
     port: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the `spawn` subcommand."""
     do_spawn(
         Namespace(
             **{
                 "name": app_name,
+                "pccs": pccs_url,
                 "package": pytest.package_path,
                 "host": host,
                 "days": 2,
@@ -241,17 +203,16 @@ def test_spawn(
 
     output = capture_logs(cmd_log)
     try:
-        pytest.args_path = Path(
+        pytest.evidence_path = Path(
             re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
         print(output)
         assert False
 
-    assert pytest.args_path.exists()
+    assert pytest.evidence_path.exists()
 
 
 @pytest.mark.slow
@@ -324,36 +285,12 @@ def test_evidence(workspace: Path, cmd_log: io.StringIO, app_name: str, pccs_url
 
 @pytest.mark.slow
 @pytest.mark.incremental
-def test_fingerprint(cmd_log: io.StringIO):
-    """Test the `fingerprint` subcommand."""
-    do_fingerprint(
-        Namespace(
-            **{
-                "package": pytest.package_path,
-                "args": pytest.args_path,
-            }
-        )
-    )
-
-    output = capture_logs(cmd_log)
-    try:
-        assert pytest.fingerprint == re.search(
-            "Fingerprint is: ([a-z0-9]+)", output
-        ).group(1)
-
-    except AttributeError:
-        print(output)
-        assert False
-
-
-@pytest.mark.slow
-@pytest.mark.incremental
 def test_verify(workspace: Path, cmd_log: io.StringIO):
     """Test the `verify` subcommand."""
     do_verify(
         Namespace(
             **{
-                "fingerprint": pytest.fingerprint,
+                "package": pytest.package_path,
                 "evidence": pytest.evidence_path,
                 "output": workspace,
             }
@@ -367,7 +304,7 @@ def test_verify(workspace: Path, cmd_log: io.StringIO):
     try:
         pytest.ratls_cert = Path(
             re.search(
-                "The ratls certificate has been saved at: ([A-Za-z0-9/._-]+)", output
+                "The RA-TLS certificate has been saved at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
@@ -652,6 +589,7 @@ def test_plaintext(
     port2: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the process subcommand without encryption."""
     do_package(
@@ -696,6 +634,7 @@ def test_plaintext(
                 "port": port2,
                 "size": 4096,
                 "signer_key": signer_key,
+                "pccs": pccs_url,
                 "output": workspace,
             }
         )
@@ -703,17 +642,16 @@ def test_plaintext(
 
     output = capture_logs(cmd_log)
     try:
-        pytest.args_path = Path(
+        pytest.evidence_path = Path(
             re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
         print(output)
         assert False
 
-    assert pytest.args_path.exists()
+    assert pytest.evidence_path.exists()
 
     do_run(
         Namespace(
@@ -756,6 +694,7 @@ def test_plaintext_project(
     port3: int,
     host: str,
     signer_key: Path,
+    pccs_url: str,
 ):
     """Test the process subcommand without encryption by specifying a project directory."""
     do_package(
@@ -792,6 +731,7 @@ def test_plaintext_project(
         Namespace(
             **{
                 "name": app_name,
+                "pccs": pccs_url,
                 "package": pytest.package_path,
                 "host": host,
                 "days": 2,
@@ -807,17 +747,16 @@ def test_plaintext_project(
 
     output = capture_logs(cmd_log)
     try:
-        pytest.args_path = Path(
+        pytest.evidence_path = Path(
             re.search(
-                "You can share '([A-Za-z0-9/._-]+)' with the other participants.",
-                output,
+                "The evidence file has been generated at: ([A-Za-z0-9/._-]+)", output
             ).group(1)
         )
     except AttributeError:
         print(output)
         assert False
 
-    assert pytest.args_path.exists()
+    assert pytest.evidence_path.exists()
 
     do_run(
         Namespace(
