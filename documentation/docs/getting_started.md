@@ -161,7 +161,7 @@ or more concisely:
 $ msehome test-dev --project example
 ```
 
-Testing your code before sending it to the SGX operator is recommanded. Be aware that any errors will require to restart the deployment flow from scratch.
+Testing your code before sending it to the SGX operator is recommended. Be aware that any error will require to restart the deployment flow from scratch.
 
 ## Create the MSE package with the code and the docker image
 
@@ -236,7 +236,7 @@ $ msehome evidence --output workspace/sgx_operator/ \
 
 This command collects cryptographic proofs related to the enclave and serialize them as a file named `evidence.json`.
 
-This command will determine your pccs url by parsing the aesmd service configuration file: `/etc/sgx_default_qcnl.conf`. You can choose another pccs by specifying the `--pccs` parameter.
+This command will determine your PCCS url by parsing the aesmd service configuration file: `/etc/sgx_default_qcnl.conf`. You can choose another PCCS by specifying the `--pccs` parameter.
 
 The file `workspace/sgx_operator/evidence.json` and the previous file `workspace/sgx_operator/args.toml` can now be shared with other participants.
 >>>>>>> d237a36 (:sparkles: determine the pccs url by default)
@@ -292,7 +292,7 @@ $ msehome run --sealed-secrets workspace/code_provider/secrets_to_seal.json.seal
               app_name
 ```
 
-From now, the real application developped by the code provider is fully operationnal and running. The configuration server started during the previous `spawn` step has been shutdown. Therefore, if you want to change the configuration or the secrets, you need to stop&remove this application and restart the deployment flow from scratch.
+From now, the real application developed by the code provider is fully operational and running. The configuration server started during the previous `spawn` step has been shutdown. Therefore, if you want to change the configuration or the secrets, you need to stop&remove this application and restart the deployment flow from scratch.
 
 ## Test the deployed application
 
@@ -390,5 +390,5 @@ Note that the `--aes` parameter is the key contained in `secrets_to_seal.json`.
 
 !!! info Fix or Update
 
-    In case of errors or if the code/the configuration needs to be updated, you shall stop&remove the current rurnning application and restart from scratch the whole deployment flow. 
+    In case of errors or if the code/the configuration needs to be updated, you shall stop&remove the current running application and restart from scratch the whole deployment flow. 
 

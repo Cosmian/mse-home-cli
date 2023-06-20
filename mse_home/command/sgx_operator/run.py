@@ -55,7 +55,7 @@ def add_subparser(subparsers):
         required=False,
         default=24 * 60,
         help="Stop the deployment if the application does not "
-        "response after a delay (in min). (Default: 1440 min)",
+        "respond after a delay (in min). (Default: 1440 min)",
     )
 
     parser.set_defaults(func=run)
