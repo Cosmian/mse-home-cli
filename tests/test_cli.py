@@ -1,5 +1,5 @@
 """Test command/*.py."""
-
+import base64
 import io
 import os
 import re
@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 import requests
 from conftest import capture_logs
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from mse_home.command.code_provider.decrypt import run as do_decrypt
 from mse_home.command.code_provider.package import run as do_package
@@ -392,32 +393,31 @@ def test_decrypt_secrets_json(
     )
 
     assert response.status_code == 200
-    result = workspace / "result.enc"
-    result.write_bytes(response.content)
+
+    enc_file_path = workspace / "result.enc"
+    enc_file_path.write_bytes(response.content)
+
+    key_path = workspace / "key.bin"
+    salt: bytes = base64.urlsafe_b64decode(
+        b"NICFe3qjykoE_DCSng22uzd6Pks3P2HHnaF-y9G18qo=")
+    password: bytes = "qwerty".encode("utf-8")
+    kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
+    key_path.write_bytes(base64.urlsafe_b64encode(kdf.derive(password)))
+
+    output_path = workspace / "result.plain"
 
     do_decrypt(
         Namespace(
             **{
-                "aes": "00112233445566778899aabbccddeeff",
-                "encrypted_file": result,
-                "output": workspace / "result.plain",
+                "key": key_path,
+                "file": enc_file_path,
+                "output": output_path,
             }
         )
     )
 
-    output = capture_logs(cmd_log)
-    try:
-        plain_result = Path(
-            re.search(
-                "Your file has been decrypted and saved at: ([A-Za-z0-9/._-]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert plain_result.exists()
-    assert plain_result.read_text() == "secret message with secrets.json"
+    assert output_path.exists()
+    assert output_path.read_text() == "message using password and salt from SECRETS"
 
 
 @pytest.mark.slow
@@ -433,32 +433,27 @@ def test_decrypt_sealed_secrets_json(
     )
 
     assert response.status_code == 200
-    result = workspace / "result2.enc"
-    result.write_bytes(response.content)
+
+    enc_file_path = workspace / "result2.enc"
+    enc_file_path.write_bytes(response.content)
+
+    key_path = workspace / "key2.bin"
+    key_path.write_bytes(b"AXIKImqLJa5SZms7o6mb_nL1QLro_GDNcpIJQ71CgMk=")
+
+    output_path = workspace / "result2.plain"
 
     do_decrypt(
         Namespace(
             **{
-                "aes": "ffeeddccbbaa99887766554433221100",
-                "encrypted_file": result,
-                "output": workspace / "result2.plain",
+                "key": key_path,
+                "file": enc_file_path,
+                "output": output_path,
             }
         )
     )
 
-    output = capture_logs(cmd_log)
-    try:
-        plain_result = Path(
-            re.search(
-                "Your file has been decrypted and saved at: ([A-Za-z0-9/._-]+)", output
-            ).group(1)
-        )
-    except AttributeError:
-        print(output)
-        assert False
-
-    assert plain_result.exists()
-    assert plain_result.read_text() == "message with sealed_secrets.json"
+    assert output_path.exists()
+    assert output_path.read_text() == "message using result_sk from SEALED_SECRETS"
 
 
 @pytest.mark.slow
