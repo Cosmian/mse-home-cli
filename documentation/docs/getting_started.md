@@ -376,16 +376,18 @@ This encrypted result is then sent by external means to the code provider.
 Finally, the code provider can decrypt the result:
 
 ```console
-$ msehome decrypt --aes ffeeddccbbaa99887766554433221100 \
+$ msehome decrypt --key key.txt \
                   --output workspace/code_provider/result.plain \
                   result.enc
 $ cat workspace/code_provider/result.plain
 ```
 
-Note that the `--aes` parameter is the key contained in `secrets_to_seal.json`.
+Note that the `--key` parameter is the key contained in `secrets_to_seal.json`.
+
+The `decrypt` command only supports [Fernet](https://cryptography.io/en/latest/fernet/) algorithm. If the code provider implements another way to encrypt the result in its micro-service, another decryption code must also be written outside `mse-home`.
 
 
 !!! info Fix or Update
 
-    In case of errors or if the code/the configuration needs to be updated, you shall stop&remove the current running application and restart from scratch the whole deployment flow. 
+    In case of errors at any step of the deployment flow or if the code/the configuration needs to be updated, you shall stop&remove the current running application and restart from scratch the whole deployment flow. 
 

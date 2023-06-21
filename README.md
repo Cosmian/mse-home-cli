@@ -132,7 +132,7 @@ Assume the SGX operator gets a result as follow: `curl https://localhost:7788/re
 Then, the code provider can decrypt the result has follow:
 
 ```console
-$ msehome decrypt --aes 00112233445566778899aabbccddeeff \
+$ msehome decrypt --key key.txt \
                   --output workspace/code_provider/result.plain \
                   result.enc
 $ cat workspace/code_provider/result.plain
