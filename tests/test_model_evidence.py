@@ -24,7 +24,6 @@ def test_load():
         input_args=NoSgxDockerConfig(
             host="localhost",
             expiration_date=1714058115,
-            app_cert=None,
             size=4096,
             app_id="63322f85-1ff8-4483-91ae-f18d7398d157",
             application="app:app",
