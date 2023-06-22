@@ -23,7 +23,6 @@ def add_subparser(subparsers):
     parser.add_argument(
         "file",
         type=Path,
-        required=True,
         help="File to decrypt",
     )
 

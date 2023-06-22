@@ -67,7 +67,7 @@ def run(args) -> None:
         client,
         image,
         evidence.input_args,
-        package.code_tar,
+        workspace,
         log_path,
     )
 

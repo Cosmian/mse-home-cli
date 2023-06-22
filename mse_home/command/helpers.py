@@ -52,7 +52,10 @@ def get_running_app_container(client: DockerClient, name: str) -> Container:
     container = get_app_container(client, name)
 
     if not is_running(container):
-        raise AppContainerNotRunning(f"Your application '{name}' is not running")
+        raise AppContainerNotRunning(
+            f"Your application '{name}' is not running. "
+            "Run `msehome logs` for more details"
+        )
 
     return container
 

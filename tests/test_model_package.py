@@ -12,7 +12,7 @@ from mse_home.model.package import CodePackage
 def test_create(workspace: Path):
     """Test `create` method."""
     package = CodePackage(
-        code_tar=Path(__file__).parent / "data" / "package" / "code.tar",
+        code_tar=Path(__file__).parent / "data" / "package" / "app.tar",
         image_tar=Path(__file__).parent / "data" / "package" / "image.tar",
         test_tar=Path(__file__).parent / "data" / "package" / "tests.tar",
         config_path=Path(__file__).parent / "data" / "mse.toml",
@@ -30,13 +30,13 @@ def test_extract(workspace: Path):
     package_tar = Path(__file__).parent / "data" / "package" / "package.tar"
     package = CodePackage.extract(workspace, package_tar)
 
-    assert package.code_tar == workspace / "code.tar"
+    assert package.code_tar == workspace / "app.tar"
     assert package.image_tar == workspace / "image.tar"
     assert package.test_tar == workspace / "tests.tar"
     assert package.config_path == workspace / "mse.toml"
 
     assert filecmp.cmp(
-        Path(__file__).parent / "data" / "package" / "code.tar", package.code_tar
+        Path(__file__).parent / "data" / "package" / "app.tar", package.code_tar
     )
     assert filecmp.cmp(
         Path(__file__).parent / "data" / "package" / "image.tar", package.image_tar
@@ -56,7 +56,7 @@ def test_extract_bad_tar(workspace: Path):
         CodePackage.extract(workspace, package_tar)
 
     # Tar but without the expecting content
-    package_tar = Path(__file__).parent / "data" / "package" / "code.tar"
+    package_tar = Path(__file__).parent / "data" / "package" / "app.tar"
 
     with pytest.raises(Exception):
         CodePackage.extract(workspace, package_tar)

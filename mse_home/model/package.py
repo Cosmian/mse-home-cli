@@ -12,7 +12,7 @@ DEFAULT_DOCKERFILE_FILENAME = "Dockerfile"
 DEFAULT_SECRETS_FILENAME = "secrets.json"
 DEFAULT_SEAL_SECRETS_FILENAME = "secrets_to_seal.json"
 
-CODE_TAR_NAME = "code.tar"
+CODE_TAR_NAME = "app.tar"
 DOCKER_IMAGE_TAR_NAME = "image.tar"
 MSE_CONFIG_NAME = "mse.toml"
 TEST_TAR_NAME = "tests.tar"
