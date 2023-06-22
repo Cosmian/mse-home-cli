@@ -136,7 +136,7 @@ def run(args) -> None:
         port=args.port,
         app_id=uuid4(),
         expiration_date=int((datetime.today() + timedelta(days=args.days)).timestamp()),
-        code=package.code_tar,
+        app_dir=workspace,
         application=code_config.python_application,
         healthcheck=code_config.healthcheck_endpoint,
         signer_key=args.signer_key,
