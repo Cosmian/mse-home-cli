@@ -89,9 +89,8 @@ class ApplicationEvidence(BaseModel):
             dataMap: Dict[str, Any] = {
                 "input_args": {
                     "host": self.input_args.host,
-                    "expiration_date": self.input_args.expiration_date,
-                    "app_cert": str(self.input_args.app_cert)
-                    if self.input_args.app_cert
+                    "expiration_date": self.input_args.expiration_date
+                    if self.input_args.expiration_date
                     else None,
                     "size": self.input_args.size,
                     "app_id": str(self.input_args.app_id),

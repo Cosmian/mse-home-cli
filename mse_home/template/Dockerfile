@@ -1,4 +1,4 @@
-FROM ghcr.io/cosmian/mse-base-beta:04ef3c356b21a4e2f995a91e1e86011a372e081f
+FROM ghcr.io/cosmian/mse-base-beta:c706160c23a080e224bd9d5f26fdb3b529721c1b
 
 
 RUN . /opt/venv/bin/activate && \
