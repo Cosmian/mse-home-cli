@@ -9,6 +9,7 @@ from docker.client import DockerClient
 from docker.models.containers import Container
 from mse_cli_core.bootstrap import wait_for_conf_server
 from mse_cli_core.clock_tick import ClockTick
+from mse_cli_core.conf import AppConf, AppConfParsingOption
 from mse_cli_core.sgx_docker import SgxDockerConfig
 from mse_cli_core.spinner import Spinner
 
@@ -26,7 +27,6 @@ from mse_home.command.sgx_operator.evidence import (
     guess_pccs_url,
 )
 from mse_home.log import LOGGER as LOG
-from mse_home.model.code import CodeConfig
 from mse_home.model.package import CodePackage
 
 
@@ -126,7 +126,9 @@ def run(args) -> None:
 
     LOG.info("Extracting the package at %s...", workspace)
     package = CodePackage.extract(workspace, args.package)
-    code_config = CodeConfig.load(package.config_path)
+    code_config = AppConf.load(
+        package.config_path, option=AppConfParsingOption.SkipCloud
+    )
 
     image = load_docker_image(client, package.image_tar)
 

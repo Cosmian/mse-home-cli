@@ -29,6 +29,10 @@ $ pytest
 $ msehome -h
 ```
 
+
+Note: if you declare the env variable `MSE_BACKTRACE` to the value `full`, a python stacktrace will be printed in case of errors.
+
+
 You can find below the use flow step by step.
 
 ### Scaffold your app
