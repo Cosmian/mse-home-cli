@@ -68,7 +68,7 @@ def run(args) -> None:
 # pylint: disable=too-many-locals
 def collect_evidence_and_certificate(
     container: Container,
-    pccs_url: str,
+    pccs_url: Optional[str],
     output: Path,
 ):
     """Collect evidence JSON file and RA-TLS certificate from running enclave."""
@@ -90,39 +90,38 @@ def collect_evidence_and_certificate(
 
     quote = ratls_verify(ratls_cert)
 
-    (
-        tcb_info,
-        qe_identity,
-        tcb_cert,
-        root_ca_crl,
-        pck_platform_crl,
-    ) = retrieve_collaterals(quote, pccs_url)
+    if pccs_url is not None:
+        (
+            tcb_info,
+            qe_identity,
+            tcb_cert,
+            root_ca_crl,
+            pck_platform_crl,
+        ) = retrieve_collaterals(quote, pccs_url)
 
-    signer_key = load_pem_private_key(
-        docker.signer_key.read_bytes(),
-        password=None,
-    )
+        signer_key = load_pem_private_key(
+            docker.signer_key.read_bytes(),
+            password=None,
+        )
 
-    evidence = ApplicationEvidence(
-        input_args=input_args,
-        ratls_certificate=ratls_cert,
-        root_ca_crl=root_ca_crl,
-        pck_platform_crl=pck_platform_crl,
-        tcb_info=tcb_info,
-        qe_identity=qe_identity,
-        tcb_cert=tcb_cert,
-        signer_pk=signer_key.public_key(),
-    )
+        evidence = ApplicationEvidence(
+            input_args=input_args,
+            ratls_certificate=ratls_cert,
+            root_ca_crl=root_ca_crl,
+            pck_platform_crl=pck_platform_crl,
+            tcb_info=tcb_info,
+            qe_identity=qe_identity,
+            tcb_cert=tcb_cert,
+            signer_pk=signer_key.public_key(),
+        )
 
-    evidence_path = output / "evidence.json"
-    evidence.save(evidence_path)
-    LOG.info("The evidence file has been generated at: %s", evidence_path)
-    LOG.info("The evidence file can now be shared!")
+        evidence_path = output / "evidence.json"
+        evidence.save(evidence_path)
+        LOG.info("The evidence file has been generated at: %s", evidence_path)
+        LOG.info("The evidence file can now be shared!")
 
     ratls_cert_path = output / "ratls.pem"
-    ratls_cert_path.write_bytes(
-        evidence.ratls_certificate.public_bytes(encoding=Encoding.PEM)
-    )
+    ratls_cert_path.write_bytes(ratls_cert.public_bytes(encoding=Encoding.PEM))
 
     LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)
 

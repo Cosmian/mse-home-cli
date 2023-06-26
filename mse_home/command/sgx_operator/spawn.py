@@ -82,7 +82,7 @@ def add_subparser(subparsers):
         default=f"{os.getenv('HOME', '/root')}/.config/gramine/enclave-key.pem",
     )
 
-    pccs_url_default = guess_pccs_url() or "https://pccs.example.com"
+    pccs_url_default = guess_pccs_url()
     parser.add_argument(
         "--pccs",
         type=str,
