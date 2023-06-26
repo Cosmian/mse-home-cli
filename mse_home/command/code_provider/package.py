@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from docker.errors import BuildError
+from mse_cli_core.conf import AppConf, AppConfParsingOption
 from mse_cli_core.fs import tar, whitelist
 from mse_cli_core.ignore_file import IgnoreFile
 from mse_lib_crypto.xsalsa20_poly1305 import encrypt_directory, random_key
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_home.model.code import CodeConfig
 from mse_home.model.package import (
     CODE_TAR_NAME,
     DEFAULT_CODE_DIR,
@@ -108,7 +108,7 @@ def run(args) -> None:
     if not dockerfile_path.is_file():
         raise FileNotFoundError(f"`{dockerfile_path}` does not exist")
 
-    code_config = CodeConfig.load(config_path)
+    code_config = AppConf.load(config_path, option=AppConfParsingOption.SkipCloud)
 
     workspace = Path(tempfile.mkdtemp())
 

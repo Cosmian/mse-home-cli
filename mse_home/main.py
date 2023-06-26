@@ -1,6 +1,8 @@
 """mse_home.main module."""
 
 import argparse
+import os
+import traceback
 from warnings import filterwarnings  # noqa: E402
 
 filterwarnings("ignore")  # noqa: E402
@@ -75,6 +77,9 @@ def main() -> int:
         return 0
     # pylint: disable=broad-except
     except Exception as e:
+        if os.getenv("MSE_BACKTRACE") == "full":
+            traceback.print_exc()
+
         LOG.error(e)
         return 1
 

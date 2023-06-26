@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pkg_resources
 from jinja2 import Template
+from mse_cli_core.conf import AppConf, AppConfParsingOption
 
 from mse_home.log import LOGGER as LOG
-from mse_home.model.code import CodeConfig
 from mse_home.model.package import (
     DEFAULT_CODE_DIR,
     DEFAULT_CONFIG_FILENAME,
@@ -49,7 +49,7 @@ def run(args) -> None:
     conf_file.write_text(content)
     template_conf_file.unlink()
 
-    app_conf = CodeConfig.load(conf_file)
+    app_conf = AppConf.load(conf_file, option=AppConfParsingOption.SkipCloud)
 
     # Initialize the python code file
     code_dir = project_dir / DEFAULT_CODE_DIR

@@ -6,10 +6,10 @@ import sys
 from pathlib import Path
 
 from mse_cli_core.bootstrap import is_waiting_for_secrets
+from mse_cli_core.conf import AppConf, AppConfParsingOption
 from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker, get_running_app_container
-from mse_home.model.code import CodeConfig
 
 
 def add_subparser(subparsers):
@@ -51,7 +51,7 @@ def run(args) -> None:
             "Your application is waiting for secrets and can't be tested right now."
         )
 
-    code_config = CodeConfig.load(args.config)
+    code_config = AppConf.load(args.config, option=AppConfParsingOption.SkipCloud)
 
     for package in code_config.tests_requirements:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])

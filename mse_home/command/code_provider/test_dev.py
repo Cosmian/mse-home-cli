@@ -11,11 +11,11 @@ from docker.errors import BuildError, NotFound
 from docker.models.containers import Container
 from mse_cli_core.bootstrap import is_ready
 from mse_cli_core.clock_tick import ClockTick
+from mse_cli_core.conf import AppConf, AppConfParsingOption
 from mse_cli_core.test_docker import TestDockerConfig
 
 from mse_home.command.helpers import get_client_docker
 from mse_home.log import LOGGER as LOG
-from mse_home.model.code import CodeConfig
 from mse_home.model.package import (
     DEFAULT_CODE_DIR,
     DEFAULT_CONFIG_FILENAME,
@@ -124,7 +124,7 @@ def run(args) -> None:
     if sealed_secrets_path and not sealed_secrets_path.is_file():
         raise FileNotFoundError(f"`{sealed_secrets_path}` does not exist")
 
-    code_config = CodeConfig.load(config_path)
+    code_config = AppConf.load(config_path, option=AppConfParsingOption.SkipCloud)
     container_name = docker_name = f"{code_config.name}_test"
 
     client = get_client_docker()
@@ -153,7 +153,7 @@ def run(args) -> None:
 
 
 def try_run(
-    code_config: CodeConfig,
+    app_config: AppConf,
     client,
     docker_name,
     container_name: str,
@@ -170,11 +170,11 @@ def try_run(
             docker_name,
             container_name,
             docker_config,
-            code_config.healthcheck_endpoint,
+            app_config.healthcheck_endpoint,
         )
 
         success = run_tests(
-            code_config,
+            app_config,
             test_path,
             secrets_path,
             sealed_secrets_path,
@@ -235,7 +235,7 @@ def run_app_docker(
 
 
 def run_tests(
-    code_config: CodeConfig,
+    app_config: AppConf,
     tests: Path,
     secrets: Optional[Path],
     sealed_secrets: Optional[Path],
@@ -243,7 +243,7 @@ def run_tests(
     """Run the tests."""
 
     LOG.info("Installing tests requirements...")
-    for package in code_config.tests_requirements:
+    for package in app_config.tests_requirements:
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", package],
             stdout=subprocess.DEVNULL,
@@ -258,7 +258,7 @@ def run_tests(
         env["TEST_SEALED_SECRET_JSON"] = str(sealed_secrets.resolve())
 
     try:
-        subprocess.check_call(code_config.tests_cmd, cwd=tests, env=env)
+        subprocess.check_call(app_config.tests_cmd, cwd=tests, env=env)
 
         LOG.info("Tests successful")
         return True
