@@ -48,10 +48,24 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--host",
+        "--docker_host",
+        type=str,
+        default="0.0.0.0",
+        help="Host of the docker container",
+    )
+
+    parser.add_argument(
+        "--subject",
+        type=str,
+        default="CN=cosmian.com,O=Cosmian Tech,C=FR,L=Paris,ST=Ile-de-France",
+        help="Subject in the RA-TLS certificate",
+    )
+
+    parser.add_argument(
+        "--san",
         type=str,
         required=True,
-        help="The common name of the generated certificate",
+        help="Subject Alternative Name in the RA-TLS certificate",
     )
 
     parser.add_argument(
@@ -62,10 +76,10 @@ def add_subparser(subparsers):
     )
 
     parser.add_argument(
-        "--port",
+        "--docker_port",
         type=int,
-        required=True,
-        help="The application port",
+        default=443,
+        help="Port of the docker container",
     )
 
     parser.add_argument(
@@ -119,8 +133,8 @@ def run(args) -> None:
             "Stop and remove it before respawn it!"
         )
 
-    if not is_port_free(args.port):
-        raise Exception(f"Port {args.port} is already in-used!")
+    if not is_port_free(args.docker_port):
+        raise Exception(f"Port {args.docker_port} is already in-used!")
 
     workspace = args.output.resolve()
 
@@ -132,8 +146,10 @@ def run(args) -> None:
 
     docker_config = SgxDockerConfig(
         size=args.size,
-        host=args.host,
-        port=args.port,
+        host=args.docker_host,
+        port=args.docker_port,
+        subject=args.subject,
+        subject_alternative_name=args.san,
         app_id=uuid4(),
         expiration_date=int((datetime.today() + timedelta(days=args.days)).timestamp()),
         app_dir=workspace,
@@ -156,7 +172,7 @@ def run(args) -> None:
                 timeout=60 * args.timeout,
                 message="The configuration server is unreachable!",
             ),
-            f"https://localhost:{args.port}",
+            f"https://localhost:{args.docker_port}",
             False,
             get_running_app_container,
             (

@@ -88,7 +88,8 @@ class ApplicationEvidence(BaseModel):
         with open(path, "w", encoding="utf8") as f:
             dataMap: Dict[str, Any] = {
                 "input_args": {
-                    "host": self.input_args.host,
+                    "subject": self.input_args.subject,
+                    "subject_alternative_name": self.input_args.subject_alternative_name,
                     "expiration_date": self.input_args.expiration_date
                     if self.input_args.expiration_date
                     else None,
