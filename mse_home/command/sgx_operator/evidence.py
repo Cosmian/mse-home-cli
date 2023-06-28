@@ -4,9 +4,10 @@ import json
 import socket
 import ssl
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 from urllib.parse import urlparse
 
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 from docker.models.containers import Container
@@ -17,7 +18,7 @@ from mse_cli_core.sgx_docker import SgxDockerConfig
 
 from mse_home.command.helpers import get_client_docker, get_running_app_container
 from mse_home.log import LOGGER as LOG
-from mse_home.model.evidence import ApplicationEvidence
+from mse_home.model.evidence import ApplicationEvidence, Collaterals
 
 
 def add_subparser(subparsers):
@@ -90,6 +91,16 @@ def collect_evidence_and_certificate(
 
     quote = ratls_verify(ratls_cert)
 
+    signer_key = cast(
+        RSAPrivateKey,
+        load_pem_private_key(
+            docker.signer_key.read_bytes(),
+            password=None,
+        ),
+    )
+
+    collaterals: Optional[Collaterals] = None
+
     if pccs_url is not None:
         (
             tcb_info,
@@ -99,26 +110,25 @@ def collect_evidence_and_certificate(
             pck_platform_crl,
         ) = retrieve_collaterals(quote, pccs_url)
 
-        signer_key = load_pem_private_key(
-            docker.signer_key.read_bytes(),
-            password=None,
-        )
-
-        evidence = ApplicationEvidence(
-            input_args=input_args,
-            ratls_certificate=ratls_cert,
+        collaterals = Collaterals(
             root_ca_crl=root_ca_crl,
             pck_platform_crl=pck_platform_crl,
             tcb_info=tcb_info,
             qe_identity=qe_identity,
             tcb_cert=tcb_cert,
-            signer_pk=signer_key.public_key(),
         )
 
-        evidence_path = output / "evidence.json"
-        evidence.save(evidence_path)
-        LOG.info("The evidence file has been generated at: %s", evidence_path)
-        LOG.info("The evidence file can now be shared!")
+    evidence = ApplicationEvidence(
+        input_args=input_args,
+        ratls_certificate=ratls_cert,
+        collaterals=collaterals,
+        signer_pk=signer_key.public_key(),
+    )
+
+    evidence_path = output / "evidence.json"
+    evidence.save(evidence_path)
+    LOG.info("The evidence file has been generated at: %s", evidence_path)
+    LOG.info("The evidence file can now be shared!")
 
     ratls_cert_path = output / "ratls.pem"
     ratls_cert_path.write_bytes(ratls_cert.public_bytes(encoding=Encoding.PEM))

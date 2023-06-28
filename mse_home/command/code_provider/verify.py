@@ -3,8 +3,10 @@
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Optional, Tuple
 
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import Certificate, CertificateRevocationList
 from mse_cli_core.enclave import compute_mr_enclave, verify_enclave
 
 from mse_home.command.helpers import get_client_docker, load_docker_image
@@ -74,11 +76,30 @@ def run(args) -> None:
     LOG.info("Fingerprint is: %s", mrenclave)
 
     try:
+        collaterals: Optional[
+            Tuple[
+                bytes,
+                bytes,
+                Certificate,
+                CertificateRevocationList,
+                CertificateRevocationList,
+            ]
+        ] = None
+
+        if evidence.collaterals is not None:
+            collaterals = (
+                evidence.collaterals.tcb_info,
+                evidence.collaterals.qe_identity,
+                evidence.collaterals.tcb_cert,
+                evidence.collaterals.root_ca_crl,
+                evidence.collaterals.pck_platform_crl,
+            )
         verify_enclave(
-            evidence.signer_pk,
-            evidence.ratls_certificate,
+            signer_pk=evidence.signer_pk,
+            ratls_certificate=evidence.ratls_certificate,
             fingerprint=mrenclave,
-            collaterals=evidence.collaterals,
+            collaterals=collaterals,
+            pccs_url=None,
         )
     except Exception as exc:
         LOG.error("Verification failed!")
