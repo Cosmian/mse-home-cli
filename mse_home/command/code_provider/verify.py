@@ -34,7 +34,6 @@ def add_subparser(subparsers):
     parser.add_argument(
         "--package",
         type=Path,
-        required=True,
         help="The MSE package containing the Docker images and the code",
     )
 
@@ -58,22 +57,26 @@ def run(args) -> None:
 
     evidence = ApplicationEvidence.load(args.evidence)
 
-    LOG.info("Extracting the package at %s...", workspace)
-    package = CodePackage.extract(workspace, args.package)
+    mrenclave: Optional[str] = None
+    if args.package:
+        LOG.info("Extracting the package at %s...", workspace)
+        package = CodePackage.extract(workspace, args.package)
 
-    LOG.info("A log file is generating at: %s", log_path)
+        LOG.info("A log file is generating at: %s", log_path)
 
-    client = get_client_docker()
-    image = load_docker_image(client, package.image_tar)
-    mrenclave = compute_mr_enclave(
-        client,
-        image,
-        evidence.input_args,
-        workspace,
-        log_path,
-    )
+        client = get_client_docker()
+        image = load_docker_image(client, package.image_tar)
+        mrenclave = compute_mr_enclave(
+            client,
+            image,
+            evidence.input_args,
+            workspace,
+            log_path,
+        )
 
-    LOG.info("Fingerprint is: %s", mrenclave)
+        LOG.info("Fingerprint is: %s", mrenclave)
+    else:
+        LOG.info("Warning: package not provided can't check code fingerprint")
 
     try:
         collaterals: Optional[
@@ -115,5 +118,4 @@ def run(args) -> None:
     LOG.info("The RA-TLS certificate has been saved at: %s", ratls_cert_path)
 
     # Clean up the workspace
-    LOG.info("Cleaning up the temporary workspace...")
     shutil.rmtree(workspace)
